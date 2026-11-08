@@ -22,15 +22,16 @@
   --ui-border: rgb(0 0 0 / 0.1);
   --ui-border-light: rgb(0 0 0 / 0.05);
   --ui-border-heavy: rgb(0 0 0 / 0.15);
-  --ui-focus-ring: rgb(1 105 204 / 0.45);
-  --ui-accent: #0169cc;
-  --ui-accent-hover: #0158ad;
-  --ui-accent-soft: rgb(1 105 204 / 0.1);
+  --ui-focus-ring: rgb(0 0 0 / 0.35);
+  --ui-accent: #0d0d0d;
+  --ui-accent-hover: #2f2f2f;
+  --ui-accent-soft: rgb(0 0 0 / 0.06);
   --ui-primary-bg: #0d0d0d;
   --ui-primary-text: #ffffff;
   --ui-primary-hover: #2f2f2f;
   --ui-shadow-popover: 0 0 0 1px rgb(0 0 0 / 0.06), 0 12px 32px rgb(0 0 0 / 0.12);
   --ui-scrim: rgb(0 0 0 / 0.32);
+  --ui-field-bg: #ffffff;
   --ui-shadow-composer: 0 0 0 1px rgb(0 0 0 / 0.08), 0 6px 20px rgb(0 0 0 / 0.06);
   --ui-shadow-composer-focus: 0 0 0 1px rgb(0 0 0 / 0.15), 0 6px 20px rgb(0 0 0 / 0.08);
 }
@@ -54,14 +55,15 @@
   --ui-border: rgb(255 255 255 / 0.12);
   --ui-border-light: rgb(255 255 255 / 0.06);
   --ui-border-heavy: rgb(255 255 255 / 0.2);
-  --ui-focus-ring: rgb(72 170 255 / 0.55);
-  --ui-accent: #48aaff;
-  --ui-accent-hover: #6cbaff;
-  --ui-accent-soft: rgb(72 170 255 / 0.14);
+  --ui-focus-ring: rgb(255 255 255 / 0.4);
+  --ui-accent: #ececec;
+  --ui-accent-hover: #ffffff;
+  --ui-accent-soft: rgb(255 255 255 / 0.08);
   --ui-primary-bg: #ececec;
   --ui-primary-text: #0d0d0d;
   --ui-primary-hover: #ffffff;
   --ui-scrim: rgb(0 0 0 / 0.55);
+  --ui-field-bg: #2f2f2f;
   --ui-shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
   --ui-shadow-composer: 0 0 0 1px rgb(255 255 255 / 0.1), 0 8px 24px rgb(0 0 0 / 0.35);
   --ui-shadow-composer-focus: 0 0 0 1px rgb(255 255 255 / 0.2), 0 8px 24px rgb(0 0 0 / 0.4);
@@ -80,16 +82,16 @@
   --color-neutral-900: #ececec;
   --color-neutral-950: #f5f5f5;
 
-  --color-accent-50: rgb(72 170 255 / 0.12);
-  --color-accent-100: rgb(72 170 255 / 0.18);
-  --color-accent-200: rgb(72 170 255 / 0.3);
-  --color-accent-300: rgb(72 170 255 / 0.45);
-  --color-accent-400: #6cbaff;
-  --color-accent-500: #5bb2ff;
-  --color-accent-600: #48aaff;
-  --color-accent-700: #6cbaff;
-  --color-accent-800: #9ccfff;
-  --color-accent-900: #cfe7ff;
+  --color-accent-50: rgb(255 255 255 / 0.06);
+  --color-accent-100: rgb(255 255 255 / 0.1);
+  --color-accent-200: rgb(255 255 255 / 0.16);
+  --color-accent-300: rgb(255 255 255 / 0.28);
+  --color-accent-400: #8e8e8e;
+  --color-accent-500: #b4b4b4;
+  --color-accent-600: #ececec;
+  --color-accent-700: #ececec;
+  --color-accent-800: #f5f5f5;
+  --color-accent-900: #ffffff;
 
   --color-emerald-50: rgb(63 207 142 / 0.12);
   --color-emerald-100: rgb(63 207 142 / 0.18);
@@ -111,22 +113,24 @@
   --color-amber-600: #f0b45b;
   --color-amber-700: #f6c97f;
 }
-.ui-page.dark body {
+/* 页面底色与外壳一致，弹窗边缘不露出浅色缝 */
+html.ui-page,
+.ui-page body {
   background: var(--ui-bg);
 }
 
 @theme {
-  /* 强调色阶：600 为 ai-hive 的 --accent */
-  --color-accent-50: #eef6ff;
-  --color-accent-100: #d9ebff;
-  --color-accent-200: #b3d6fb;
-  --color-accent-300: #80baf3;
-  --color-accent-400: #3f94e3;
-  --color-accent-500: #0f7bd8;
-  --color-accent-600: #0169cc;
-  --color-accent-700: #0158ad;
-  --color-accent-800: #0a4a8c;
-  --color-accent-900: #0d3d70;
+  /* 强调色阶：跟主按钮一样走黑白，不再用蓝色（选中、聚焦、链接都是这一套） */
+  --color-accent-50: #f5f5f5;
+  --color-accent-100: #ebebeb;
+  --color-accent-200: #dcdcdc;
+  --color-accent-300: #c2c2c2;
+  --color-accent-400: #8f8f8f;
+  --color-accent-500: #5d5d5d;
+  --color-accent-600: #0d0d0d;
+  --color-accent-700: #0d0d0d;
+  --color-accent-800: #0d0d0d;
+  --color-accent-900: #0d0d0d;
 }
 
 @theme {
@@ -413,22 +417,23 @@ body.quiet-page {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 }
 
-/* 卡片：细边框，不用阴影堆层次 */
+/* 弹窗里的分组：浅底色区分，不画边框（小窗口里一圈圈描边显得拥挤） */
 .popup-main :is(section, div).rounded-lg.border.border-neutral-200.bg-white {
-  border-color: var(--ui-border);
-  background: var(--ui-bg);
+  border-color: transparent;
+  border-radius: var(--radius-xl, 14px);
+  background: var(--ui-bg-subtle);
 }
 
 /* 输入框 */
 .popup-main :is(input, textarea).rounded-lg,
 .popup-field {
   border-color: var(--ui-border-heavy);
-  background: var(--ui-bg);
+  background: var(--ui-field-bg);
 }
 .popup-main :is(input, textarea).rounded-lg:focus,
 .popup-field:focus-within {
-  border-color: var(--ui-accent);
-  box-shadow: 0 0 0 3px var(--ui-accent-soft);
+  border-color: var(--ui-text-tertiary);
+  box-shadow: none;
 }
 .popup-field:hover {
   border-color: var(--ui-text-tertiary);
@@ -477,7 +482,19 @@ body.quiet-page {
 }
 .popup-switch.is-checked,
 .popup-switch.is-checked:enabled:hover {
-  background: var(--ui-accent);
+  background: var(--ui-primary-bg);
+}
+
+/* 聚焦：去掉浏览器默认的蓝色描边。输入框靠边框变深提示，键盘聚焦的按钮等用中性色描边 */
+.ui-page :is(input, textarea, select):focus {
+  outline: none;
+}
+.ui-page :is(button, a, [tabindex]):focus {
+  outline: none;
+}
+.ui-page :is(button, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
 }
 
 /* 下拉浮层 */
@@ -493,8 +510,8 @@ body.quiet-page {
   background: var(--ui-bg-hover);
 }
 .popup-select-item.is-selected {
-  color: var(--ui-accent);
-  background: var(--ui-accent-soft);
+  color: var(--ui-text);
+  background: var(--ui-bg-active);
 }
 
 .sidepanel-shell {

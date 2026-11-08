@@ -34,7 +34,7 @@ export default function ModeSelector({
 }: ModeSelectorProps) {
   return (
     <div className='popup-mode-scroll -mx-1 overflow-x-auto px-1'>
-      <div className='flex w-max gap-1.5 pb-1'>
+      <div className='flex w-max gap-1.5 py-0.5 pb-1.5'>
         {MODE_OPTIONS.map((item) => {
           const selected = mode === item.value && !(item.value === 'global' && customModeActive)
           const Icon = MODE_ICONS[item.value]
@@ -47,7 +47,7 @@ export default function ModeSelector({
               title={item.description}
               className={`flex h-[52px] w-[84px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 text-center transition-[transform,border-color,background-color,color] duration-150 ease-out enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
                 selected
-                  ? 'border-neutral-900 bg-white text-neutral-900 shadow-[0_0_0_1px_var(--color-neutral-900)]'
+                  ? 'border-neutral-900 bg-white text-neutral-900 shadow-[inset_0_0_0_1px_var(--color-neutral-900)]'
                   : 'border-black/10 bg-white text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900'
               }`}
             >
@@ -72,7 +72,7 @@ export default function ModeSelector({
               title={item.name}
               className={`flex h-[52px] w-[92px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 text-center transition-[transform,border-color,background-color,color] duration-150 ease-out enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
                 selected
-                  ? 'border-neutral-900 bg-white text-neutral-900 shadow-[0_0_0_1px_var(--color-neutral-900)]'
+                  ? 'border-neutral-900 bg-white text-neutral-900 shadow-[inset_0_0_0_1px_var(--color-neutral-900)]'
                   : 'border-black/10 bg-white text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900'
               }`}
             >
