@@ -10,8 +10,12 @@ import ProxyServerFields from './ProxyServerFields'
 import RuleListSection from './RuleListSection'
 import ScenarioRulesSection from './ScenarioRulesSection'
 import { useNetworkController } from './useNetworkController'
+import WebrtcSettings from './WebrtcSettings'
 
-/** 设置页「网络代理」：网络模式、自定义代理模式、代理服务器、绕过列表与自动模式规则的完整配置 */
+/**
+ * 设置页「网络」：网络模式、自定义代理模式、代理服务器、绕过列表与自动模式规则的完整配置，
+ * 以及与代理配合使用的 WebRTC 防泄露
+ */
 export default function NetworkSettings() {
   const c = useNetworkController({ withPageContext: false })
 
@@ -26,8 +30,8 @@ export default function NetworkSettings() {
   return (
     <div className='flex flex-col gap-5'>
       <SectionHeader
-        title='网络代理'
-        desc='网络模式与代理配置。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。'
+        title='网络'
+        desc='网络模式、代理配置与 WebRTC 防泄露。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。'
       />
 
       <Card
@@ -134,7 +138,7 @@ export default function NetworkSettings() {
               {c.profileDirty
                 ? '代理服务器或绕过列表有未保存的修改，保存后才会生效'
                 : c.customModeStatus ||
-                  '代理服务器与绕过列表修改后需保存；规则列表与代理域名即时生效'}
+                  '代理服务器与绕过列表修改后需保存；规则列表、代理域名与下方 WebRTC 设置即时生效'}
             </p>
             {c.canSaveProxyProfile && (
               <Button variant='primary' onClick={c.saveProxyProfile} loading={c.busy}>
@@ -151,6 +155,8 @@ export default function NetworkSettings() {
           <span className='text-xs text-neutral-500'>当前模式无需配置</span>
         </Card>
       )}
+
+      <WebrtcSettings />
 
       {c.customModeOpen && (
         <CustomModeDialog

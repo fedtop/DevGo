@@ -5,19 +5,20 @@ import ModeSelector from '@/features/network/ModeSelector'
 import { SCHEME_OPTIONS } from '@/features/network/model'
 import { useScenarioHostProxy } from '@/features/network/ScenarioRulesSection'
 import { useNetworkController } from '@/features/network/useNetworkController'
+import WebrtcStatusSection from '@/features/network/WebrtcStatusSection'
 import Button from '@/ui/Button'
 import { ArrowUpRight } from 'lucide-react'
 
-/** 打开设置页「网络代理」分区，并关闭 popup */
-function openNetworkSettings() {
+/** 打开设置页「网络」分区（可带分区内锚点），并关闭 popup */
+function openNetworkSettings(anchor = '') {
   void browser.tabs
-    .create({ url: browser.runtime.getURL('/options.html#network') })
+    .create({ url: browser.runtime.getURL(`/options.html#network${anchor && `/${anchor}`}`) })
     .finally(() => window.close())
 }
 
 /**
  * popup「网络」页：只做高频操作 —— 切换网络模式、把当前网站设为直连 / 走代理、CORS 调试开关。
- * 代理服务器、绕过列表、规则列表、自定义模式等完整配置在设置页「网络代理」。
+ * 代理服务器、绕过列表、规则列表、自定义模式等完整配置在设置页「网络」。
  */
 export default function NetworkPage() {
   const c = useNetworkController({ withPageContext: true })
@@ -42,7 +43,7 @@ export default function NetworkPage() {
           </div>
           <button
             type='button'
-            onClick={openNetworkSettings}
+            onClick={() => openNetworkSettings()}
             className='shrink-0 text-xs text-neutral-500 transition-colors hover:text-accent-600'
           >
             代理设置
@@ -75,7 +76,7 @@ export default function NetworkPage() {
         <section className='flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-2.5'>
           <button
             type='button'
-            onClick={openNetworkSettings}
+            onClick={() => openNetworkSettings()}
             title='在设置页编辑代理服务器与规则'
             className='group flex items-center justify-between gap-2 text-left'
           >
@@ -131,6 +132,11 @@ export default function NetworkPage() {
           )}
         </section>
       )}
+
+      <WebrtcStatusSection
+        proxyActive={c.showProxySettings}
+        onOpenSettings={() => openNetworkSettings('webrtc')}
+      />
 
       <CorsSection />
     </div>

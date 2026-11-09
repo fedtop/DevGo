@@ -5,7 +5,6 @@ import {
   MessageSquare,
   Puzzle,
   Settings,
-  ShieldCheck,
   TextSelect,
   type LucideIcon,
 } from 'lucide-react'
@@ -15,7 +14,6 @@ import AiModelSettings from '@/features/options/AiModelSettings'
 import AssistantSettings from '@/features/options/AssistantSettings'
 import EnhanceSettings from '@/features/options/EnhanceSettings'
 import GeneralSettings from '@/features/options/GeneralSettings'
-import PrivacySettings from '@/features/options/PrivacySettings'
 import SelectionSettings from '@/features/options/SelectionSettings'
 import NetworkSettings from '@/features/network/NetworkSettings'
 import TranslateSettings from '@/features/options/TranslateSettings'
@@ -34,29 +32,61 @@ const SECTIONS: Section[] = [
   { id: 'models', label: 'AI 模型', icon: Brain, component: AiModelSettings },
   { id: 'selection', label: '划词', icon: TextSelect, component: SelectionSettings },
   { id: 'assistant', label: 'AI 助手', icon: MessageSquare, component: AssistantSettings },
-  { id: 'network', label: '网络代理', icon: Globe, component: NetworkSettings },
-  { id: 'privacy', label: '隐私防护', icon: ShieldCheck, component: PrivacySettings },
+  { id: 'network', label: '网络', icon: Globe, component: NetworkSettings },
   { id: 'enhance', label: '网页增强', icon: Puzzle, component: EnhanceSettings },
   { id: 'general', label: '通用', icon: Settings, component: GeneralSettings },
 ]
 
-/** 当前分区记在地址的 hash 里：刷新、从其他页面直达（options.html#models）都能定位 */
-function readSection(): string {
-  const id = location.hash.slice(1)
-  return SECTIONS.some((section) => section.id === id) ? id : SECTIONS[0].id
+/** 已并入其他分区的旧 hash：旧书签、外部链接仍能直达对应位置 */
+const LEGACY_HASHES: Record<string, string> = {
+  privacy: 'network/webrtc',
+}
+
+/**
+ * 当前分区记在地址的 hash 里：刷新、从其他页面直达（options.html#models）都能定位；
+ * `#分区/锚点`（如 #network/webrtc）还会滚动到分区内 id 为锚点的元素
+ */
+function readHash(): { section: string; anchor: string } {
+  const raw = location.hash.slice(1)
+  const [id, anchor = ''] = (LEGACY_HASHES[raw] ?? raw).split('/')
+  return SECTIONS.some((section) => section.id === id)
+    ? { section: id, anchor }
+    : { section: SECTIONS[0].id, anchor: '' }
 }
 
 export default function App() {
-  const [current, setCurrent] = useState(readSection)
+  const [{ section: current, anchor }, setLocation] = useState(readHash)
 
   useEffect(() => {
-    const onHashChange = () => {
-      setCurrent(readSection())
-      window.scrollTo({ top: 0 })
-    }
+    const onHashChange = () => setLocation(readHash())
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
+
+  // 分区渲染后再定位：有锚点滚到锚点，否则回到顶部
+  useEffect(() => {
+    if (!anchor) {
+      window.scrollTo({ top: 0 })
+      return
+    }
+    // 分区内容异步加载会撑高上方区域：短时间内跟随布局变化重新定位，用户自己滚动后就不再干预
+    const scrollToAnchor = () => document.getElementById(anchor)?.scrollIntoView({ block: 'start' })
+    const observer = new ResizeObserver(scrollToAnchor)
+    const stop = () => observer.disconnect()
+    observer.observe(document.body)
+    scrollToAnchor()
+    const timer = window.setTimeout(stop, 1500)
+    window.addEventListener('wheel', stop, { once: true })
+    window.addEventListener('touchstart', stop, { once: true })
+    window.addEventListener('keydown', stop, { once: true })
+    return () => {
+      stop()
+      window.clearTimeout(timer)
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('keydown', stop)
+    }
+  }, [current, anchor])
 
   const Active = SECTIONS.find((section) => section.id === current)?.component ?? TranslateSettings
 

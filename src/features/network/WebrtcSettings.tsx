@@ -17,41 +17,10 @@ import {
 } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
-import { Card, Row, SectionHeader } from './layout'
+import { Card, Row } from '@/features/options/layout'
 import { ArrowUpRight } from 'lucide-react'
 
-const POLICY_OPTIONS: Array<{ value: WebrtcPolicy; label: string; hint: string }> = [
-  {
-    value: 'default',
-    label: '关闭（浏览器默认）',
-    hint: '不干预：网页可以通过 WebRTC 拿到内网 IP 与真实公网 IP',
-  },
-  {
-    value: 'default_public_and_private_interfaces',
-    label: '只用默认网卡',
-    hint: '只使用默认路由的网卡（公网 + 内网地址），隐藏 VPN、虚拟机等其他网卡的地址',
-  },
-  {
-    value: 'default_public_interface_only',
-    label: '隐藏内网 IP',
-    hint: '只暴露默认网卡的公网地址，音视频通话不受影响',
-  },
-  {
-    value: 'disable_non_proxied_udp',
-    label: '防止真实 IP 泄露（推荐）',
-    hint: 'WebRTC 只能经代理连接：开着代理时网页拿不到真实 IP；代理不支持 UDP 时网页通话可能变慢或失败',
-  },
-]
-
-const CONTROL_HINTS: Record<string, { text: string; warn: boolean }> = {
-  controlled_by_this_extension: { text: '已由 DevGo 接管', warn: false },
-  controllable_by_this_extension: { text: '未接管（浏览器默认）', warn: false },
-  controlled_by_other_extensions: {
-    text: '被其他扩展接管（如 WebRTC Control），DevGo 的设置不会生效，请先停用该扩展',
-    warn: true,
-  },
-  not_controllable: { text: '浏览器策略锁定，扩展无法修改', warn: true },
-}
+import { CONTROL_HINTS, POLICY_OPTIONS, policyLabel } from './webrtc'
 
 function describeCandidate(candidate: WebrtcCandidate): string {
   if (candidate.address.endsWith('.local')) return '本机地址（已被浏览器用 mDNS 匿名化）'
@@ -138,8 +107,8 @@ function LeakTest() {
   )
 }
 
-/** 设置页：隐私防护（WebRTC 防泄露） */
-export default function PrivacySettings() {
+/** 设置页「网络」下的 WebRTC 防泄露分组：防护策略、彻底屏蔽与泄露自测，修改即时生效 */
+export default function WebrtcSettings() {
   const [policy, setPolicy] = useStorageItem(webrtcPolicy)
   const [blockApis, setBlockApis] = useStorageItem(webrtcBlockApis)
   const [hideDevices, setHideDevices] = useStorageItem(webrtcHideMediaDevices)
@@ -181,14 +150,18 @@ export default function PrivacySettings() {
     policy !== 'default' && status?.permission && status.value && status.value !== policy
 
   return (
-    <div className='flex flex-col gap-5'>
-      <SectionHeader
-        title='隐私防护'
-        desc='防止网页通过 WebRTC 获取你的内网 IP 和真实公网 IP（开着代理也可能泄露）'
-      />
+    <>
+      {/* 分组标题带锚点：popup 与旧链接 #privacy 经 #network/webrtc 直达这里 */}
+      <div id='webrtc' className='scroll-mt-6 pt-4'>
+        <h2 className='text-base font-semibold tracking-tight text-neutral-900'>WebRTC 防泄露</h2>
+        <p className='mt-1 text-sm text-neutral-500'>
+          防止网页通过 WebRTC 获取你的内网 IP 和真实公网
+          IP（开着代理也可能泄露）。这里的设置改完即保存，不需要点上方的「保存并应用」。
+        </p>
+      </div>
 
-      <Card title='WebRTC IP 防泄露' desc={current.hint}>
-        <Row label='防护策略' hint='作用于整个浏览器，开启时需要授予「更改隐私设置」权限'>
+      <Card title='IP 防泄露策略' desc={current.hint}>
+        <Row label='策略' hint='作用于整个浏览器，开启时需要授予「更改隐私设置」权限'>
           <Select
             value={policy}
             options={POLICY_OPTIONS.map(({ value, label }) => ({ value, label }))}
@@ -209,7 +182,7 @@ export default function PrivacySettings() {
                 ? '尚未授予权限，防护未生效：重新选择一次策略即可授权'
                 : !status?.supported
                   ? '当前浏览器不支持修改 WebRTC 策略'
-                  : `浏览器当前策略：${POLICY_OPTIONS.find((item) => item.value === status.value)?.label ?? status.value ?? '未知'} · ${control?.text ?? ''}`)}
+                  : `浏览器当前策略：${policyLabel(status.value)} · ${control?.text ?? ''}`)}
           </p>
         )}
       </Card>
@@ -233,6 +206,6 @@ export default function PrivacySettings() {
       </Card>
 
       <LeakTest />
-    </div>
+    </>
   )
 }
