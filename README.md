@@ -6,42 +6,77 @@ DevGo 是一个面向开发者的浏览器效率扩展，聚焦翻译、GitHub �
 
 使用文档：👉🏻 [DevGo 使用文档](https://fedtop.github.io/dev-go-docs)
 
+离线安装包：👉🏻 [GitHub Releases](https://github.com/fedtop/dev-go/releases)（解压后在 `chrome://extensions` 开启开发者模式，「加载已解压的扩展程序」）
+
+<p align="center">
+  <img src="docs/images/popup-translate.png" width="32%" alt="弹窗：翻译" />
+  <img src="docs/images/popup-network.png" width="32%" alt="弹窗：网络" />
+  <img src="docs/images/sidepanel.png" width="27%" alt="侧边栏 AI 助手" />
+</p>
+
 ## 功能概览
 
-- 翻译能力
-  - 弹窗查词（有道 / 微软 / Google）
-  - 整页行间翻译（支持再次点击还原）
-  - 划词工具条：翻译（单词并行展示词典结果）、AI 解释 / 总结（附带段落上下文）、问 AI；输入框内选中文字可 AI 润色 / 纠错 / 改正式并一键替换
-  - 整页翻译支持 Shadow DOM / Web Components 页面
-  - 翻译模型与对话模型分开配置：翻译选快的，解释 / 助手选强的
-- GitHub 增强
-  - 代码页悬浮快捷按钮：在线编辑、DeepWiki、回到顶部
-  - 键盘快捷键 `,` 一键打开 github1s
-- 网页体验增强
-  - 按站点解除复制 / 选择 / 右键限制（在弹窗「功能」页对当前站点开启，设置页「网页增强」管理全部站点）
-  - 标记不应被浏览器翻译的页面元素（含 GitHub 场景）
-- WebRTC 防泄露（设置页「网络」，弹窗「网络」页显示是否生效）
-  - WebRTC IP 防泄露：隐藏内网 IP，或强制 WebRTC 只经代理连接，开着代理也不暴露真实 IP（`privacy` 为可选权限，开启时才申请）
-  - 可选彻底屏蔽网页的 WebRTC 接口、隐藏摄像头和麦克风（document_start 注入网页主环境，网页无法绕过）
-  - 内置泄露自测：在最近使用的网页里实测网站能拿到哪些地址
-- 开发调试能力
-  - 可开关的 CORS 调试辅助（针对网页 XHR/fetch 响应补充 CORS 头）
-  - 网络面板：直连 / 系统代理 / 自动模式 / 代理模式快速切换，自动模式、代理模式与自定义代理模式分别保存代理服务器和绕过列表，自动模式支持 AutoProxy 规则列表（定时自动更新）、自定义代理域名，以及未命中规则时直连或走代理
-- AI 助手（侧边栏，Alt+2）
-  - 一键总结本页 / 提取要点，就网页内容提问（AI 可自行读取网页正文）；划词「问 AI」带着选中内容过来
-  - 支持各家 OpenAI 兼容服务与 Coding Plan，回答流式输出、展示思考过程
-  - WebMCP：自动列出网页通过 WebMCP 注册的工具（含 iframe），AI 可调用它们完成任务；未声明只读的工具执行前确认（需要 Chrome 150+ 并在 chrome://flags 开启「WebMCP for testing」）
-- 设置页：独立标签页，分为翻译 / AI 模型 / 划词 / AI 助手 / 网络（代理与 WebRTC 防泄露） / 网页增强 / 通用（快捷键、跨设备同步、数据备份）；弹窗只保留与当前页面相关的操作
-- 新标签页
-  - 搜索引擎切换 + bang 语法
-  - 快捷导航增删改拖拽排序
-  - 聚合导航与书签的搜索联想
-  - 主题切换与配置导入导出
+### 翻译
+
+- 整页双语对照翻译：译文插在原文段落之后，随滚动按需翻译，再点一次还原；支持 Shadow DOM / Web Components 页面
+- 划词工具条：翻译（单词并行展示词典结果）、AI 解释 / 总结（附带段落上下文）、问 AI；输入框里选中文字可以 AI 润色 / 纠错 / 改正式并一键替换
+- 弹窗查词（有道 / 微软 / Google / AI），总是翻译指定网站，悬停翻译
+- 翻译引擎可选谷歌、微软（免翻墙）或任意 OpenAI 兼容大模型；翻译模型与对话模型分开配置：翻译选快的，解释和助手选强的
+
+| 整页双语翻译 | 划词翻译 |
+| --- | --- |
+| ![整页双语翻译](docs/images/page-translate.png) | ![划词翻译](docs/images/selection-translate.png) |
+
+### AI 助手（侧边栏，`Alt+2` 打开 / 关闭）
+
+- 一键总结本页、提取要点，就网页内容提问（AI 会自行读取网页正文）；划词「问 AI」会带着选中内容过来
+- 支持各家 OpenAI 兼容服务与 Coding Plan 预设，回答流式输出，展示思考过程
+- WebMCP：自动列出网页通过 WebMCP 注册的工具（含 iframe），AI 可以调用它们完成任务；没有声明只读的工具执行前会先确认（需要 Chrome 150+，并在 `chrome://flags` 开启「WebMCP for testing」）
+
+![AI 模型配置](docs/images/options-models.png)
+
+### 网络
+
+- 直连 / 系统代理 / 自动模式 / 代理模式一键切换，也可以新增自定义代理模式；每种模式分别保存代理服务器和绕过列表
+- 自动模式：AutoProxy / GFWList 规则列表（每 6 小时自动更新）、自定义代理域名、未命中规则时直连或走代理；没有任何规则时全部直连
+- WebRTC 防泄露：隐藏内网 IP，或强制 WebRTC 只经代理连接，开着代理也不暴露真实 IP；可以彻底屏蔽网页的 WebRTC 接口、隐藏摄像头和麦克风，内置泄露自测。弹窗「网络」页显示防护是否生效（`privacy` 为可选权限，开启时才申请）
+- CORS 调试：可开关地为网页的 XHR / fetch 响应补充跨域响应头，方便本地联调
+
+![设置页：网络](docs/images/options-network.png)
+
+### 资源嗅探与网页增强
+
+- 嗅探当前标签页的图片、视频、音频资源，按类型筛选、搜索，单个或批量下载
+- 按站点解除复制 / 选择 / 右键限制：在弹窗「功能」页对当前网站开启，设置页「网页增强」管理全部网站
+- GitHub 增强：代码页悬浮按钮（在线编辑、DeepWiki、回到顶部），按 `,` 一键用 github1s 打开
+- 标记不应被浏览器自动翻译的页面元素（含 GitHub 代码区）
+
+| 资源嗅探                                 | 功能                                    |
+| ---------------------------------------- | --------------------------------------- |
+| ![资源嗅探](docs/images/popup-tools.png) | ![功能](docs/images/popup-function.png) |
+
+### 新标签页
+
+- 搜索引擎切换 + bang 语法（如 `!gh`），聚合导航与书签的搜索联想
+- 快捷导航分类管理、拖拽排序、固定常用站点，配置可导入导出
+- 多种动态背景，浅色 / 深色 / 自动主题
+
+![新标签页](docs/images/newtab.jpg)
+
+### 设置与外观
+
+- 设置页是独立标签页：翻译 / AI 模型 / 划词 / AI 助手 / 网络 / 网页增强 / 通用；弹窗只放与当前页面相关的高频操作
+- 弹窗、设置页、侧边栏支持浅色 / 深色 / 自动主题（设置页「通用 → 外观」，与新标签页共用）
+- 快捷键可在 `chrome://extensions/shortcuts` 自定义，界面上会显示当前绑定的按键；支持跨设备同步与配置导入导出
+
+| 设置页（深色） | 弹窗（深色） | 侧边栏（深色） |
+| --- | --- | --- |
+| ![设置页深色](docs/images/options-general-dark.png) | ![弹窗深色](docs/images/popup-network-dark.png) | ![侧边栏深色](docs/images/sidepanel-dark.png) |
 
 ## 技术栈
 
 - 框架：WXT + React + TypeScript
-- 样式：Tailwind CSS
+- 样式：Tailwind CSS v4，图标：lucide-react
 - 运行时：Chrome MV3（支持 Firefox 构建）
 
 ## 本地开发
@@ -63,8 +98,8 @@ pnpm dev:firefox
 
 ```bash
 pnpm compile
-pnpm eslint
-pnpm prettier
+pnpm lint
+pnpm format:check
 ```
 
 ## 构建与打包
@@ -82,6 +117,10 @@ pnpm build:firefox
 pnpm zip
 pnpm zip:firefox
 ```
+
+## 发布
+
+`pnpm release` 升版本号、生成 CHANGELOG 并打 tag；提交 Chrome 应用商店的流程见 [docs/publishing.md](docs/publishing.md)。
 
 ## 项目结构
 
