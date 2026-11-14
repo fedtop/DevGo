@@ -1,7 +1,7 @@
 {
   "extName": { "message": "DevGo" },
   "extDescription": {
-    "message": "A browser toolkit for developers: translation, AI assistant, proxy switching, CORS debugging, media sniffing and GitHub enhancements."
+    "message": "A browser toolkit for developers: translation, AI assistant, proxy switching, CORS debugging, media sniffing and GitHub tools."
   },
   "cmdOpenDefault": { "message": "Open default panel" },
   "cmdOpenAssistant": { "message": "Open AI assistant (side panel)" },
