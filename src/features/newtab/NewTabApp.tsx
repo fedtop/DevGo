@@ -6,14 +6,16 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { SHIP_NAME, SITE_URL } from '@/utils/constants'
 import { t, type MessageKey } from '@/utils/i18n'
-import { isNewtabShaderEffect, newtabActiveCategory, newtabShaderEffect, newtabShaderMode, newtabShaderRandomSeeded, quickNavBuiltinPagesSeeded, quickNavCategoryLabels, quickNavCategorySeeded, quickNavDefaultPinsSeeded, quickNavItems, searchEngine, themeMode, type NewtabShaderEffect, type NewtabShaderMode, type QuickNavCategoryId, type QuickNavCategoryLabels, type QuickNavItem, type ThemeMode } from '@/utils/settings' // prettier-ignore
+import { isNewtabShaderEffect, newtabActiveCategory, newtabShaderEffect, newtabShaderMode, newtabShaderRandomSeeded, quickNavBuiltinPagesSeeded, quickNavCategoryLabels, quickNavCategorySeeded, quickNavDefaultPinsSeeded, quickNavDefaultsRevision, quickNavItems, searchEngine, themeMode, type NewtabShaderEffect, type NewtabShaderMode, type QuickNavCategoryId, type QuickNavCategoryLabels, type QuickNavItem, type ThemeMode } from '@/utils/settings' // prettier-ignore
 import { applyTheme, normalizeThemeMode, watchAutoTheme } from '@/utils/theme'
 import { CATEGORY_LABEL_MAX, defaultLabelOf, isQuickNavCategory } from './categories'
 import CategoryTabs, { PencilIcon } from './CategoryTabs'
 import { downloadConfig, mergeItems, parseConfig } from './config'
 import {
   DEFAULT_PINNED_NAV_IDS,
+  applyNavRevisions,
   DEFAULT_QUICK_NAV,
+  QUICK_NAV_DEFAULTS_REVISION,
   isUncustomizedDefault,
   navTitleOf,
   seedBuiltinBrowserPages,
@@ -269,15 +271,23 @@ export default function NewTabApp() {
   // （没改过旧默认 → 整体换新版分类默认；自定义过 → 只往空分类补默认站点）。
   useEffect(() => {
     ;(async () => {
-      const [stored, seeded, defaultPinsSeeded, builtinPagesSeeded, savedCategory, savedLabels] =
-        await Promise.all([
-          quickNavItems.getValue(),
-          quickNavCategorySeeded.getValue(),
-          quickNavDefaultPinsSeeded.getValue(),
-          quickNavBuiltinPagesSeeded.getValue(),
-          newtabActiveCategory.getValue(),
-          quickNavCategoryLabels.getValue(),
-        ])
+      const [
+        stored,
+        seeded,
+        defaultPinsSeeded,
+        builtinPagesSeeded,
+        savedCategory,
+        savedLabels,
+        defaultsRevision,
+      ] = await Promise.all([
+        quickNavItems.getValue(),
+        quickNavCategorySeeded.getValue(),
+        quickNavDefaultPinsSeeded.getValue(),
+        quickNavBuiltinPagesSeeded.getValue(),
+        newtabActiveCategory.getValue(),
+        quickNavCategoryLabels.getValue(),
+        quickNavDefaultsRevision.getValue(),
+      ])
 
       let next = stored
       if (stored.length === 0) {
@@ -287,6 +297,13 @@ export default function NewTabApp() {
       }
       if (!defaultPinsSeeded) next = seedDefaultPinnedItems(next)
       if (!builtinPagesSeeded) next = seedBuiltinBrowserPages(next)
+      // 默认导航修订（如下线失效链接）同步到老用户；新装用户已是最新默认，直接记为已应用
+      if (stored.length > 0 && defaultsRevision < QUICK_NAV_DEFAULTS_REVISION) {
+        next = applyNavRevisions(next, defaultsRevision)
+      }
+      if (defaultsRevision < QUICK_NAV_DEFAULTS_REVISION) {
+        quickNavDefaultsRevision.setValue(QUICK_NAV_DEFAULTS_REVISION)
+      }
       if (next !== stored) quickNavItems.setValue(next)
       if (!seeded) quickNavCategorySeeded.setValue(true)
       if (!defaultPinsSeeded) quickNavDefaultPinsSeeded.setValue(true)

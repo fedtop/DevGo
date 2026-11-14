@@ -30,6 +30,7 @@ import {
   newtabShaderMode,
   quickNavCategoryLabels,
   quickNavCategorySeeded,
+  quickNavDefaultsRevision,
   quickNavItems,
   searchEngine,
   setNetworkProxyProfile,
@@ -188,6 +189,10 @@ export async function restoreBackup(
   await Promise.all(tasks)
   // 旧版备份的导航项可能没有 category（恢复后全部落在「常用」），
   // 重置种子标记让 newtab 下次打开时给空分类补默认站点。
-  if ('quickNavItems' in data) await quickNavCategorySeeded.setValue(false)
+  if ('quickNavItems' in data) {
+    await quickNavCategorySeeded.setValue(false)
+    // 导入的可能是旧备份，重新应用默认导航修订（如去掉已下线的失效链接）
+    await quickNavDefaultsRevision.setValue(0)
+  }
   return { imported: tasks.length, skipped }
 }

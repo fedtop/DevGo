@@ -267,6 +267,46 @@ export function seedBuiltinBrowserPages(stored: QuickNavItem[]): QuickNavItem[] 
   return additions.length > 0 ? [...stored, ...additions] : stored
 }
 
+/**
+ * 默认导航的修订：发版后需要同步到老用户数据的默认项变更（下线失效链接、补充新站点）。
+ * 每条只执行一次（按 quickNavDefaultsRevision 记录进度），只追加不改旧条目。
+ * - remove：只删 id 和链接都没被用户改过的条目，用户改过的保留；
+ * - add：从 DEFAULT_QUICK_NAV 取，已有相同 id 或链接时跳过；优先放在被删条目的位置。
+ */
+const NAV_REVISIONS: Array<{ remove?: Array<{ id: string; url: string }>; add?: string[] }> = [
+  // 1：Zwork 链接失效下线，常用补上 Muse
+  { remove: [{ id: 'zwork', url: 'https://zwork.zhipuai.cn/web/' }], add: ['muse'] },
+]
+
+export const QUICK_NAV_DEFAULTS_REVISION = NAV_REVISIONS.length
+
+export function applyNavRevisions(stored: QuickNavItem[], fromRevision: number): QuickNavItem[] {
+  const defaultsById = new Map(DEFAULT_QUICK_NAV.map((item) => [item.id, item]))
+  let next = stored
+  for (const revision of NAV_REVISIONS.slice(fromRevision)) {
+    let insertAt = -1
+    for (const target of revision.remove ?? []) {
+      const index = next.findIndex((item) => item.id === target.id && item.url === target.url)
+      if (index < 0) continue
+      if (insertAt < 0) insertAt = index
+      next = [...next.slice(0, index), ...next.slice(index + 1)]
+    }
+    for (const id of revision.add ?? []) {
+      const item = defaultsById.get(id)
+      if (!item || next.some((existing) => existing.id === id || existing.url === item.url)) {
+        continue
+      }
+      if (insertAt >= 0) {
+        next = [...next.slice(0, insertAt), item, ...next.slice(insertAt)]
+        insertAt += 1
+      } else {
+        next = [...next, item]
+      }
+    }
+  }
+  return next
+}
+
 /** 一次性默认固定：仅当当前没有任何固定项时，固定指定默认站点；缺失的默认站点会补入。 */
 export function seedDefaultPinnedItems(stored: QuickNavItem[]): QuickNavItem[] {
   if (stored.some((item) => item.pinned)) return stored

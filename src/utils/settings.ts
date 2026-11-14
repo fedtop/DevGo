@@ -399,6 +399,12 @@ export const quickNavDefaultPinsSeeded = storage.defineItem<boolean>(
 )
 
 /** 浏览器内建页入口一次性种子标记：补齐历史 / 下载 / 扩展管理 */
+/** 已应用到本机导航数据的默认导航修订号（见 features/newtab/engines.ts 的 NAV_REVISIONS） */
+export const quickNavDefaultsRevision = storage.defineItem<number>(
+  'local:quickNavDefaultsRevision',
+  { fallback: 0 },
+)
+
 export const quickNavBuiltinPagesSeeded = storage.defineItem<boolean>(
   'local:quickNavBuiltinPagesSeeded',
   { fallback: false },
