@@ -102,6 +102,9 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'browser-extensions', title: '扩展管理', url: 'chrome://extensions/', category: 'common' },
   { id: 'muse', title: 'Muse', url: 'https://muse.ai', category: 'common' },
   { id: 'claude', title: 'Claude', url: 'https://claude.ai', category: 'common' },
+  { id: 'deepseek', title: 'DeepSeek', url: 'https://chat.deepseek.com', category: 'common' },
+  { id: 'doubao', title: '豆包', url: 'https://www.doubao.com', category: 'common' },
+  { id: 'grok', title: 'Grok', url: 'https://grok.com', category: 'common' },
   { id: 'aihot', title: 'AIHot', url: 'https://aihot.virxact.com', category: 'common' },
   { id: 'yixi', title: '一席', url: 'https://yixi.tv', category: 'common' },
   { id: 'notion', title: 'Notion', url: 'https://www.notion.so', category: 'common' },
@@ -116,8 +119,6 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'xiaohongshu', title: '小红书', url: 'https://www.xiaohongshu.com', category: 'common' },
   { id: 'douban', title: '豆瓣', url: 'https://www.douban.com', category: 'common' },
   { id: 'netease-music', title: '网易云音乐', url: 'https://music.163.com', category: 'common' },
-  { id: 'chuangkit', title: '创客贴', url: 'https://www.chuangkit.com', category: 'common' },
-  { id: 'gaoding', title: '稿定设计', url: 'https://www.gaoding.com', category: 'common' },
   // 开发
   { id: 'github', title: 'GitHub', url: 'https://github.com', category: 'dev', pinned: true }, // prettier-ignore
   { id: 'mdn', title: 'MDN', url: 'https://developer.mozilla.org', category: 'dev' },
@@ -142,13 +143,10 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   // AI
   { id: 'huggingface', title: 'HuggingFace', url: 'https://huggingface.co', category: 'ai' },
   { id: 'chatgpt', title: 'ChatGPT', url: 'https://chatgpt.com', category: 'ai', pinned: true }, // prettier-ignore
-  { id: 'deepseek', title: 'DeepSeek', url: 'https://chat.deepseek.com', category: 'ai' },
   { id: 'gemini', title: 'Gemini', url: 'https://gemini.google.com', category: 'ai' },
   { id: 'kimi', title: 'Kimi', url: 'https://www.kimi.com', category: 'ai' },
   { id: 'qwen', title: '通义千问', url: 'https://chat.qwen.ai', category: 'ai' },
   { id: 'modelscope', title: 'ModelScope', url: 'https://modelscope.cn', category: 'ai' },
-  { id: 'doubao', title: '豆包', url: 'https://www.doubao.com', category: 'ai' },
-  { id: 'grok', title: 'Grok', url: 'https://grok.com', category: 'ai' },
   { id: 'perplexity', title: 'Perplexity', url: 'https://www.perplexity.ai', category: 'ai' },
   { id: 'chatglm', title: '智谱清言', url: 'https://chatglm.cn', category: 'ai' },
   { id: 'openrouter', title: 'OpenRouter', url: 'https://openrouter.ai', category: 'ai' },
@@ -174,6 +172,8 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'ruanyf-weekly', title: '阮一峰周刊', url: 'https://github.com/ruanyf/weekly', category: 'community' }, // prettier-ignore
   { id: 'eleduck', title: '电鸭社区', url: 'https://eleduck.com', category: 'community' },
   // 工具
+  { id: 'chuangkit', title: '创客贴', url: 'https://www.chuangkit.com', category: 'tools' },
+  { id: 'gaoding', title: '稿定设计', url: 'https://www.gaoding.com', category: 'tools' },
   { id: 'figma', title: 'Figma', url: 'https://www.figma.com', category: 'tools' },
   { id: 'excalidraw', title: 'Excalidraw', url: 'https://excalidraw.com', category: 'tools' },
   { id: 'codepen', title: 'CodePen', url: 'https://codepen.io', category: 'tools' },
@@ -267,18 +267,57 @@ export function seedBuiltinBrowserPages(stored: QuickNavItem[]): QuickNavItem[] 
   return additions.length > 0 ? [...stored, ...additions] : stored
 }
 
+interface NavPlacement {
+  id: string
+  /** 只移动仍在原分类里的条目；用户自己挪过分类的不动 */
+  from: QuickNavItem['category']
+  to: QuickNavItem['category']
+  /** 放在目标分类里这个条目的后面；找不到时放到目标分类末尾 */
+  after?: string
+}
+
+interface NavRevision {
+  /** 只删 id 和链接都没被用户改过的条目，用户改过的保留 */
+  remove?: Array<{ id: string; url: string }>
+  /** 补充默认站点（取自 DEFAULT_QUICK_NAV），已有相同 id 或链接时跳过；优先放在被删条目的位置 */
+  add?: string[]
+  /** 调整默认站点所在分类；条目不存在（且没有同链接的站点）时按默认补上 */
+  place?: NavPlacement[]
+}
+
 /**
- * 默认导航的修订：发版后需要同步到老用户数据的默认项变更（下线失效链接、补充新站点）。
- * 每条只执行一次（按 quickNavDefaultsRevision 记录进度），只追加不改旧条目。
- * - remove：只删 id 和链接都没被用户改过的条目，用户改过的保留；
- * - add：从 DEFAULT_QUICK_NAV 取，已有相同 id 或链接时跳过；优先放在被删条目的位置。
+ * 默认导航的修订：发版后需要同步到老用户数据的默认项变更（下线失效链接、补充新站点、调整分类）。
+ * 每条只执行一次（按 quickNavDefaultsRevision 记录进度）。只动和默认值完全一致的条目，
+ * 用户新增、改过链接或挪过分类的条目一律不碰，不会删除用户自己的数据。
  */
-const NAV_REVISIONS: Array<{ remove?: Array<{ id: string; url: string }>; add?: string[] }> = [
+const NAV_REVISIONS: NavRevision[] = [
   // 1：Zwork 链接失效下线，常用补上 Muse
   { remove: [{ id: 'zwork', url: 'https://zwork.zhipuai.cn/web/' }], add: ['muse'] },
+  // 2：常用放主流 AI（Muse 后面接 Claude / DeepSeek / 豆包 / Grok），设计类工具挪到「工具」
+  {
+    place: [
+      { id: 'claude', from: 'ai', to: 'common', after: 'muse' },
+      { id: 'deepseek', from: 'ai', to: 'common', after: 'claude' },
+      { id: 'doubao', from: 'ai', to: 'common', after: 'deepseek' },
+      { id: 'grok', from: 'ai', to: 'common', after: 'doubao' },
+      { id: 'chuangkit', from: 'common', to: 'tools' },
+      { id: 'gaoding', from: 'common', to: 'tools' },
+    ],
+  },
 ]
 
 export const QUICK_NAV_DEFAULTS_REVISION = NAV_REVISIONS.length
+
+/** 把条目插到目标分类里 anchor 之后（没有 anchor 时插到该分类最后一个条目之后） */
+function insertInCategory(items: QuickNavItem[], item: QuickNavItem, after?: string) {
+  let index = after
+    ? items.findIndex((existing) => existing.id === after && existing.category === item.category)
+    : -1
+  if (index < 0) index = items.findLastIndex((existing) => existing.category === item.category)
+  return index < 0
+    ? [...items, item]
+    : [...items.slice(0, index + 1), item, ...items.slice(index + 1)]
+}
 
 export function applyNavRevisions(stored: QuickNavItem[], fromRevision: number): QuickNavItem[] {
   const defaultsById = new Map(DEFAULT_QUICK_NAV.map((item) => [item.id, item]))
@@ -301,6 +340,19 @@ export function applyNavRevisions(stored: QuickNavItem[], fromRevision: number):
         insertAt += 1
       } else {
         next = [...next, item]
+      }
+    }
+    for (const placement of revision.place ?? []) {
+      const fallback = defaultsById.get(placement.id)
+      if (!fallback) continue
+      const index = next.findIndex((item) => item.id === placement.id)
+      if (index >= 0) {
+        const current = next[index]
+        if (current.category !== placement.from || current.url !== fallback.url) continue
+        const rest = [...next.slice(0, index), ...next.slice(index + 1)]
+        next = insertInCategory(rest, { ...current, category: placement.to }, placement.after)
+      } else if (!next.some((item) => item.url === fallback.url)) {
+        next = insertInCategory(next, { ...fallback, category: placement.to }, placement.after)
       }
     }
   }
