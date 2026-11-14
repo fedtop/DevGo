@@ -16,7 +16,11 @@ import { sendRuntimeMessage, type OpenAssistantMessage } from '@/utils/messaging
 import { dockDisabledHosts, dockEnabled, dockPositionY } from '@/utils/settings'
 
 const Z_DOCK = 2147483646
-const BALL_SIZE = 40
+const BALL_SIZE = 36
+/** 展开时圆块离屏幕右边缘的距离 */
+const EDGE_GAP = 16
+/** 指针离贴边小条多近时开始「吸」出来 */
+const PEEK_RADIUS = 120
 /** 拖动超过这个距离才算拖动，否则当作点击 */
 const DRAG_THRESHOLD = 4
 
@@ -55,6 +59,7 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
   const [translating, setTranslating] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [peek, setPeek] = useState(0)
   const collapseTimer = useRef<number>()
   const draggedRef = useRef(false)
 
@@ -73,6 +78,31 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
       document.removeEventListener('fullscreenchange', onFullscreen)
     }
   }, [])
+
+  // 收起时指针靠近，贴边小条跟着往外探一点（像磁铁），提示这里可以展开
+  const tucked = !expanded && dragY === null
+  useEffect(() => {
+    if (!tucked || ratio === null) {
+      setPeek(0)
+      return undefined
+    }
+    let frame = 0
+    const onMove = (event: PointerEvent) => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const centerY =
+          Math.min(Math.max(ratio * window.innerHeight, 16), window.innerHeight - BALL_SIZE - 16) +
+          BALL_SIZE / 2
+        const distance = Math.hypot(window.innerWidth - event.clientX, event.clientY - centerY)
+        setPeek(Math.max(0, Math.min(1, 1 - (distance - 16) / PEEK_RADIUS)))
+      })
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('pointermove', onMove)
+    }
+  }, [tucked, ratio])
 
   if (ratio === null || fullscreen) return null
 
@@ -181,34 +211,32 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
   const columnHeight = actions.length * 34 + 8 + 8
   const openUp = top + BALL_SIZE + columnHeight + 16 > window.innerHeight
 
-  const surface =
-    'border border-black/[0.08] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]'
+  const surface = 'dg-surface'
 
   return (
     <div
-      className={`fixed right-0 flex items-end font-sans text-[13px] leading-normal text-neutral-800 dark:text-neutral-100 ${
+      className={`dg-dock fixed right-0 flex items-end font-sans text-[13px] leading-normal ${
         openUp ? 'flex-col-reverse' : 'flex-col'
       }`}
-      style={
-        openUp
-          ? { bottom: window.innerHeight - top - BALL_SIZE, zIndex: Z_DOCK }
-          : { top, zIndex: Z_DOCK }
-      }
+      data-tucked={tucked || undefined}
+      style={{
+        ...(openUp ? { bottom: window.innerHeight - top - BALL_SIZE } : { top }),
+        zIndex: Z_DOCK,
+        ['--dg-peek' as string]: peek,
+        ['--dg-gap' as string]: `${EDGE_GAP}px`,
+      }}
       onPointerEnter={open}
       onPointerLeave={scheduleCollapse}
     >
-      <div
-        className='relative flex items-center transition-transform duration-200 ease-out'
-        style={{ transform: expanded || dragY !== null ? 'translateX(-10px)' : 'translateX(24px)' }}
-      >
-        {/* 关闭入口：悬停时出现在圆球左上角 */}
+      <div className='dg-slide relative flex items-center' style={{ marginRight: EDGE_GAP }}>
+        {/* 关闭入口：展开时出现在圆块左上角 */}
         {expanded && dragY === null && (
           <button
             type='button'
             title={t('dock.close.button')}
             aria-label={t('dock.close.button')}
             onClick={() => setMenuOpen((value) => !value)}
-            className='absolute -top-1.5 -left-1.5 z-10 flex size-[18px] cursor-pointer items-center justify-center rounded-full border-0 bg-neutral-500/80 p-0 text-white transition-colors hover:bg-neutral-700'
+            className='dg-close absolute -top-1.5 -left-1.5 z-10 flex size-[18px] cursor-pointer items-center justify-center rounded-full p-0'
           >
             <X className='size-3' strokeWidth={2.4} aria-hidden />
           </button>
@@ -224,12 +252,11 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
             setExpanded((value) => !value)
             setMenuOpen(false)
           }}
-          className={`flex cursor-grab touch-none items-center justify-center rounded-full p-0 transition-opacity active:cursor-grabbing ${surface} ${
-            expanded ? 'opacity-100' : 'opacity-70'
-          }`}
+          className='dg-tile touch-none'
           style={{ width: BALL_SIZE, height: BALL_SIZE }}
         >
-          <DevGoMark className='size-6' />
+          <span className='dg-grip' aria-hidden='true' />
+          <DevGoMark className='dg-mark' />
         </button>
 
         {menuOpen && (
@@ -261,7 +288,8 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
 
       {expanded && dragY === null && (
         <div
-          className={`mr-[10px] flex flex-col gap-0.5 rounded-full p-1 ${openUp ? 'mb-2' : 'mt-2'} ${surface}`}
+          className={`dg-column flex flex-col gap-0.5 rounded-[12px] p-1 ${openUp ? 'mb-2' : 'mt-2'} ${surface}`}
+          style={{ marginRight: EDGE_GAP - 2 }}
         >
           {actions.map(({ key, label, icon: Icon, active, run }) => (
             <button
@@ -270,14 +298,12 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
               title={label}
               aria-label={label}
               onClick={run}
-              className={`group relative flex size-8 cursor-pointer items-center justify-center rounded-full border-0 p-0 transition-colors ${
-                active
-                  ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900'
-                  : 'bg-transparent text-neutral-600 hover:bg-black/[0.06] hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
+              className={`dg-action group relative flex size-8 cursor-pointer items-center justify-center rounded-lg p-0 ${
+                active ? 'is-active' : ''
               }`}
             >
               <Icon className='size-4' strokeWidth={1.8} aria-hidden />
-              <span className='pointer-events-none absolute right-full mr-2 rounded-md bg-neutral-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-neutral-100 dark:text-neutral-900'>
+              <span className='dg-tip pointer-events-none absolute right-full mr-2.5 rounded-md px-2 py-1 text-xs whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100'>
                 {label}
               </span>
             </button>
@@ -304,14 +330,12 @@ function MenuItem({
       type='button'
       role='menuitem'
       onClick={onClick}
-      className='flex w-full cursor-pointer items-start gap-2 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-black/[0.05] dark:hover:bg-white/10'
+      className='dg-menu-item flex w-full cursor-pointer items-start gap-2 rounded-lg px-2.5 py-2 text-left'
     >
-      <Icon className='mt-0.5 size-3.5 shrink-0 text-neutral-500' aria-hidden />
+      <Icon className='mt-0.5 size-3.5 shrink-0 opacity-60' aria-hidden />
       <span className='min-w-0'>
-        <span className='block truncate text-[13px] text-neutral-900 dark:text-neutral-100'>
-          {title}
-        </span>
-        <span className='block text-[11px] text-neutral-500'>{desc}</span>
+        <span className='block truncate text-[13px] text-white/90'>{title}</span>
+        <span className='block text-[11px] text-white/50'>{desc}</span>
       </span>
     </button>
   )
