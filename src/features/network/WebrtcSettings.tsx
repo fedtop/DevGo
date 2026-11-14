@@ -23,10 +23,10 @@ import { ArrowUpRight } from 'lucide-react'
 import { CONTROL_HINTS, POLICY_OPTIONS, policyLabel } from './webrtc'
 
 function describeCandidate(candidate: WebrtcCandidate): string {
-  if (candidate.address.endsWith('.local')) return '本机地址（已被浏览器用 mDNS 匿名化）'
-  if (candidate.type === 'srflx') return '公网 IP（经 STUN 获得，开代理时应为代理出口）'
-  if (candidate.type === 'relay') return '中继地址'
-  if (candidate.type === 'host') return '本机网卡地址（内网 IP）'
+  if (candidate.address.endsWith('.local')) return '本机地址（浏览器已做匿名处理，安全）'
+  if (candidate.type === 'srflx') return '公网 IP（开着代理时，这里应该是代理的 IP）'
+  if (candidate.type === 'relay') return '中继服务器地址'
+  if (candidate.type === 'host') return '局域网地址'
   return candidate.type
 }
 
@@ -47,8 +47,8 @@ function LeakTest() {
 
   return (
     <Card
-      title='泄露自测'
-      desc='在你最近使用的网页里发起一次 WebRTC 连接，列出网站能拿到的地址；修改设置后可以重新检测对比。（扩展自己的页面不受防护策略约束，所以不在本页检测）'
+      title='检测一下'
+      desc='用你最近打开的网页试一次，看看网站实际能拿到哪些地址。开着代理时，如果列表里出现你的真实 IP，说明防护没生效；改完设置可以重新检测对比。'
       extra={
         <div className='flex items-center gap-2'>
           <a
@@ -80,10 +80,10 @@ function LeakTest() {
           <span className='text-xs text-neutral-500'>检测网页：{result.host}</span>
           {result.blocked ? (
             <span className='text-sm text-emerald-600'>
-              网页的 WebRTC 接口已被屏蔽，拿不到任何地址
+              网页音视频通话已禁用，网站拿不到任何地址
             </span>
           ) : result.candidates.length === 0 ? (
-            <span className='text-sm text-emerald-600'>没有暴露任何地址</span>
+            <span className='text-sm text-emerald-600'>网站没有拿到任何地址</span>
           ) : (
             <ul className='flex flex-col gap-1.5'>
               {result.candidates.map((candidate) => (
@@ -153,15 +153,24 @@ export default function WebrtcSettings() {
     <>
       {/* 分组标题带锚点：popup 与旧链接 #privacy 经 #network/webrtc 直达这里 */}
       <div id='webrtc' className='scroll-mt-6 pt-4'>
-        <h2 className='text-base font-semibold tracking-tight text-neutral-900'>WebRTC 防泄露</h2>
-        <p className='mt-1 text-sm text-neutral-500'>
-          防止网页通过 WebRTC 获取你的内网 IP 和真实公网
-          IP（开着代理也可能泄露）。这里的设置改完即保存，不需要点上方的「保存并应用」。
+        <h2 className='flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900'>
+          真实 IP 防护
+          <span className='rounded-full bg-black/5 px-2 py-px text-[11px] font-normal text-neutral-500'>
+            WebRTC
+          </span>
+        </h2>
+        <p className='mt-1 text-sm leading-relaxed text-neutral-500'>
+          开着代理上网时，网站仍然可以借助浏览器的
+          WebRTC（网页音视频通话用的技术）绕过代理，悄悄拿到你的真实
+          IP，从而判断你大概在哪个城市、用的哪家运营商。开启防护后，网站只能看到代理的 IP。
+        </p>
+        <p className='mt-1.5 text-xs leading-relaxed text-neutral-500'>
+          只作用于浏览器里的网页，不影响电脑上的其他应用；网页申请定位权限（精确位置）由浏览器单独询问，不在这里控制。这里的设置改完即保存，不需要点上方的「保存并应用」。
         </p>
       </div>
 
-      <Card title='IP 防泄露策略' desc={current.hint}>
-        <Row label='策略' hint='作用于整个浏览器，开启时需要授予「更改隐私设置」权限'>
+      <Card title='防护级别' desc={current.hint}>
+        <Row label='级别' hint='对所有网页生效；第一次开启时浏览器会请求「更改隐私设置」权限'>
           <Select
             value={policy}
             options={POLICY_OPTIONS.map(({ value, label }) => ({ value, label }))}
@@ -179,27 +188,27 @@ export default function WebrtcSettings() {
           >
             {message ||
               (status && !status.permission
-                ? '尚未授予权限，防护未生效：重新选择一次策略即可授权'
+                ? '还没授权，防护没有生效：重新选择一次级别即可授权'
                 : !status?.supported
-                  ? '当前浏览器不支持修改 WebRTC 策略'
-                  : `浏览器当前策略：${policyLabel(status.value)} · ${control?.text ?? ''}`)}
+                  ? '当前浏览器不支持这项设置'
+                  : `浏览器当前生效：${policyLabel(status.value)} · ${control?.text ?? ''}`)}
           </p>
         )}
       </Card>
 
       <Card
         title='更彻底的屏蔽'
-        desc='直接移除网页里的接口，任何策略都绕不过去，但会影响对应功能。修改后刷新网页生效。'
+        desc='直接关掉网页里的相关功能，任何网站都绕不过去，但对应功能会用不了。修改后刷新网页生效。'
       >
         <Row
-          label='屏蔽网页 WebRTC 接口'
-          hint='移除 RTCPeerConnection 等：网页无法建立 P2P 连接，视频会议、网页通话将不可用'
+          label='禁用网页音视频通话（WebRTC）'
+          hint='网站彻底拿不到你的 IP；网页版视频会议、语音通话、P2P 传文件会用不了'
         >
           <Switch checked={blockApis} onChange={setBlockApis} />
         </Row>
         <Row
           label='隐藏摄像头和麦克风'
-          hint='网页无法枚举媒体设备（常被用于设备指纹），也无法使用摄像头和麦克风'
+          hint='网站读不到你有哪些设备（常被用来识别、追踪同一台电脑），也就用不了摄像头和麦克风'
         >
           <Switch checked={hideDevices} onChange={setHideDevices} />
         </Row>

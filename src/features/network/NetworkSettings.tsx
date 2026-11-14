@@ -31,7 +31,7 @@ export default function NetworkSettings() {
     <div className='flex flex-col gap-5'>
       <SectionHeader
         title='网络'
-        desc='网络模式、代理配置与 WebRTC 防泄露。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。'
+        desc='网络模式、代理配置与真实 IP 防护。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。'
       />
 
       <Card

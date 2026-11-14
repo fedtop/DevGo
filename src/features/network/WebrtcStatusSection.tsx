@@ -33,18 +33,18 @@ export default function WebrtcStatusSection({
     policy === 'default' || !status
       ? ''
       : !status.permission
-        ? '未授权，防护未生效'
+        ? '还没授权，防护没有生效'
         : (control?.short ?? '')
 
   const detail = problem
     ? problem
     : enabled
-      ? [policy !== 'default' && policyLabel(policy), blockApis && '已屏蔽接口']
+      ? [policy !== 'default' && policyLabel(policy), blockApis && '已禁用网页音视频通话']
           .filter(Boolean)
           .join(' · ')
       : proxyActive
-        ? '未开启，走代理时网页仍可能拿到真实 IP'
-        : '未开启'
+        ? '未开启：开着代理，网站仍可能看到你的真实 IP'
+        : '未开启：防止网站绕过代理看到你的真实 IP'
 
   const Icon = problem ? ShieldAlert : enabled ? ShieldCheck : ShieldOff
 
@@ -53,7 +53,7 @@ export default function WebrtcStatusSection({
       <button
         type='button'
         onClick={onOpenSettings}
-        title='在设置页修改 WebRTC 防泄露'
+        title='网站可能借助 WebRTC 绕过代理拿到你的真实 IP；点击去设置页开启防护'
         className='group flex w-full items-center justify-between gap-3 text-left'
       >
         <span className='flex min-w-0 items-center gap-2'>
@@ -65,7 +65,7 @@ export default function WebrtcStatusSection({
             aria-hidden
           />
           <span className='min-w-0'>
-            <span className='block text-sm font-semibold text-neutral-800'>WebRTC 防泄露</span>
+            <span className='block text-sm font-semibold text-neutral-800'>真实 IP 防护</span>
             <span
               className={`block truncate text-xs ${
                 problem || (!enabled && proxyActive) ? 'text-amber-600' : 'text-neutral-500'

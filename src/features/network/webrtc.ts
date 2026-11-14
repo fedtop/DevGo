@@ -1,26 +1,26 @@
 import type { WebrtcPolicy } from '@/utils/settings'
 
-/** WebRTC 防护策略选项（设置页与 popup 共用） */
+/** 真实 IP 防护（WebRTC）的级别选项，文案面向普通用户（设置页与 popup 共用） */
 export const POLICY_OPTIONS: Array<{ value: WebrtcPolicy; label: string; hint: string }> = [
   {
     value: 'default',
-    label: '关闭（浏览器默认）',
-    hint: '不干预：网页可以通过 WebRTC 拿到内网 IP 与真实公网 IP',
+    label: '不防护（浏览器默认）',
+    hint: '网页可以悄悄拿到你的真实 IP 和局域网地址，开着代理也一样',
   },
   {
     value: 'default_public_and_private_interfaces',
-    label: '只用默认网卡',
-    hint: '只使用默认路由的网卡（公网 + 内网地址），隐藏 VPN、虚拟机等其他网卡的地址',
+    label: '隐藏 VPN / 虚拟网卡',
+    hint: '不暴露 VPN、虚拟机等额外网卡的地址；真实 IP 和局域网地址仍然可见',
   },
   {
     value: 'default_public_interface_only',
-    label: '隐藏内网 IP',
-    hint: '只暴露默认网卡的公网地址，音视频通话不受影响',
+    label: '隐藏局域网地址',
+    hint: '网页看不到你家里或公司内网的地址；真实 IP 仍然可见，网页视频通话不受影响',
   },
   {
     value: 'disable_non_proxied_udp',
-    label: '防止真实 IP 泄露（推荐）',
-    hint: 'WebRTC 只能经代理连接：开着代理时网页拿不到真实 IP；代理不支持 UDP 时网页通话可能变慢或失败',
+    label: '隐藏真实 IP（推荐）',
+    hint: '开着代理时，网页只能看到代理的 IP，没法据此判断你的真实位置和运营商；少数网页视频通话可能变慢或连不上',
   },
 ]
 
