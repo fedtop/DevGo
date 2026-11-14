@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.2.0](https://github.com/fedtop/dev-go/compare/v0.1.0...v0.2.0) (2026-11-14)
+
+### Features
+
+- **assistant:** 侧边栏新增「网页工具」页，弹窗 WebMCP 入口直达该页且无工具时禁用 ([7c4fd5a](https://github.com/fedtop/dev-go/commit/7c4fd5a6327e667f7783d889095c5cef8888b7ec))
+- **dock:** 新增页面右侧悬浮快捷栏，可按本次 / 本站 / 全部关闭 ([0670512](https://github.com/fedtop/dev-go/commit/067051212f0bfe6b34d97ab06669797cdd3770fd))
+- **i18n:** 抽取划词工具条、划词 AI 动作与划词设置的界面文案，内置解释/总结的回复语言跟随界面语言 ([064b3a1](https://github.com/fedtop/dev-go/commit/064b3a1cca08ee63f9cecfb14959e2d31cd2a1a8))
+- **i18n:** 抽取弹窗、设置页、侧边栏、新标签页、网络、翻译与后台的界面文案到语言文件 ([d1bff7b](https://github.com/fedtop/dev-go/commit/d1bff7b8ee526bf4f850a8b2361503077b1cbeb3))
+- **i18n:** 抽取悬浮快捷栏与弹窗站点开关的界面文案 ([4bada50](https://github.com/fedtop/dev-go/commit/4bada50fb1db1cda45f9da663066c4a87d90249c))
+- **i18n:** 新增英文语言包（GLM 翻译） ([c947658](https://github.com/fedtop/dev-go/commit/c9476583d194e6a040d428d97cda6422a34499ae))
+- **i18n:** 界面多语言基础设施：t() 与分模块语言文件、manifest 本地化、设置页界面语言选项 ([ffefda3](https://github.com/fedtop/dev-go/commit/ffefda385ca4b57ada5f7131961c3bd09ce98dfd))
+- **i18n:** 英文第二批翻译与抽查修订，长英文文案的控件宽度适配，文档补充多语言约定 ([dbe772f](https://github.com/fedtop/dev-go/commit/dbe772fa54107a9fbdb851cc90e58704ac88bdd0))
+- **network:** WebRTC 防泄露并入设置页「网络」，弹窗网络页显示防护状态 ([950aab4](https://github.com/fedtop/dev-go/commit/950aab426ecd5c2a4312d892d7a7268b2220e407))
+- **network:** 开启真实 IP 防护各项前弹窗说明实际改动与会受影响的网页功能 ([27f15d6](https://github.com/fedtop/dev-go/commit/27f15d64f11804f68e9f620f3056e1a0d4d1ebc3))
+- **selection:** 划词工具条与结果面板改为浅色胶囊样式，面板随页面滚动跟随选区，支持拖动与固定 ([2aa63a3](https://github.com/fedtop/dev-go/commit/2aa63a397e8c59cf6f2ba60bca2897485f4d0e8a))
+- **selection:** 划词支持自定义 AI 动作，设置页管理动作与内置动作显示，工具条超出 4 个收进「更多」 ([f21c864](https://github.com/fedtop/dev-go/commit/f21c864df67387b855772ac621c85fbcf08d0e92))
+- **selection:** 弹窗「功能」页可对当前网站停用划词工具条，设置页管理停用列表 ([c35fb2f](https://github.com/fedtop/dev-go/commit/c35fb2f43f947562f0d7dc4edc653aef7540cb27))
+
+### Bug Fixes
+
+- **dock:** 靠近底部时向上展开、贴边时露出更少；新标签页常用导航去掉 Zwork，加入 Muse 和 Claude ([38e0e39](https://github.com/fedtop/dev-go/commit/38e0e39ba38ea46034c7dbfcf6c3083c6196aae9))
+
 ## [0.1.0](https://github.com/fedtop/dev-go/compare/v0.0.9...v0.1.0) (2026-11-04)
 
 ### Features
