@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.3](https://github.com/fedtop/dev-go/compare/v0.2.2...v0.2.3) (2026-11-14)
+
+### Bug Fixes
+
+- **i18n:** 英文扩展描述缩短到商店 132 字符上限以内 ([838d4d5](https://github.com/fedtop/dev-go/commit/838d4d562ec8693562a0c74453892498afa24ec8))
+
 ### [0.2.2](https://github.com/fedtop/dev-go/compare/v0.2.1...v0.2.2) (2026-11-14)
 
 ### Features
