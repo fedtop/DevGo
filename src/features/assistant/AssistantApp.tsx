@@ -335,6 +335,9 @@ export default function AssistantApp() {
     setItems([])
   }, [])
 
+  /** 待自动发送的提问（来自悬浮快捷栏） */
+  const [pendingPrompt, setPendingPrompt] = useState('')
+
   /** 接手划词内容：带着已有问答时开启新对话，否则把选中文字作为引用放进输入框 */
   const acceptHandoff = useCallback(
     (handoff: AssistantHandoff) => {
@@ -357,6 +360,11 @@ export default function AssistantApp() {
           },
         ])
         setQuote('')
+      } else if (handoff.prompt) {
+        // 悬浮快捷栏「总结本页」：开新对话直接发送（等模型配置读取完再发，见下方 effect）
+        clear()
+        setQuote('')
+        setPendingPrompt(handoff.prompt)
       } else {
         setQuote(handoff.quote)
       }
@@ -364,6 +372,15 @@ export default function AssistantApp() {
     },
     [clear],
   )
+
+  useEffect(() => {
+    if (!pendingPrompt || !loaded || tabId == null) return
+    setPendingPrompt('')
+    if (configReady) void send({ text: pendingPrompt, withPage: true })
+    else setInput(pendingPrompt)
+    // send 每次渲染都会重建，这里只在待发送内容就绪时触发一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt, loaded, tabId, configReady])
 
   // 划词「问 AI」：侧边栏打开时或已打开时都会收到交接内容，读取后清空，避免重复处理
   useEffect(() => {

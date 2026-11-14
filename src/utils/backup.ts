@@ -43,6 +43,8 @@ import {
   translateTargetLang,
   translateUnderline,
   unlockHosts,
+  dockEnabled,
+  dockDisabledHosts,
   type NetworkProxyProfile,
 } from '@/utils/settings'
 
@@ -83,6 +85,8 @@ const BACKUP_ITEMS: Record<string, BackupItem> = {
   selectionHiddenBuiltinActions,
   enableGithubEnhance,
   unlockHosts,
+  dockEnabled,
+  dockDisabledHosts,
   enableCorsBypass,
   webrtcPolicy,
   webrtcBlockApis,

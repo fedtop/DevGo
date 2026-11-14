@@ -48,7 +48,12 @@ import {
 import { handleTranslatePort } from '@/features/translate/port-server'
 import { updateNetworkActionIconSafely } from '@/utils/actionIcon'
 import { restoreDevBackupIfNeeded } from '@/utils/dev-backup'
-import { SELECTION_AI_PORT_NAME, TRANSLATE_PORT_NAME } from '@/utils/messaging'
+import {
+  SELECTION_AI_PORT_NAME,
+  TRANSLATE_PORT_NAME,
+  type PageTranslationState,
+  type TabMessage,
+} from '@/utils/messaging'
 import { enableCorsBypass, networkMode, networkProxyManaged } from '@/utils/settings'
 import { startSyncMirror, syncNow } from '@/utils/sync-mirror'
 
@@ -81,6 +86,17 @@ export default defineBackground(() => {
         () => ({ ok: true }),
         () => ({ ok: false }),
       ),
+    'dock-page-translation': async (message, sender) => {
+      const tabId = sender.tab?.id
+      if (tabId == null) return null
+      const tabMessage: TabMessage =
+        message.action === 'toggle'
+          ? { type: 'translate-page' }
+          : { type: 'get-page-translation-state' }
+      return ((await browser.tabs
+        .sendMessage(tabId, tabMessage, { frameId: 0 })
+        .catch(() => null)) ?? null) as PageTranslationState | null
+    },
     'sync-cors-bypass': () => syncCorsBypassRules(),
     'get-webrtc-status': () => getWebrtcStatus(),
     'test-webrtc-leak': () => testWebrtcLeak(),

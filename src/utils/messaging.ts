@@ -263,6 +263,8 @@ export interface AssistantHandoff {
   title: string
   /** 已有的一轮问答（在气泡里解释 / 总结后继续追问） */
   exchange?: { question: string; answer: string }
+  /** 打开后直接发送的提问（悬浮快捷栏「总结本页」），带网页正文 */
+  prompt?: string
 }
 
 /** 当前标签页的整页翻译状态 */
@@ -283,6 +285,8 @@ export type RuntimeMessage =
   /** 立即执行一次跨设备同步对账 */
   | { type: 'sync-now' }
   | { type: 'open-options-page' }
+  /** 悬浮快捷栏：转给本标签页顶层 frame 的整页翻译（切换或查询状态），未加载翻译脚本时返回 null */
+  | { type: 'dock-page-translation'; action: 'toggle' | 'state' }
   | { type: 'sync-cors-bypass' }
   /** WebRTC 防泄露的生效状态（权限、浏览器当前策略、是否被其他扩展接管） */
   | { type: 'get-webrtc-status' }
@@ -313,6 +317,7 @@ export interface RuntimeResponseMap {
   'test-assistant': TranslateTestResult
   'sync-now': SyncStatus
   'open-options-page': { ok: boolean }
+  'dock-page-translation': PageTranslationState | null
   'sync-cors-bypass': boolean
   'get-webrtc-status': WebrtcStatus
   'test-webrtc-leak': WebrtcLeakResult

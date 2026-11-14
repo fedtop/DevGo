@@ -171,6 +171,17 @@ export const selectionDisabledHosts = storage.defineItem<string[]>('local:select
   fallback: [],
 })
 
+/** 页面右下角悬浮快捷栏（dock）：全局开关，默认开启 */
+export const dockEnabled = storage.defineItem<boolean>('local:dockEnabled', { fallback: true })
+
+/** 不显示悬浮快捷栏的网站（hostname） */
+export const dockDisabledHosts = storage.defineItem<string[]>('local:dockDisabledHosts', {
+  fallback: [],
+})
+
+/** 悬浮快捷栏的垂直位置：占视口高度的比例（0–1），拖动后记住 */
+export const dockPositionY = storage.defineItem<number>('local:dockPositionY', { fallback: 0.62 })
+
 /** GitHub 增强：在线编辑按钮 + 回到顶部 + 逗号快捷键（默认开启） */
 export const enableGithubEnhance = storage.defineItem<boolean>('local:enableGithubEnhance', {
   fallback: true,

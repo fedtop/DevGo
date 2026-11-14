@@ -4,6 +4,8 @@ import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-clie
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
 import {
+  dockDisabledHosts,
+  dockEnabled,
   enableSelectionTranslate,
   selectionDisabledHosts,
   sidepanelView,
@@ -107,13 +109,27 @@ function WebmcpRow() {
   )
 }
 
+type BooleanItem = typeof enableSelectionTranslate
+type HostListItem = typeof selectionDisabledHosts
+
 /**
- * 划词工具条：开关作用于当前网站（在代码编辑器、在线文档里常需要单独关掉）。
- * 全局关闭时开关显示为关，打开即恢复全局开启。
+ * 「全局开关 + 按网站停用」类功能的当前网站开关（划词工具条、悬浮快捷栏）。
+ * 开关作用于当前网站；全局关闭时开关显示为关，打开即恢复全局开启。
  */
-function SelectionSiteRow() {
-  const [enabled, setEnabled] = useStorageItem(enableSelectionTranslate)
-  const [disabledHosts, setDisabledHosts] = useStorageItem(selectionDisabledHosts)
+function SiteSwitchRow({
+  title,
+  enabledItem,
+  hostsItem,
+  feature,
+}: {
+  title: string
+  enabledItem: BooleanItem
+  hostsItem: HostListItem
+  /** 开启时的说明，如「选中文字后显示翻译与 AI 工具条」 */
+  feature: string
+}) {
+  const [enabled, setEnabled] = useStorageItem(enabledItem)
+  const [disabledHosts, setDisabledHosts] = useStorageItem(hostsItem)
   const [hostname, setHostname] = useState('')
 
   useEffect(() => {
@@ -144,12 +160,12 @@ function SelectionSiteRow() {
       ? '当前页面不支持'
       : siteDisabled
         ? `已在 ${hostname} 停用`
-        : `${hostname}：选中文字后显示翻译与 AI 工具条${
+        : `${hostname}：${feature}${
             disabledHosts.length ? `（${disabledHosts.length} 个网站已停用）` : ''
           }`
 
   return (
-    <Row title='划词工具条' desc={desc}>
+    <Row title={title} desc={desc}>
       <Switch checked={checked} onChange={toggle} disabled={enabled && !hostname} />
     </Row>
   )
@@ -200,7 +216,18 @@ export default function FunctionPage() {
           <WebmcpRow />
         </>
       )}
-      <SelectionSiteRow />
+      <SiteSwitchRow
+        title='悬浮快捷栏'
+        enabledItem={dockEnabled}
+        hostsItem={dockDisabledHosts}
+        feature='网页右侧的快捷按钮（翻译、AI 总结等）'
+      />
+      <SiteSwitchRow
+        title='划词工具条'
+        enabledItem={enableSelectionTranslate}
+        hostsItem={selectionDisabledHosts}
+        feature='选中文字后显示翻译与 AI 工具条'
+      />
       <UnlockSiteRow />
       <button
         type='button'
