@@ -105,7 +105,7 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'deepseek', title: 'DeepSeek', url: 'https://chat.deepseek.com', category: 'common' },
   { id: 'doubao', title: '豆包', url: 'https://www.doubao.com', category: 'common' },
   { id: 'grok', title: 'Grok', url: 'https://grok.com', category: 'common' },
-  { id: 'aihot', title: 'AIHot', url: 'https://aihot.virxact.com', category: 'common' },
+  { id: 'aihot', title: 'AIHot', url: 'https://aihot.news', category: 'common' },
   { id: 'yixi', title: '一席', url: 'https://yixi.tv', category: 'common' },
   { id: 'notion', title: 'Notion', url: 'https://www.notion.so', category: 'common' },
   { id: 'weread', title: '微信读书', url: 'https://weread.qq.com', category: 'common' },
@@ -304,6 +304,8 @@ const NAV_REVISIONS: NavRevision[] = [
       { id: 'gaoding', from: 'common', to: 'tools' },
     ],
   },
+  // 3：AIHOT 迁到新域名（原位替换老用户没改过的条目）
+  { remove: [{ id: 'aihot', url: 'https://aihot.virxact.com' }], add: ['aihot'] },
 ]
 
 export const QUICK_NAV_DEFAULTS_REVISION = NAV_REVISIONS.length
