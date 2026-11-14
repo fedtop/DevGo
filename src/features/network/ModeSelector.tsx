@@ -46,17 +46,17 @@ export default function ModeSelector({
               disabled={disabled}
               onClick={() => onSelectMode(item.value)}
               title={item.description}
-              className={`flex h-[52px] w-[84px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 text-center transition-[transform,border-color,background-color,color] duration-150 ease-out enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`flex h-[52px] min-w-[84px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 text-center transition-[transform,border-color,background-color,color] duration-150 ease-out enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
                 selected
                   ? 'border-neutral-900 bg-white text-neutral-900 shadow-[inset_0_0_0_1px_var(--color-neutral-900)]'
                   : 'border-black/10 bg-white text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900'
               }`}
             >
-              <span className='flex items-center gap-1 text-xs font-medium'>
+              <span className='flex items-center gap-1 text-xs font-medium whitespace-nowrap'>
                 <Icon className='size-3.5' strokeWidth={1.8} aria-hidden />
                 {item.label}
               </span>
-              <span className='block max-w-full truncate text-[10px] leading-3 text-neutral-500'>
+              <span className='block max-w-[9rem] truncate text-[10px] leading-3 text-neutral-500'>
                 {item.description}
               </span>
             </button>

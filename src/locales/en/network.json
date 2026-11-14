@@ -28,15 +28,15 @@
     },
     "system": {
       "label": "System proxy",
-      "desc": "Follow system settings"
+      "desc": "Use system settings"
     },
     "scenario": {
       "label": "Auto",
-      "desc": "Switches by rules"
+      "desc": "Rule-based"
     },
     "global": {
       "label": "Global proxy",
-      "desc": "All traffic through the proxy"
+      "desc": "Proxy everything"
     },
     "customBadge": "Custom proxy"
   },

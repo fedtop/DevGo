@@ -135,7 +135,14 @@
   },
   "enhance": {
     "title": "Page enhancements",
-    "desc": "GitHub enhancements and per-site copy unlocking",
+    "desc": "Floating dock, GitHub enhancements, and per-site copy unlocking",
+    "dock": {
+      "title": "Floating dock",
+      "desc": "The DevGo bubble on the right edge of pages: hover to expand quick actions like translating the page, AI summary, and AI assistant. Drag it up or down to reposition.",
+      "label": "Show the floating dock",
+      "hint": "You can also hide it for now or on the current site from the bubble's close menu",
+      "disabledHosts": "Sites where the dock is hidden"
+    },
     "github": {
       "label": "GitHub enhancements",
       "hint": "Floating buttons on code pages (edit online, DeepWiki, back to top); press , to open github1s"

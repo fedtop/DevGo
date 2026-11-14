@@ -83,7 +83,7 @@ export default function TranslatePage() {
           <Select
             value={engine}
             onChange={changeLookupEngine}
-            className='w-[72px] shrink-0'
+            className='w-[104px] shrink-0'
             options={[
               { value: 'youdao', label: t('popup.lookup.engineYoudao') },
               { value: 'microsoft', label: t('popup.lookup.engineMicrosoft') },

@@ -19,8 +19,8 @@
     "tr": "Turkish"
   },
   "provider": {
-    "microsoft": "Microsoft · no VPN needed",
-    "google": "Google · VPN needed",
+    "microsoft": "Microsoft · no proxy",
+    "google": "Google · needs proxy",
     "llm": "AI model"
   },
   "displayMode": {

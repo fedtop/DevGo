@@ -52,6 +52,10 @@ pnpm exec prettier --check <改动的文件>
 
 所有用户设置都是 WXT 的 `storage.defineItem` 项（`local:` 键）并带 fallback。它们是响应式的、跨所有上下文共享——导入对应项后调用 `.getValue()` / `.setValue()` / `.watch()`。不要直接读 `chrome.storage`。`src/utils/backup.ts` 负责把这些设置序列化用于导入/导出。
 
+### 界面多语言——`src/utils/i18n.ts`
+
+界面文案一律写成 `t('模块.分组.名称', params?)`，中文放在 `src/locales/zh_CN/<模块>.json`，英文放在 `src/locales/en/<模块>.json`（key 由中文文件推导类型，写错会编译报错；插值用 `{name}`，英文单复数可加 `<key>_one`）。`t()` 只能在运行时调用，不要在模块顶层求值；需要标签表时存 `MessageKey` 或写成 `getXxx()` 函数。各上下文先 `await initI18n()` 再渲染（扩展页面已在 `main.tsx` 处理，内容脚本在 `main()` 里）。界面语言设置是 `uiLanguage`（跟随浏览器 / 中文 / English）。扩展名称、描述与快捷键说明在 `public/_locales`。发给大模型的提示词不属于界面文案，保持原样。
+
 ### 其他关键工具（`src/utils/`）
 
 `network.ts`（代理 PAC/AutoProxy 规则处理、bypass 列表规范化）、`media.ts`、`theme.ts`、`shortcut.ts`、`no-translate.ts` / `content-settings.ts`（标记浏览器不应自动翻译的元素/页面）、`actionIcon.ts`。

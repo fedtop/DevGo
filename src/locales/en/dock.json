@@ -1,1 +1,29 @@
-{}
+{
+  "actions": {
+    "translatePage": "Translate this page",
+    "showOriginal": "Show original",
+    "summarize": "AI summary",
+    "assistant": "AI assistant",
+    "backToTop": "Back to top",
+    "settings": "Settings"
+  },
+  "ball": {
+    "title": "DevGo (drag to reposition)",
+    "ariaLabel": "DevGo quick actions"
+  },
+  "close": {
+    "button": "Close the floating dock",
+    "session": {
+      "title": "Hide for now",
+      "desc": "Stays hidden until this tab closes"
+    },
+    "site": {
+      "title": "Hide on {host}",
+      "desc": "Turn it back on from the popup's Features page"
+    },
+    "all": {
+      "title": "Hide on all sites",
+      "desc": "Turn it back on from settings under Page enhancements"
+    }
+  }
+}

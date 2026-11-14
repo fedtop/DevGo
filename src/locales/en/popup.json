@@ -51,10 +51,10 @@
     "bypassCount": "{count} bypass entries",
     "bypassCount_one": "{count} bypass entry",
     "edit": "Edit",
-    "cancelHostDirect": "Cancel direct on this site",
+    "cancelHostDirect": "Stop direct on this site",
     "hostDirect": "Direct on this site",
-    "cancelHostProxy": "Cancel proxy on this site",
-    "hostProxy": "Proxy on this site"
+    "cancelHostProxy": "Stop proxying this site",
+    "hostProxy": "Proxy this site"
   },
   "tools": {
     "title": "Media sniffer",
@@ -117,6 +117,8 @@
     "webmcpTools_one": "This page provides {count} tool for the AI to call or for you to run",
     "webmcpNoTools": "This page doesn't provide any tools",
     "viewTools": "View tools",
+    "dockTitle": "Floating dock",
+    "dockFeature": "Quick actions on the right edge of pages (translate, AI summary, and more)",
     "selectionTitle": "Selection toolbar",
     "selectionFeature": "show the translation and AI toolbar when you select text",
     "siteSwitch": {

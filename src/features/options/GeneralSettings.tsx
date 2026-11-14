@@ -263,7 +263,7 @@ export default function GeneralSettings() {
             value={defaultTab}
             options={getPopupPages()}
             onChange={setDefaultTab}
-            className='w-32'
+            className='w-36'
           />
         </Row>
       </Card>

@@ -23,8 +23,8 @@
       "prompt": "Extract the key information from this page (conclusions, data, steps, caveats, etc.) as a list. Don't leave out important details."
     },
     "explain": {
-      "label": "Explain in Chinese",
-      "prompt": "In Simplified Chinese, explain what this page is about, who it's for, and the parts most worth attention."
+      "label": "Explain this page",
+      "prompt": "Explain in plain English what this page is about, who it's for, and which parts are most worth attention."
     }
   },
   "chat": {

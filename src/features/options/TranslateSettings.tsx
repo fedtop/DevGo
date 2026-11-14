@@ -82,7 +82,7 @@ function GeneralSettings() {
           value={provider}
           options={PROVIDER_OPTIONS}
           onChange={(value) => setProvider(value as TranslateProvider)}
-          className='w-44'
+          className='w-56'
         />
       </Row>
       <Row label={t('options.translate.page.target')} hint={t('options.translate.page.targetHint')}>
@@ -90,7 +90,7 @@ function GeneralSettings() {
           value={target}
           options={TARGET_LANGUAGE_OPTIONS}
           onChange={(value) => setTarget(value as TranslateTargetSetting)}
-          className='w-44'
+          className='w-56'
         />
       </Row>
       <Row
@@ -114,7 +114,7 @@ function GeneralSettings() {
           value={hoverMode}
           options={HOVER_MODE_OPTIONS}
           onChange={(value) => setHoverMode(value as HoverTranslateMode)}
-          className='w-44'
+          className='w-56'
         />
       </Row>
     </Card>

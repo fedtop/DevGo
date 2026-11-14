@@ -222,7 +222,7 @@ export default function WebrtcSettings() {
             value={policy}
             options={policyOptions.map(({ value, label }) => ({ value, label }))}
             onChange={changePolicy}
-            className='w-56'
+            className='w-64'
           />
         </Row>
         {policy !== 'default' && (
