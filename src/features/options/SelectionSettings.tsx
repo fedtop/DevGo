@@ -1,6 +1,12 @@
 import { SELECTION_AI_ACTIONS } from '@/features/ai/actions'
+import { X } from 'lucide-react'
+
 import Switch from '@/ui/Switch'
-import { enableSelectionTranslate, selectionAiEnabled } from '@/utils/settings'
+import {
+  enableSelectionTranslate,
+  selectionAiEnabled,
+  selectionDisabledHosts,
+} from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
 import { Card, Row, SectionHeader } from './layout'
@@ -9,6 +15,7 @@ import { Card, Row, SectionHeader } from './layout'
 export default function SelectionSettings() {
   const [enabled, setEnabled] = useStorageItem(enableSelectionTranslate)
   const [aiEnabled, setAiEnabled] = useStorageItem(selectionAiEnabled)
+  const [disabledHosts, setDisabledHosts] = useStorageItem(selectionDisabledHosts)
 
   return (
     <div className='flex flex-col gap-5'>
@@ -24,6 +31,34 @@ export default function SelectionSettings() {
         >
           <Switch checked={aiEnabled} onChange={setAiEnabled} disabled={!enabled} />
         </Row>
+      </Card>
+
+      <Card
+        title='停用划词的网站'
+        desc='在这些网站上不显示划词工具条。在弹窗「功能」页可以一键开关当前网站。'
+      >
+        {disabledHosts.length > 0 ? (
+          <ul className='flex flex-wrap gap-2'>
+            {disabledHosts.map((host) => (
+              <li
+                key={host}
+                className='flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 py-1 pr-1.5 pl-3 text-xs text-neutral-600'
+              >
+                {host}
+                <button
+                  type='button'
+                  aria-label={`移除 ${host}`}
+                  onClick={() => setDisabledHosts(disabledHosts.filter((item) => item !== host))}
+                  className='flex h-4 w-4 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-600'
+                >
+                  <X className='size-3' aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className='text-xs text-neutral-500'>暂无</p>
+        )}
       </Card>
 
       <Card

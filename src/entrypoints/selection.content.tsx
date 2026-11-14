@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom/client'
 import SelectionApp from '@/features/selection/SelectionApp'
 import {
   getLocalBooleanSetting,
+  getLocalStringListSetting,
   hasExtensionRuntime,
-  watchLocalBooleanSetting,
+  watchLocalSetting,
 } from '@/utils/content-settings'
 import '@/features/selection/style.css'
 
 const ENABLE_SELECTION_TRANSLATE_KEY = 'enableSelectionTranslate'
+const SELECTION_DISABLED_HOSTS_KEY = 'selectionDisabledHosts'
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -34,17 +36,27 @@ export default defineContentScript({
       },
     })
 
-    // 按开关挂载 / 卸载，并监听设置变化动态启停
-    const applyEnabled = (enabled: boolean) => {
-      if (enabled) ui.mount()
-      else ui.remove()
-    }
+    // 全局开关 + 本站是否停用，二者都允许才挂载；设置变化时动态启停
+    let mounted = false
     const sync = async () => {
-      applyEnabled(await getLocalBooleanSetting(ENABLE_SELECTION_TRANSLATE_KEY, true))
+      const [enabled, disabledHosts] = await Promise.all([
+        getLocalBooleanSetting(ENABLE_SELECTION_TRANSLATE_KEY, true),
+        getLocalStringListSetting(SELECTION_DISABLED_HOSTS_KEY),
+      ])
+      const next = enabled && !disabledHosts.includes(location.hostname)
+      if (next === mounted) return
+      mounted = next
+      if (next) ui.mount()
+      else ui.remove()
     }
 
     await sync()
-    const unwatch = watchLocalBooleanSetting(ENABLE_SELECTION_TRANSLATE_KEY, true, applyEnabled)
+    const unwatchEnabled = watchLocalSetting(ENABLE_SELECTION_TRANSLATE_KEY, () => void sync())
+    const unwatchHosts = watchLocalSetting(SELECTION_DISABLED_HOSTS_KEY, () => void sync())
+    const unwatch = () => {
+      unwatchEnabled()
+      unwatchHosts()
+    }
     ctx.onInvalidated(unwatch)
   },
 })

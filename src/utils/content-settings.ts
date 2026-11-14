@@ -29,6 +29,28 @@ export async function getLocalBooleanSetting(key: string, fallback: boolean): Pr
   })
 }
 
+export async function getLocalStringListSetting(key: string): Promise<string[]> {
+  if (!hasExtensionRuntime() || !chrome.storage?.local) return []
+
+  return new Promise((resolve) => {
+    chrome.storage.local.get({ [key]: [] }, (items) => {
+      const value = chrome.runtime.lastError ? [] : items[key]
+      resolve(Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [])
+    })
+  })
+}
+
+export function watchLocalSetting(key: string, onChange: () => void): () => void {
+  if (!hasExtensionRuntime() || !chrome.storage?.onChanged) return () => undefined
+
+  const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+    if (areaName === 'local' && changes[key]) onChange()
+  }
+
+  chrome.storage.onChanged.addListener(listener)
+  return () => chrome.storage.onChanged.removeListener(listener)
+}
+
 export function watchLocalBooleanSetting(
   key: string,
   fallback: boolean,

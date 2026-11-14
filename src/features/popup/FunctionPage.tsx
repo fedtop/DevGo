@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
-import { unlockHosts } from '@/utils/settings'
+import { enableSelectionTranslate, selectionDisabledHosts, unlockHosts } from '@/utils/settings'
 import { formatShortcut } from '@/utils/shortcut'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { getActiveHostname } from '@/utils/tabs'
@@ -86,6 +86,54 @@ function WebmcpRow() {
   )
 }
 
+/**
+ * 划词工具条：开关作用于当前网站（在代码编辑器、在线文档里常需要单独关掉）。
+ * 全局关闭时开关显示为关，打开即恢复全局开启。
+ */
+function SelectionSiteRow() {
+  const [enabled, setEnabled] = useStorageItem(enableSelectionTranslate)
+  const [disabledHosts, setDisabledHosts] = useStorageItem(selectionDisabledHosts)
+  const [hostname, setHostname] = useState('')
+
+  useEffect(() => {
+    void getActiveHostname().then(setHostname)
+  }, [])
+
+  const siteDisabled = Boolean(hostname) && disabledHosts.includes(hostname)
+  const checked = enabled && !siteDisabled
+  const toggle = (next: boolean) => {
+    if (!enabled) {
+      if (next) {
+        setEnabled(true)
+        if (siteDisabled) setDisabledHosts(disabledHosts.filter((h) => h !== hostname))
+      }
+      return
+    }
+    if (!hostname) return
+    setDisabledHosts(
+      next
+        ? disabledHosts.filter((h) => h !== hostname)
+        : [...new Set([...disabledHosts, hostname])],
+    )
+  }
+
+  const desc = !enabled
+    ? '已在全部网站关闭，打开后恢复'
+    : !hostname
+      ? '当前页面不支持'
+      : siteDisabled
+        ? `已在 ${hostname} 停用`
+        : `${hostname}：选中文字后显示翻译与 AI 工具条${
+            disabledHosts.length ? `（${disabledHosts.length} 个网站已停用）` : ''
+          }`
+
+  return (
+    <Row title='划词工具条' desc={desc}>
+      <Switch checked={checked} onChange={toggle} disabled={enabled && !hostname} />
+    </Row>
+  )
+}
+
 /** 解除复制限制：只对当前站点开关（全局阻断 copy 等事件会让在线编辑器失灵） */
 function UnlockSiteRow() {
   const [hosts, setHosts] = useStorageItem(unlockHosts)
@@ -131,6 +179,7 @@ export default function FunctionPage() {
           <WebmcpRow />
         </>
       )}
+      <SelectionSiteRow />
       <UnlockSiteRow />
       <button
         type='button'

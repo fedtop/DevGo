@@ -160,6 +160,11 @@ export const enableSelectionTranslate = storage.defineItem<boolean>(
   { fallback: true },
 )
 
+/** 划词工具条停用的网站（hostname）；全局开关开启时，这些网站仍不显示工具条 */
+export const selectionDisabledHosts = storage.defineItem<string[]>('local:selectionDisabledHosts', {
+  fallback: [],
+})
+
 /** GitHub 增强：在线编辑按钮 + 回到顶部 + 逗号快捷键（默认开启） */
 export const enableGithubEnhance = storage.defineItem<boolean>('local:enableGithubEnhance', {
   fallback: true,
