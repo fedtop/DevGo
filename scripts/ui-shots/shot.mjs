@@ -311,7 +311,7 @@ for (const tab of ['translate', 'network', 'tools', 'function']) {
 // 设置页各分区（整页长图）
 for (const sec of SECTIONS) {
   await go(`/options.html#${sec}`, 1280, 900)
-  await shot(`options-${sec}`, true)
+  await shot(`options-${sec}`, { full: true })
 }
 
 // 侧边栏 AI 助手
