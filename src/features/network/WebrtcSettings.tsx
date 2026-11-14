@@ -20,7 +20,39 @@ import { useStorageItem } from '@/utils/useStorageItem'
 import { Card, Row } from '@/features/options/layout'
 import { ArrowUpRight } from 'lucide-react'
 
-import { CONTROL_HINTS, POLICY_OPTIONS, policyLabel } from './webrtc'
+import ConfirmDialog from '@/ui/ConfirmDialog'
+
+import {
+  BLOCK_APIS_IMPACT,
+  CONTROL_HINTS,
+  HIDE_DEVICES_IMPACT,
+  POLICY_IMPACTS,
+  POLICY_OPTIONS,
+  policyLabel,
+  type WebrtcImpact,
+} from './webrtc'
+
+/** 开启前的影响说明（确认框正文） */
+function ImpactDetail({ impact }: { impact: WebrtcImpact }) {
+  return (
+    <>
+      <div>
+        <p className='font-medium text-neutral-900'>DevGo 会做什么</p>
+        <p>{impact.action}</p>
+      </div>
+      <div>
+        <p className='font-medium text-neutral-900'>可能受影响的功能</p>
+        <ul className='mt-0.5 list-disc pl-4'>
+          {impact.affects.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
+      <p>{impact.unaffected}</p>
+      <p className='rounded-lg bg-black/[0.04] px-3 py-2 text-xs text-neutral-600'>{impact.undo}</p>
+    </>
+  )
+}
 
 function describeCandidate(candidate: WebrtcCandidate): string {
   if (candidate.address.endsWith('.local')) return '本机地址（浏览器已做匿名处理，安全）'
@@ -114,6 +146,8 @@ export default function WebrtcSettings() {
   const [hideDevices, setHideDevices] = useStorageItem(webrtcHideMediaDevices)
   const [status, setStatus] = useState<WebrtcStatus | null>(null)
   const [message, setMessage] = useState('')
+  /** 待确认的开启操作：确认框里点「确认开启」才真正执行 */
+  const [pending, setPending] = useState<{ impact: WebrtcImpact; apply: () => void } | null>(null)
 
   const refresh = useCallback(() => {
     void sendRuntimeMessage({ type: 'get-webrtc-status' })
@@ -125,15 +159,8 @@ export default function WebrtcSettings() {
     refresh()
   }, [refresh])
 
-  const changePolicy = (value: string) => {
-    const next = value as WebrtcPolicy
-    setMessage('')
-    if (next === 'default') {
-      setPolicy(next)
-      window.setTimeout(refresh, 300)
-      return
-    }
-    // 权限申请必须在用户点击的同步调用栈里发起
+  const applyPolicy = (next: WebrtcPolicy) => {
+    // 权限申请必须在用户点击的同步调用栈里发起（这里是确认框按钮的点击）
     void browser.permissions.request({ permissions: ['privacy'] }).then((granted) => {
       if (!granted) {
         setMessage('需要授予「更改隐私设置」权限才能开启防护')
@@ -143,6 +170,27 @@ export default function WebrtcSettings() {
       window.setTimeout(refresh, 300)
     })
   }
+
+  const changePolicy = (value: string) => {
+    const next = value as WebrtcPolicy
+    setMessage('')
+    if (next === policy) return
+    if (next === 'default') {
+      setPolicy(next)
+      window.setTimeout(refresh, 300)
+      return
+    }
+    const impact = POLICY_IMPACTS[next]
+    if (impact) setPending({ impact, apply: () => applyPolicy(next) })
+    else applyPolicy(next)
+  }
+
+  /** 开关类防护：开启前先确认，关闭直接生效 */
+  const confirmToggle =
+    (impact: WebrtcImpact, set: (value: boolean) => void) => (next: boolean) => {
+      if (!next) set(false)
+      else setPending({ impact, apply: () => set(true) })
+    }
 
   const current = POLICY_OPTIONS.find((item) => item.value === policy) ?? POLICY_OPTIONS[0]
   const control = status?.control ? CONTROL_HINTS[status.control] : undefined
@@ -178,6 +226,11 @@ export default function WebrtcSettings() {
             className='w-56'
           />
         </Row>
+        {policy !== 'default' && (
+          <p className='text-xs text-neutral-500'>
+            已开启：如果网页会议、语音通话连不上，先把级别改回「不防护」试试。
+          </p>
+        )}
         {(message || control || (policy !== 'default' && status && !status.permission)) && (
           <p
             className={`text-xs ${
@@ -204,17 +257,33 @@ export default function WebrtcSettings() {
           label='禁用网页音视频通话（WebRTC）'
           hint='网站彻底拿不到你的 IP；网页版视频会议、语音通话、P2P 传文件会用不了'
         >
-          <Switch checked={blockApis} onChange={setBlockApis} />
+          <Switch checked={blockApis} onChange={confirmToggle(BLOCK_APIS_IMPACT, setBlockApis)} />
         </Row>
         <Row
           label='隐藏摄像头和麦克风'
           hint='网站读不到你有哪些设备（常被用来识别、追踪同一台电脑），也就用不了摄像头和麦克风'
         >
-          <Switch checked={hideDevices} onChange={setHideDevices} />
+          <Switch
+            checked={hideDevices}
+            onChange={confirmToggle(HIDE_DEVICES_IMPACT, setHideDevices)}
+          />
         </Row>
       </Card>
 
       <LeakTest />
+
+      {pending && (
+        <ConfirmDialog
+          title={pending.impact.title}
+          onClose={() => setPending(null)}
+          onConfirm={() => {
+            pending.apply()
+            setPending(null)
+          }}
+        >
+          <ImpactDetail impact={pending.impact} />
+        </ConfirmDialog>
+      )}
     </>
   )
 }
