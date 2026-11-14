@@ -177,19 +177,29 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
     },
   ]
 
+  // 圆球靠近底部时，按钮列改为向上展开，否则会超出视口看不到
+  const columnHeight = actions.length * 34 + 8 + 8
+  const openUp = top + BALL_SIZE + columnHeight + 16 > window.innerHeight
+
   const surface =
     'border border-black/[0.08] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]'
 
   return (
     <div
-      className='fixed right-0 flex flex-col items-end font-sans text-[13px] leading-normal text-neutral-800 dark:text-neutral-100'
-      style={{ top, zIndex: Z_DOCK }}
+      className={`fixed right-0 flex items-end font-sans text-[13px] leading-normal text-neutral-800 dark:text-neutral-100 ${
+        openUp ? 'flex-col-reverse' : 'flex-col'
+      }`}
+      style={
+        openUp
+          ? { bottom: window.innerHeight - top - BALL_SIZE, zIndex: Z_DOCK }
+          : { top, zIndex: Z_DOCK }
+      }
       onPointerEnter={open}
       onPointerLeave={scheduleCollapse}
     >
       <div
         className='relative flex items-center transition-transform duration-200 ease-out'
-        style={{ transform: expanded || dragY !== null ? 'translateX(-10px)' : 'translateX(10px)' }}
+        style={{ transform: expanded || dragY !== null ? 'translateX(-10px)' : 'translateX(24px)' }}
       >
         {/* 关闭入口：悬停时出现在圆球左上角 */}
         {expanded && dragY === null && (
@@ -215,7 +225,7 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
             setMenuOpen(false)
           }}
           className={`flex cursor-grab touch-none items-center justify-center rounded-full p-0 transition-opacity active:cursor-grabbing ${surface} ${
-            expanded ? 'opacity-100' : 'opacity-80'
+            expanded ? 'opacity-100' : 'opacity-70'
           }`}
           style={{ width: BALL_SIZE, height: BALL_SIZE }}
         >
@@ -224,7 +234,7 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
 
         {menuOpen && (
           <div
-            className={`absolute top-0 right-full mr-2 w-56 rounded-xl p-1 ${surface}`}
+            className={`absolute right-full mr-2 w-56 rounded-xl p-1 ${openUp ? 'bottom-0' : 'top-0'} ${surface}`}
             role='menu'
           >
             <MenuItem
@@ -250,7 +260,9 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
       </div>
 
       {expanded && dragY === null && (
-        <div className={`mt-2 mr-[10px] flex flex-col gap-0.5 rounded-full p-1 ${surface}`}>
+        <div
+          className={`mr-[10px] flex flex-col gap-0.5 rounded-full p-1 ${openUp ? 'mb-2' : 'mt-2'} ${surface}`}
+        >
           {actions.map(({ key, label, icon: Icon, active, run }) => (
             <button
               key={key}

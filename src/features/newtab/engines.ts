@@ -100,7 +100,8 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'browser-history', title: '历史记录', url: 'chrome://history/', category: 'common' },
   { id: 'browser-downloads', title: '下载管理', url: 'chrome://downloads/', category: 'common' },
   { id: 'browser-extensions', title: '扩展管理', url: 'chrome://extensions/', category: 'common' },
-  { id: 'zwork', title: 'Zwork', url: 'https://zwork.zhipuai.cn/web/', category: 'common' },
+  { id: 'muse', title: 'Muse', url: 'https://muse.ai', category: 'common' },
+  { id: 'claude', title: 'Claude', url: 'https://claude.ai', category: 'common' },
   { id: 'aihot', title: 'AIHot', url: 'https://aihot.virxact.com', category: 'common' },
   { id: 'yixi', title: '一席', url: 'https://yixi.tv', category: 'common' },
   { id: 'notion', title: 'Notion', url: 'https://www.notion.so', category: 'common' },
@@ -141,7 +142,6 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   // AI
   { id: 'huggingface', title: 'HuggingFace', url: 'https://huggingface.co', category: 'ai' },
   { id: 'chatgpt', title: 'ChatGPT', url: 'https://chatgpt.com', category: 'ai', pinned: true }, // prettier-ignore
-  { id: 'claude', title: 'Claude', url: 'https://claude.ai', category: 'ai' },
   { id: 'deepseek', title: 'DeepSeek', url: 'https://chat.deepseek.com', category: 'ai' },
   { id: 'gemini', title: 'Gemini', url: 'https://gemini.google.com', category: 'ai' },
   { id: 'kimi', title: 'Kimi', url: 'https://www.kimi.com', category: 'ai' },
