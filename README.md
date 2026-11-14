@@ -31,7 +31,7 @@ DevGo 是一个面向开发者的浏览器效率扩展，聚焦翻译、GitHub �
 
 - 一键总结本页、提取要点，就网页内容提问（AI 会自行读取网页正文）；划词「问 AI」会带着选中内容过来
 - 支持各家 OpenAI 兼容服务与 Coding Plan 预设，回答流式输出，展示思考过程
-- WebMCP：自动列出网页通过 WebMCP 注册的工具（含 iframe），AI 可以调用它们完成任务；没有声明只读的工具执行前会先确认（需要 Chrome 150+，并在 `chrome://flags` 开启「WebMCP for testing」）
+- WebMCP：自动列出网页通过 WebMCP 注册的工具（含 iframe），AI 可以调用它们完成任务；没有声明只读的工具执行前会先确认；侧边栏「网页工具」页可以查看每个工具的说明，手动填参数执行（方便调试网页的 WebMCP 实现）（需要 Chrome 150+，并在 `chrome://flags` 开启「WebMCP for testing」）
 
 ![AI 模型配置](docs/images/options-models.png)
 

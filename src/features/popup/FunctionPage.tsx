@@ -3,7 +3,13 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
-import { enableSelectionTranslate, selectionDisabledHosts, unlockHosts } from '@/utils/settings'
+import {
+  enableSelectionTranslate,
+  selectionDisabledHosts,
+  sidepanelView,
+  unlockHosts,
+  type SidepanelView,
+} from '@/utils/settings'
 import { formatShortcut } from '@/utils/shortcut'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { getActiveHostname } from '@/utils/tabs'
@@ -26,7 +32,15 @@ function Row({ title, desc, children }: { title: string; desc: ReactNode; childr
  * 打开侧边栏的按钮（仅 Chrome 支持侧边栏）。
  * sidePanel.open 必须在点击的同步调用栈里执行，所以提前取好 windowId
  */
-function OpenSidePanelButton() {
+function OpenSidePanelButton({
+  view,
+  label = '打开',
+  disabled = false,
+}: {
+  view: SidepanelView
+  label?: string
+  disabled?: boolean
+}) {
   const [windowId, setWindowId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -35,17 +49,20 @@ function OpenSidePanelButton() {
   }, [])
 
   const open = () => {
-    if (windowId != null) void chrome.sidePanel.open({ windowId }).then(() => window.close())
+    if (windowId == null) return
+    // 先写入要显示的页面，侧边栏打开后（或已开着时）读取并切换
+    void sidepanelView.setValue(view)
+    void chrome.sidePanel.open({ windowId }).then(() => window.close())
   }
 
   return (
     <Button
       variant='primary'
       onClick={open}
-      disabled={windowId == null}
+      disabled={windowId == null || disabled}
       className='!px-3 !py-1 text-xs'
     >
-      打开
+      {label}
     </Button>
   )
 }
@@ -58,12 +75,12 @@ function AssistantRow() {
       title='AI 助手'
       desc={`侧边栏里总结网页、就网页内容提问${shortcut ? ` · ${formatShortcut(shortcut)}` : ''}`}
     >
-      <OpenSidePanelButton />
+      <OpenSidePanelButton view='chat' />
     </Row>
   )
 }
 
-/** 当前网页的 WebMCP 工具：显示数量，AI 助手里可以调用或手动执行 */
+/** 当前网页的 WebMCP 工具：有工具时打开侧边栏的「网页工具」页查看、手动执行 */
 function WebmcpRow() {
   const tabId = useActiveTabId()
   const { tools, status } = useWebmcpTools(tabId)
@@ -81,7 +98,11 @@ function WebmcpRow() {
 
   return (
     <Row title='网页工具（WebMCP）' desc={desc}>
-      <OpenSidePanelButton />
+      <OpenSidePanelButton
+        view='tools'
+        label='查看工具'
+        disabled={status !== 'ready' || tools.length === 0}
+      />
     </Row>
   )
 }

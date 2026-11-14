@@ -106,6 +106,12 @@ export const assistantHandoff = storage.defineItem<AssistantHandoff | null>(
   { fallback: null },
 )
 
+/** 侧边栏要显示的页面：弹窗里点「AI 助手」或「网页工具」时写入，侧边栏读到后切换并清空 */
+export type SidepanelView = 'chat' | 'tools'
+export const sidepanelView = storage.defineItem<SidepanelView | null>('session:sidepanelView', {
+  fallback: null,
+})
+
 /** 划词工具条显示 AI 动作（解释、总结、问 AI、润色等；需要配置可用的 AI 模型） */
 export const selectionAiEnabled = storage.defineItem<boolean>('local:selectionAiEnabled', {
   fallback: true,

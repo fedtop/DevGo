@@ -16,21 +16,26 @@ import {
   assistantLlmConfig,
   translateLlmApiKey,
   translateLlmConfig,
+  sidepanelView,
+  type SidepanelView,
 } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
 import { buildSystemPrompt, repairHistory, runAgent, type AgentEvent } from './agent'
 import { formatPageContent, isBuiltinTool, readPage, READ_PAGE_TOOL } from './page-tools'
-import ToolsPanel from './ToolsPanel'
+import WebmcpView from './WebmcpView'
 import { executeFrameTool, useActiveTabId, useWebmcpTools, type FrameTool } from './webmcp-client'
 import {
   ArrowLeft,
+  Blocks,
   ArrowUp,
   ArrowUpRight,
   FileText,
   Globe,
   Languages,
   ListChecks,
+  Loader2,
+  MessageSquare,
   Settings,
   Sparkles,
   Square,
@@ -128,7 +133,18 @@ export default function AssistantApp() {
   const configReady = isLlmConfigReady(config)
   const loaded = assistantLoaded && translateLoaded
 
-  const [view, setView] = useState<'chat' | 'settings'>('chat')
+  const [view, setView] = useState<'chat' | 'tools' | 'settings'>('chat')
+
+  // 弹窗点「网页工具」/「AI 助手」打开侧边栏时，切到对应页面（侧边栏已开着也会收到）
+  useEffect(() => {
+    const apply = (next: SidepanelView | null) => {
+      if (!next) return
+      setView(next)
+      void sidepanelView.setValue(null)
+    }
+    void sidepanelView.getValue().then(apply)
+    return sidepanelView.watch(apply)
+  }, [])
   const [items, setItems] = useState<ChatItem[]>([])
   const [input, setInput] = useState('')
   const [quote, setQuote] = useState('')
@@ -401,14 +417,48 @@ export default function AssistantApp() {
             </IconButton>
           )}
           <IconButton
-            label={view === 'chat' ? '设置' : '返回对话'}
-            onClick={() => setView(view === 'chat' ? 'settings' : 'chat')}
+            label={view === 'settings' ? '返回对话' : '设置'}
+            onClick={() => setView(view === 'settings' ? 'chat' : 'settings')}
             disabled={view === 'settings' && !configReady}
           >
-            {view === 'chat' ? <Settings strokeWidth={1.8} /> : <ArrowLeft strokeWidth={1.8} />}
+            {view === 'settings' ? <ArrowLeft strokeWidth={1.8} /> : <Settings strokeWidth={1.8} />}
           </IconButton>
         </div>
       </header>
+
+      {view !== 'settings' && (
+        <nav
+          className='flex shrink-0 gap-1 border-b border-black/5 px-3 py-1.5'
+          aria-label='侧边栏页面'
+        >
+          {(
+            [
+              { value: 'chat', label: '对话', icon: MessageSquare },
+              { value: 'tools', label: '网页工具', icon: Blocks },
+            ] as const
+          ).map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              type='button'
+              aria-pressed={view === value}
+              onClick={() => setView(value)}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-colors ${
+                view === value
+                  ? 'bg-black/[0.07] font-medium text-neutral-900'
+                  : 'text-neutral-500 hover:bg-black/5 hover:text-neutral-900'
+              }`}
+            >
+              <Icon className='size-3.5' strokeWidth={1.8} aria-hidden />
+              {label}
+              {value === 'tools' && status === 'ready' && webTools.length > 0 && (
+                <span className='rounded-full bg-black/[0.08] px-1.5 text-[10px] leading-4 text-neutral-600'>
+                  {webTools.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {view === 'settings' ? (
         <SettingsView
@@ -418,21 +468,19 @@ export default function AssistantApp() {
           webmcpSupported={status !== 'unsupported'}
           onSaved={() => setView('chat')}
         />
+      ) : view === 'tools' ? (
+        <WebmcpView
+          tools={webTools}
+          status={status}
+          onRefresh={refresh}
+          execute={(tool, args) =>
+            tabId == null
+              ? Promise.resolve({ ok: false, error: '没有可用的标签页' })
+              : executeFrameTool(tabId, tool.frameId, tool.name, args)
+          }
+        />
       ) : (
         <>
-          {webTools.length > 0 && (
-            <ToolsPanel
-              tools={webTools}
-              status={status}
-              onRefresh={refresh}
-              execute={(tool, args) =>
-                tabId == null
-                  ? Promise.resolve({ ok: false, error: '没有可用的标签页' })
-                  : executeFrameTool(tabId, tool.frameId, tool.name, args)
-              }
-            />
-          )}
-
           <div
             ref={scrollRef}
             onScroll={(event) => {
@@ -457,7 +505,10 @@ export default function AssistantApp() {
                   />
                 ))}
                 {running && items[items.length - 1]?.kind !== 'assistant' && (
-                  <p className='animate-pulse text-xs text-neutral-500'>思考中…</p>
+                  <p className='flex items-center gap-1.5 text-xs text-neutral-500'>
+                    <Loader2 className='size-3.5 animate-spin' aria-hidden />
+                    思考中…
+                  </p>
                 )}
               </div>
             )}
@@ -565,7 +616,7 @@ function SettingsView({
 }) {
   return (
     <div className='popup-main min-h-0 flex-1 overflow-y-auto px-3 py-3'>
-      <section className='flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-3'>
+      <section className='flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3'>
         <div>
           <h2 className='text-sm font-semibold'>对话模型</h2>
           <p className='text-[11px] leading-relaxed text-neutral-500'>
@@ -576,7 +627,7 @@ function SettingsView({
         </div>
         <LlmConfigForm compact target='assistant' onSaved={onSaved} />
       </section>
-      <section className='mt-2.5 flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2.5'>
+      <section className='mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-3 py-2.5'>
         <div className='min-w-0'>
           <p className='text-sm font-medium'>执行网页工具前确认</p>
           <p className='text-[11px] leading-relaxed text-neutral-500'>
@@ -709,21 +760,24 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
   const displayName = item.name === READ_PAGE_TOOL.name ? '读取网页内容' : item.name
 
   return (
-    <div className='mr-4 rounded-lg border border-neutral-200 bg-white px-2.5 py-2 text-xs'>
+    <div className='mr-4 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs'>
       <div className='flex items-center justify-between gap-2'>
         <span className='flex min-w-0 items-center gap-1.5 font-mono font-medium text-neutral-700'>
           <Wrench className='size-3.5 shrink-0 text-neutral-500' aria-hidden />
           <span className='truncate'>{displayName}</span>
         </span>
-        <span className={`shrink-0 ${tone}`}>{TOOL_STATUS_LABELS[item.status]}</span>
+        <span className={`flex shrink-0 items-center gap-1 ${tone}`}>
+          {item.status === 'running' && <Loader2 className='size-3 animate-spin' aria-hidden />}
+          {TOOL_STATUS_LABELS[item.status]}
+        </span>
       </div>
       <details className='mt-1' open={item.status === 'awaiting'}>
         <summary className='cursor-pointer select-none text-neutral-500'>参数与结果</summary>
-        <pre className='mt-1 max-h-32 overflow-auto rounded bg-neutral-50 p-1.5 font-mono text-[11px] whitespace-pre-wrap break-all text-neutral-600'>
+        <pre className='mt-1 max-h-32 overflow-auto rounded-lg bg-black/[0.04] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-neutral-600'>
           {formatJson(item.args)}
         </pre>
         {item.result != null && (
-          <pre className='mt-1 max-h-48 overflow-auto rounded bg-neutral-50 p-1.5 font-mono text-[11px] whitespace-pre-wrap break-all text-neutral-600'>
+          <pre className='mt-1 max-h-48 overflow-auto rounded-lg bg-black/[0.04] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-neutral-600'>
             {formatJson(item.result)}
           </pre>
         )}
