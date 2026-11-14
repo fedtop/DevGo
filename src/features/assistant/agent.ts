@@ -6,6 +6,7 @@
  */
 import { chatWithTools, type AgentMessage, type ToolDefinition } from '@/api/llm'
 import type { LlmConfig } from '@/features/translate/llm-config'
+import { t } from '@/utils/i18n'
 import type { WebmcpExecuteResult } from '@/utils/messaging'
 
 import type { FrameTool, PageInfo } from './webmcp-client'
@@ -113,7 +114,7 @@ function parseArguments(raw: string): { ok: true; value: unknown } | { ok: false
   try {
     return { ok: true, value: raw.trim() ? JSON.parse(raw) : {} }
   } catch {
-    return { ok: false, error: `参数不是合法的 JSON：${raw.slice(0, 200)}` }
+    return { ok: false, error: t('assistant.agent.invalidArgs', { raw: raw.slice(0, 200) }) }
   }
 }
 
@@ -157,7 +158,7 @@ export async function runAgent(options: RunAgentOptions): Promise<void> {
         args: call.function.arguments,
       })
       if (!target) {
-        respond('error', `工具「${call.function.name}」不存在，请只使用提供的工具`)
+        respond('error', t('assistant.agent.toolNotFound', { name: call.function.name }))
         continue
       }
 
@@ -167,21 +168,21 @@ export async function runAgent(options: RunAgentOptions): Promise<void> {
         continue
       }
       if (!(await confirm(target.tool, call.id))) {
-        respond('rejected', '用户拒绝执行该工具')
+        respond('rejected', t('assistant.agent.rejectedByUser'))
         continue
       }
 
       const outcome = await execute(target.tool, args.value)
-      if (outcome.ok) respond('done', outcome.result ?? '（工具执行成功，没有返回值）')
-      else respond('error', outcome.error ?? '工具执行失败')
+      if (outcome.ok) respond('done', outcome.result ?? t('assistant.agent.noResult'))
+      else respond('error', outcome.error ?? t('assistant.agent.failed'))
     }
   }
 
   history.push({
     role: 'assistant',
-    content: `已连续调用工具 ${MAX_STEPS} 次仍未完成，先停在这里。可以补充说明后继续。`,
+    content: t('assistant.agent.maxStepsHistory', { count: MAX_STEPS }),
   })
-  onEvent({ type: 'text', delta: `已连续调用工具 ${MAX_STEPS} 次仍未完成，先停在这里。` })
+  onEvent({ type: 'text', delta: t('assistant.agent.maxSteps', { count: MAX_STEPS }) })
   onEvent({ type: 'message-end' })
 }
 

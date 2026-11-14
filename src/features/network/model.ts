@@ -1,6 +1,7 @@
 /**
  * 网络面板的常量与纯函数（不依赖 React / 浏览器 API）。
  */
+import { getLocale, t, type MessageKey } from '@/utils/i18n'
 import type { NetworkProxyStatus } from '@/utils/messaging'
 import { normalizeBypassList } from '@/utils/network'
 import {
@@ -12,12 +13,35 @@ import {
   type NetworkProxyScheme,
 } from '@/utils/settings'
 
-export const MODE_OPTIONS: Array<{ value: NetworkMode; label: string; description: string }> = [
-  { value: 'direct', label: '直连', description: '不使用代理' },
-  { value: 'system', label: '系统代理', description: '跟随系统设置' },
-  { value: 'scenario', label: '自动模式', description: '规则自动切换' },
-  { value: 'global', label: '代理模式', description: '全部走代理' },
-]
+/** 内置网络模式；运行时调用以跟随界面语言 */
+export function getModeOptions(): Array<{
+  value: NetworkMode
+  label: string
+  description: string
+}> {
+  return [
+    {
+      value: 'direct',
+      label: t('network.mode.direct.label'),
+      description: t('network.mode.direct.desc'),
+    },
+    {
+      value: 'system',
+      label: t('network.mode.system.label'),
+      description: t('network.mode.system.desc'),
+    },
+    {
+      value: 'scenario',
+      label: t('network.mode.scenario.label'),
+      description: t('network.mode.scenario.desc'),
+    },
+    {
+      value: 'global',
+      label: t('network.mode.global.label'),
+      description: t('network.mode.global.desc'),
+    },
+  ]
+}
 
 export const SCHEME_OPTIONS: Array<{ value: NetworkProxyScheme; label: string }> = [
   { value: 'http', label: 'HTTP' },
@@ -31,31 +55,27 @@ export function usesProxyProfile(mode: NetworkMode): boolean {
   return mode === 'global' || mode === 'scenario'
 }
 
-const CONTROL_LABELS: Record<string, string> = {
-  not_controllable: '浏览器不允许扩展控制代理',
-  controlled_by_other_extensions: '代理已被其他扩展控制',
-  controllable_by_this_extension: '可由 DevGo 控制',
-  controlled_by_this_extension: '已由 DevGo 控制',
+const CONTROL_LABELS: Record<string, MessageKey> = {
+  not_controllable: 'network.proxyControl.notControllable',
+  controlled_by_other_extensions: 'network.proxyControl.byOther',
+  controllable_by_this_extension: 'network.proxyControl.controllable',
+  controlled_by_this_extension: 'network.proxyControl.byThis',
 }
 
-export const RECOMMENDED_RULE_LISTS = [
-  {
-    label: '规则 1 · GitHub',
-    url: 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt',
-  },
-  {
-    label: '规则 2 · GitLab',
-    url: 'https://gitlab.com/gfwlist/gfwlist/raw/master/gfwlist.txt',
-  },
-  {
-    label: '规则 3 · jsDelivr',
-    url: 'https://cdn.jsdelivr.net/gh/gfwlist/gfwlist@master/gfwlist.txt',
-  },
-  {
-    label: '规则 4 · Pagure',
-    url: 'https://pagure.io/gfwlist/raw/master/f/gfwlist.txt',
-  },
+const RECOMMENDED_RULE_LIST_SOURCES = [
+  { source: 'GitHub', url: 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt' },
+  { source: 'GitLab', url: 'https://gitlab.com/gfwlist/gfwlist/raw/master/gfwlist.txt' },
+  { source: 'jsDelivr', url: 'https://cdn.jsdelivr.net/gh/gfwlist/gfwlist@master/gfwlist.txt' },
+  { source: 'Pagure', url: 'https://pagure.io/gfwlist/raw/master/f/gfwlist.txt' },
 ]
+
+/** 推荐的规则列表地址（「规则 N · 来源」）；运行时调用以跟随界面语言 */
+export function getRecommendedRuleLists(): Array<{ label: string; url: string }> {
+  return RECOMMENDED_RULE_LIST_SOURCES.map(({ source, url }, index) => ({
+    label: t('network.ruleList.recommended', { index: index + 1, source }),
+    url,
+  }))
+}
 
 export const CUSTOM_PROXY_MODE_NAME_MAX = 24
 
@@ -127,15 +147,16 @@ export function proxyProfileModeOf(mode: NetworkMode): NetworkProxyProfileMode |
 
 export function getStatusText(status: NetworkProxyStatus | null): string {
   if (!status) return ''
-  if (!status.ok) return status.error || '代理设置失败'
-  return status.levelOfControl ? CONTROL_LABELS[status.levelOfControl] : '代理设置已同步'
+  if (!status.ok) return status.error || t('network.status.applyFailed')
+  const key = status.levelOfControl ? CONTROL_LABELS[status.levelOfControl] : undefined
+  return key ? t(key) : t('network.status.synced')
 }
 
 export function formatRuleListTime(value: string): string {
   if (!value) return ''
 
   try {
-    return new Intl.DateTimeFormat('zh-CN', {
+    return new Intl.DateTimeFormat(getLocale(), {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',

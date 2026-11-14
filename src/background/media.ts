@@ -2,6 +2,7 @@
  * 媒体资源嗅探：通过 webRequest 记录各标签页加载的图片 / 视频，合并内容脚本的 DOM 采集结果，并提供下载。
  */
 
+import { t } from '@/utils/i18n'
 import type {
   MediaDownloadResult,
   MediaResource,
@@ -183,7 +184,7 @@ export async function getMediaResources(
 ): Promise<MediaResourceListResult> {
   const targetTabId = tabId ?? (await getActiveTabId())
   if (targetTabId == null) {
-    return { resources: [], error: '无法获取当前标签页' }
+    return { resources: [], error: t('background.media.noActiveTab') }
   }
 
   let pageUrl = ''

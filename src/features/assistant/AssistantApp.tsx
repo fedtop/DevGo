@@ -8,6 +8,7 @@ import LlmConfigForm from '@/features/translate/LlmConfigForm'
 import Button from '@/ui/Button'
 import Markdown from '@/ui/Markdown'
 import Switch from '@/ui/Switch'
+import { t, type MessageKey } from '@/utils/i18n'
 import { sendRuntimeMessage, type AssistantHandoff } from '@/utils/messaging'
 import {
   assistantConfirmTools,
@@ -22,7 +23,13 @@ import {
 import { useStorageItem } from '@/utils/useStorageItem'
 
 import { buildSystemPrompt, repairHistory, runAgent, type AgentEvent } from './agent'
-import { formatPageContent, isBuiltinTool, readPage, READ_PAGE_TOOL } from './page-tools'
+import {
+  formatPageContent,
+  isBuiltinTool,
+  PageReadError,
+  readPage,
+  READ_PAGE_TOOL,
+} from './page-tools'
 import WebmcpView from './WebmcpView'
 import { executeFrameTool, useActiveTabId, useWebmcpTools, type FrameTool } from './webmcp-client'
 import {
@@ -71,31 +78,40 @@ interface Prompt {
   withPage?: boolean
 }
 
-const QUICK_ACTIONS: Array<{ label: string; prompt: string; icon: LucideIcon }> = [
-  {
-    label: '总结本页',
-    icon: FileText,
-    prompt: '总结这个网页的主要内容：先用一两句话概括，再分点列出关键信息。',
-  },
-  {
-    label: '提取要点',
-    icon: ListChecks,
-    prompt:
-      '提取这个网页里的关键信息（结论、数据、步骤、注意事项等），用列表列出，不要遗漏重要细节。',
-  },
-  {
-    label: '用中文讲讲',
-    icon: Languages,
-    prompt: '用简体中文介绍这个网页讲了什么、适合谁看，以及最值得关注的部分。',
-  },
-]
+interface QuickAction {
+  label: string
+  /** 发给模型的指令，同时在空状态里作为说明展示（随界面语言） */
+  prompt: string
+  icon: LucideIcon
+}
 
-const TOOL_STATUS_LABELS: Record<ToolStatus, string> = {
-  running: '执行中',
-  awaiting: '待确认',
-  done: '完成',
-  error: '失败',
-  rejected: '已拒绝',
+/** 快捷指令：运行时按当前界面语言取文案 */
+function getQuickActions(): QuickAction[] {
+  return [
+    {
+      label: t('assistant.quickActions.summarize.label'),
+      icon: FileText,
+      prompt: t('assistant.quickActions.summarize.prompt'),
+    },
+    {
+      label: t('assistant.quickActions.keyPoints.label'),
+      icon: ListChecks,
+      prompt: t('assistant.quickActions.keyPoints.prompt'),
+    },
+    {
+      label: t('assistant.quickActions.explain.label'),
+      icon: Languages,
+      prompt: t('assistant.quickActions.explain.prompt'),
+    },
+  ]
+}
+
+const TOOL_STATUS_LABELS: Record<ToolStatus, MessageKey> = {
+  running: 'assistant.tool.status.running',
+  awaiting: 'assistant.tool.status.awaiting',
+  done: 'assistant.tool.status.done',
+  error: 'assistant.tool.status.error',
+  rejected: 'assistant.tool.status.rejected',
 }
 
 let idSeed = 0
@@ -305,7 +321,11 @@ export default function AssistantApp() {
         ...current.map((item) =>
           item.kind === 'assistant' && !item.done ? { ...item, done: true } : item,
         ),
-        { kind: 'error', id: nextId(), text: aborted ? '已停止' : describeError(error) },
+        {
+          kind: 'error',
+          id: nextId(),
+          text: aborted ? t('assistant.chat.stopped') : describeError(error),
+        },
       ])
     } finally {
       repairHistory(historyRef.current)
@@ -402,11 +422,11 @@ export default function AssistantApp() {
 
   const host = hostOf(page.url)
   const placeholder = useMemo(() => {
-    if (!configReady) return '先在设置里配置对话模型'
-    if (quote) return '就选中的内容提问…'
+    if (!configReady) return t('assistant.chat.placeholder.notConfigured')
+    if (quote) return t('assistant.chat.placeholder.quote')
     return webTools.length
-      ? '问问这个网页，或让 AI 用网页工具帮你做点什么…'
-      : '问问这个网页，比如「这篇文章的结论是什么」'
+      ? t('assistant.chat.placeholder.withTools')
+      : t('assistant.chat.placeholder.default')
   }, [configReady, quote, webTools.length])
 
   return (
@@ -417,24 +437,29 @@ export default function AssistantApp() {
           <Globe className='size-4 shrink-0 text-neutral-500' strokeWidth={1.8} aria-hidden />
           <div className='min-w-0'>
             <p className='truncate text-[13px] font-medium text-neutral-900'>
-              {page.title || host || '当前页面'}
+              {page.title || host || t('assistant.header.currentPage')}
             </p>
             {(host || webTools.length > 0) && (
               <p className='truncate text-[11px] text-neutral-500'>
                 {host}
-                {webTools.length > 0 && `${host ? ' · ' : ''}${webTools.length} 个网页工具`}
+                {webTools.length > 0 &&
+                  `${host ? ' · ' : ''}${t('assistant.header.webToolCount', { count: webTools.length })}`}
               </p>
             )}
           </div>
         </div>
         <div className='flex shrink-0 items-center gap-1.5'>
           {view === 'chat' && items.length > 0 && (
-            <IconButton label='新对话' onClick={clear}>
+            <IconButton label={t('assistant.header.newChat')} onClick={clear}>
               <SquarePen strokeWidth={1.8} />
             </IconButton>
           )}
           <IconButton
-            label={view === 'settings' ? '返回对话' : '设置'}
+            label={
+              view === 'settings'
+                ? t('assistant.header.backToChat')
+                : t('assistant.header.settings')
+            }
             onClick={() => setView(view === 'settings' ? 'chat' : 'settings')}
             disabled={view === 'settings' && !configReady}
           >
@@ -446,12 +471,12 @@ export default function AssistantApp() {
       {view !== 'settings' && (
         <nav
           className='flex shrink-0 gap-1 border-b border-black/5 px-3 py-1.5'
-          aria-label='侧边栏页面'
+          aria-label={t('assistant.nav.label')}
         >
           {(
             [
-              { value: 'chat', label: '对话', icon: MessageSquare },
-              { value: 'tools', label: '网页工具', icon: Blocks },
+              { value: 'chat', label: t('assistant.nav.chat'), icon: MessageSquare },
+              { value: 'tools', label: t('assistant.nav.tools'), icon: Blocks },
             ] as const
           ).map(({ value, label, icon: Icon }) => (
             <button
@@ -492,7 +517,7 @@ export default function AssistantApp() {
           onRefresh={refresh}
           execute={(tool, args) =>
             tabId == null
-              ? Promise.resolve({ ok: false, error: '没有可用的标签页' })
+              ? Promise.resolve({ ok: false, error: t('assistant.chat.noTab') })
               : executeFrameTool(tabId, tool.frameId, tool.name, args)
           }
         />
@@ -524,7 +549,7 @@ export default function AssistantApp() {
                 {running && items[items.length - 1]?.kind !== 'assistant' && (
                   <p className='flex items-center gap-1.5 text-xs text-neutral-500'>
                     <Loader2 className='size-3.5 animate-spin' aria-hidden />
-                    思考中…
+                    {t('assistant.chat.thinking')}
                   </p>
                 )}
               </div>
@@ -534,7 +559,7 @@ export default function AssistantApp() {
           <footer className='shrink-0 border-t border-black/5 p-2.5'>
             {items.length > 0 && !running && (
               <div className='mb-2 flex flex-wrap gap-1.5'>
-                {QUICK_ACTIONS.map((action) => (
+                {getQuickActions().map((action) => (
                   <button
                     key={action.label}
                     type='button'
@@ -556,7 +581,7 @@ export default function AssistantApp() {
                   </span>
                   <button
                     type='button'
-                    title='移除引用'
+                    title={t('assistant.chat.removeQuote')}
                     onClick={() => setQuote('')}
                     className='shrink-0 text-neutral-500 hover:text-neutral-600'
                   >
@@ -578,8 +603,8 @@ export default function AssistantApp() {
                 {running ? (
                   <button
                     type='button'
-                    title='停止'
-                    aria-label='停止'
+                    title={t('assistant.chat.stop')}
+                    aria-label={t('assistant.chat.stop')}
                     onClick={stop}
                     className='flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700'
                   >
@@ -588,8 +613,8 @@ export default function AssistantApp() {
                 ) : (
                   <button
                     type='button'
-                    title='发送'
-                    aria-label='发送'
+                    title={t('assistant.chat.send')}
+                    aria-label={t('assistant.chat.send')}
                     onClick={submit}
                     disabled={!input.trim() || !configReady || tabId == null}
                     className='flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:bg-black/10 disabled:text-neutral-400'
@@ -600,7 +625,8 @@ export default function AssistantApp() {
               </div>
             </div>
             <p className='mt-1 px-1 text-[10px] text-neutral-500'>
-              {config.model ? `${config.model} · ` : ''}Enter 发送，Shift + Enter 换行
+              {config.model ? `${config.model} · ` : ''}
+              {t('assistant.chat.inputHint')}
             </p>
           </footer>
         </>
@@ -610,11 +636,11 @@ export default function AssistantApp() {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error && error.message.startsWith('无法读取当前网页')) return error.message
+  if (error instanceof PageReadError) return error.message
   const translateError = toTranslateError(error)
   const friendly = describeServiceError(translateError.code)
   return translateError.message && translateError.message !== friendly
-    ? `${friendly}：${translateError.message}`
+    ? t('assistant.chat.errorDetail', { reason: friendly, detail: translateError.message })
     : friendly
 }
 
@@ -635,22 +661,22 @@ function SettingsView({
     <div className='popup-main min-h-0 flex-1 overflow-y-auto px-3 py-3'>
       <section className='flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3'>
         <div>
-          <h2 className='text-sm font-semibold'>对话模型</h2>
+          <h2 className='text-sm font-semibold'>{t('assistant.settings.modelTitle')}</h2>
           <p className='text-[11px] leading-relaxed text-neutral-500'>
-            用于侧边栏助手和划词的解释、总结、润色，建议选能力强、支持工具调用的模型。
-            翻译模型在设置页单独配置，可以选更快的模型。
-            {inherited && '当前沿用翻译模型，保存后单独生效。'}
+            {inherited
+              ? t('assistant.settings.modelHintInherited')
+              : t('assistant.settings.modelHint')}
           </p>
         </div>
         <LlmConfigForm compact target='assistant' onSaved={onSaved} />
       </section>
       <section className='mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-3 py-2.5'>
         <div className='min-w-0'>
-          <p className='text-sm font-medium'>执行网页工具前确认</p>
+          <p className='text-sm font-medium'>{t('assistant.settings.confirmTools')}</p>
           <p className='text-[11px] leading-relaxed text-neutral-500'>
-            网页通过 WebMCP 提供、且未声明为只读的工具（可能提交表单、下单等），执行前先让你确认
-            {!webmcpSupported &&
-              '。浏览器尚未开启 WebMCP：在 chrome://flags 启用「WebMCP for testing」后可用'}
+            {webmcpSupported
+              ? t('assistant.settings.confirmToolsHint')
+              : t('assistant.settings.confirmToolsHintUnsupported')}
           </p>
         </div>
         <Switch checked={confirmTools} onChange={setConfirmTools} />
@@ -662,7 +688,7 @@ function SettingsView({
         }
         className='mt-3 w-full text-center text-[11px] text-neutral-500 hover:text-accent-600'
       >
-        打开完整设置页
+        {t('assistant.settings.openOptions')}
         <ArrowUpRight className='ml-0.5 inline size-3 -translate-y-px' aria-hidden />
       </button>
     </div>
@@ -684,14 +710,15 @@ function EmptyState({
         <Sparkles className='size-5' strokeWidth={1.8} aria-hidden />
       </span>
       <div className='flex flex-col gap-1'>
-        <p className='text-[15px] font-semibold text-neutral-900'>有什么可以帮你？</p>
+        <p className='text-[15px] font-semibold text-neutral-900'>{t('assistant.empty.title')}</p>
         <p className='text-xs leading-relaxed text-neutral-500'>
-          可以总结网页、就网页内容提问；在网页上选中文字后点「问 AI」，会带着选中内容来这里。
-          {webToolCount > 0 && `当前网页还提供了 ${webToolCount} 个工具，AI 可以替你在网页上操作。`}
+          {webToolCount > 0
+            ? t('assistant.empty.descriptionWithTools', { count: webToolCount })
+            : t('assistant.empty.description')}
         </p>
       </div>
       <div className='flex w-full flex-col gap-1.5'>
-        {QUICK_ACTIONS.map((action) => (
+        {getQuickActions().map((action) => (
           <button
             key={action.label}
             type='button'
@@ -717,7 +744,7 @@ function EmptyState({
 
 function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boolean) => void }) {
   if (item.kind === 'user') {
-    const label = QUICK_ACTIONS.find((action) => action.prompt === item.text)?.label
+    const label = getQuickActions().find((action) => action.prompt === item.text)?.label
     return (
       <div className='ml-8 flex flex-col items-end gap-1 self-end'>
         {item.quote && (
@@ -731,7 +758,7 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
         {item.withPage && (
           <span className='inline-flex items-center gap-1 text-[10px] text-neutral-500'>
             <FileText className='size-3' aria-hidden />
-            已附带网页内容
+            {t('assistant.chat.withPage')}
           </span>
         )}
       </div>
@@ -751,7 +778,9 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
       <div className='mr-4 flex flex-col gap-1'>
         {item.reasoning && (
           <details className='text-[11px] text-neutral-500' open={!item.done && !item.text}>
-            <summary className='cursor-pointer select-none'>思考过程</summary>
+            <summary className='cursor-pointer select-none'>
+              {t('assistant.chat.reasoning')}
+            </summary>
             <p className='mt-1 border-l-2 border-neutral-200 pl-2 whitespace-pre-wrap break-words'>
               {item.reasoning}
             </p>
@@ -774,7 +803,7 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
         : item.status === 'done'
           ? 'text-emerald-600'
           : 'text-neutral-500'
-  const displayName = item.name === READ_PAGE_TOOL.name ? '读取网页内容' : item.name
+  const displayName = item.name === READ_PAGE_TOOL.name ? t('assistant.tool.readPage') : item.name
 
   return (
     <div className='mr-4 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs'>
@@ -785,11 +814,13 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
         </span>
         <span className={`flex shrink-0 items-center gap-1 ${tone}`}>
           {item.status === 'running' && <Loader2 className='size-3 animate-spin' aria-hidden />}
-          {TOOL_STATUS_LABELS[item.status]}
+          {t(TOOL_STATUS_LABELS[item.status])}
         </span>
       </div>
       <details className='mt-1' open={item.status === 'awaiting'}>
-        <summary className='cursor-pointer select-none text-neutral-500'>参数与结果</summary>
+        <summary className='cursor-pointer select-none text-neutral-500'>
+          {t('assistant.tool.argsAndResult')}
+        </summary>
         <pre className='mt-1 max-h-32 overflow-auto rounded-lg bg-black/[0.04] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-neutral-600'>
           {formatJson(item.args)}
         </pre>
@@ -801,16 +832,18 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
       </details>
       {item.status === 'awaiting' && (
         <div className='mt-2 flex items-center justify-end gap-1.5'>
-          <span className='mr-auto text-[11px] text-amber-600'>该工具可能修改网页数据</span>
+          <span className='mr-auto text-[11px] text-amber-600'>
+            {t('assistant.tool.mayModify')}
+          </span>
           <Button onClick={() => onDecide(false)} className='!px-2 !py-0.5 text-xs'>
-            拒绝
+            {t('assistant.tool.reject')}
           </Button>
           <Button
             variant='primary'
             onClick={() => onDecide(true)}
             className='!px-2 !py-0.5 text-xs'
           >
-            允许执行
+            {t('assistant.tool.allow')}
           </Button>
         </div>
       )}

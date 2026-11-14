@@ -1,1 +1,6 @@
-{}
+{
+  "floatButton": {
+    "editOnline": "在线编辑",
+    "backToTop": "回到顶部"
+  }
+}

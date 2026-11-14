@@ -9,7 +9,11 @@ import {
   registerOpenAssistantListener,
   testAssistant,
 } from '@/background/ai'
-import { createContextMenus, registerCommands } from '@/background/commands'
+import {
+  createContextMenus,
+  registerCommands,
+  registerContextMenuLocaleWatcher,
+} from '@/background/commands'
 import {
   proxyCorsRequest,
   syncCorsBypassRules,
@@ -123,6 +127,7 @@ export default defineBackground(() => {
 
   registerMediaSniffer()
   registerCommands()
+  registerContextMenuLocaleWatcher()
   registerProxyWatchers()
   registerWebrtcWatchers()
 

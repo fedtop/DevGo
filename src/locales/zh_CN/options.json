@@ -49,5 +49,101 @@
       "imported": "已导入 {imported} 项，立即生效",
       "importFailed": "导入失败：{reason}"
     }
+  },
+  "app": {
+    "title": "{name} 设置",
+    "nav": {
+      "translate": "翻译",
+      "models": "AI 模型",
+      "selection": "划词",
+      "assistant": "AI 助手",
+      "network": "网络",
+      "enhance": "网页增强",
+      "general": "通用"
+    }
+  },
+  "hostList": {
+    "add": "添加",
+    "remove": "移除 {host}",
+    "empty": "暂无"
+  },
+  "translate": {
+    "title": "翻译",
+    "desc": "整页双语翻译、悬停翻译与总是翻译的网站",
+    "page": {
+      "title": "网页翻译",
+      "desc": "整页双语对照翻译：译文插在原文段落之后，随页面滚动按需翻译。",
+      "provider": "翻译引擎",
+      "usingModel": "使用翻译模型 {model}",
+      "modelMissing": "还没有配置翻译模型，AI 翻译暂时不可用",
+      "editModel": "修改",
+      "configureModel": "去配置",
+      "freeHint": "谷歌、微软免费可用；想用大模型翻译可配置自己的模型",
+      "configureAiModel": "配置 AI 模型",
+      "target": "目标语言",
+      "targetHint": "自动：中文页面译成英文，其余页面译成简体中文",
+      "displayMode": "展示方式",
+      "displayModeHint": "仅译文：隐藏原文，只保留译文",
+      "underline": "译文下划线",
+      "underlineHint": "用虚线标出译文，方便区分原文",
+      "hover": "悬停翻译"
+    },
+    "autoHosts": {
+      "title": "总是翻译的网站",
+      "desc": "打开这些网站时自动整页翻译。也可在弹窗中一键开关当前网站。",
+      "placeholder": "例如 developer.mozilla.org"
+    }
+  },
+  "models": {
+    "title": "AI 模型",
+    "desc": "支持任意 OpenAI 兼容接口（含各家 Coding Plan）。翻译和对话分开配置：翻译要快，对话要强。",
+    "notConfigured": "还没有配置",
+    "missingKey": "缺少 API Key",
+    "collapse": "收起",
+    "configure": "配置",
+    "translateModel": {
+      "title": "翻译模型",
+      "badge": "追求速度",
+      "desc": "整页 / 悬停 / 划词翻译，翻译引擎选「AI 大模型」时生效。建议选不带深度思考的快模型，如 glm-4-flash、qwen-turbo、deepseek-chat。"
+    },
+    "chatModel": {
+      "title": "对话模型",
+      "badge": "追求能力",
+      "desc": "划词解释 / 总结 / 润色与侧边栏 AI 助手。建议选能力强、支持工具调用的模型，如 GLM-4.6、Kimi K2、qwen3-max 或 Coding Plan。",
+      "inherited": "（沿用翻译模型）",
+      "resetHint": "不想单独维护一套配置时，可以改回沿用翻译模型",
+      "reset": "改回沿用翻译模型"
+    }
+  },
+  "assistant": {
+    "title": "AI 助手",
+    "desc": "浏览器侧边栏里的 AI 助手，使用「AI 模型」里的对话模型",
+    "sidepanel": {
+      "title": "侧边栏助手",
+      "desc": "总结网页、提取要点、就网页内容提问（包括 Shadow DOM 渲染的页面）；划词「问 AI」会带着选中内容打开这里。",
+      "open": "打开侧边栏",
+      "shortcutHint": "快捷键 {shortcut}，也可以在弹窗「功能」页打开",
+      "noShortcutHint": "未设置快捷键，可在「通用 → 快捷键」里设置",
+      "openButton": "打开"
+    },
+    "webmcp": {
+      "title": "网页工具（WebMCP）",
+      "desc": "网页可以通过 WebMCP 向 AI 提供可执行的工具（查询、下单、填写表单等），助手会自动发现并调用。需要 Chrome 150 及以上，并在 chrome://flags 启用「WebMCP for testing」。",
+      "confirm": "执行前确认",
+      "confirmHint": "未声明为只读的网页工具（可能修改数据），执行前先让你确认"
+    }
+  },
+  "enhance": {
+    "title": "网页增强",
+    "desc": "GitHub 增强与按站点解除复制限制",
+    "github": {
+      "label": "GitHub 增强",
+      "hint": "代码页悬浮按钮（在线编辑、DeepWiki、回到顶部），快捷键 , 打开 github1s"
+    },
+    "unlock": {
+      "title": "解除复制限制的网站",
+      "desc": "放开这些网站的复制、选择与右键限制。只对列表里的网站生效（全局放开会让在线编辑器等网站失灵），也可以在弹窗「功能」页一键开关当前网站。",
+      "placeholder": "例如 www.example.com"
+    }
   }
 }

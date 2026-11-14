@@ -4,6 +4,7 @@
  * 导出为 JSON；导入时做容错校验，仅接收合法字段，旧文件缺字段也能导入。
  */
 
+import { t } from '@/utils/i18n'
 import {
   isNewtabShaderEffect,
   isNewtabShaderMode,
@@ -101,15 +102,15 @@ export function parseConfig(text: string): NewTabConfig {
   try {
     data = JSON.parse(text)
   } catch {
-    throw new Error('文件不是合法的 JSON')
+    throw new Error(t('newtab.config.invalidJson'))
   }
-  if (!data || typeof data !== 'object') throw new Error('配置格式不正确')
+  if (!data || typeof data !== 'object') throw new Error(t('newtab.config.invalidFormat'))
 
   const obj = data as Record<string, unknown>
-  if (obj.format !== FORMAT) throw new Error('不是 DevGo 新标签页配置文件')
+  if (obj.format !== FORMAT) throw new Error(t('newtab.config.notDevgoFile'))
 
   const items = sanitizeItems(obj.quickNavItems)
-  if (items.length === 0) throw new Error('文件中没有可导入的导航项')
+  if (items.length === 0) throw new Error(t('newtab.config.noItems'))
 
   const themeMode = sanitizeThemeMode(obj.themeMode)
   const shaderMode = isNewtabShaderMode(obj.shaderMode) ? obj.shaderMode : undefined

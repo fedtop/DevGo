@@ -1,6 +1,7 @@
 import { httpStatusToError, TranslateError } from '@/features/translate/errors'
 import type { DictResult } from '@/types/dict'
 import { pickTarget } from '@/utils/lang'
+import { t } from '@/utils/i18n'
 
 export interface YoudaoTransRes {
   query: string
@@ -79,14 +80,17 @@ export async function googleTranslateBatch(
     credentials: 'omit',
     signal,
   })
-  if (!res.ok) throw httpStatusToError(res.status, 'Google 翻译')
+  if (!res.ok) throw httpStatusToError(res.status, t('translate.services.google'))
 
   const data: unknown = await res.json()
   // 只有一段时部分版本会返回扁平的 [译文, 源语言]
   const items =
     texts.length === 1 && Array.isArray(data) && typeof data[0] === 'string' ? [data] : data
   if (!Array.isArray(items) || items.length !== texts.length) {
-    throw new TranslateError('parse', 'Google 翻译返回的结果数量与请求不一致')
+    throw new TranslateError(
+      'parse',
+      t('translate.errors.resultCountMismatch', { service: t('translate.services.google') }),
+    )
   }
   return items.map((item) => {
     const text = Array.isArray(item) ? item[0] : item

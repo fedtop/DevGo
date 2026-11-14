@@ -15,6 +15,7 @@ import { useState, type ReactNode } from 'react'
 
 import Button from '@/ui/Button'
 import IconButton from '@/ui/IconButton'
+import { t } from '@/utils/i18n'
 import type { WebmcpExecuteResult } from '@/utils/messaging'
 
 import { templateFromSchema } from './schema-template'
@@ -38,30 +39,33 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
 
   if (status === 'unsupported') {
     return (
-      <EmptyState icon={FlaskConical} title='浏览器还没开启 WebMCP'>
-        WebMCP 目前是 Chrome 的实验功能：需要 Chrome 150 及以上，在 chrome://flags 搜索「WebMCP for
-        testing」并启用，重启浏览器后回到这里刷新。
+      <EmptyState icon={FlaskConical} title={t('assistant.webmcp.unsupported.title')}>
+        {t('assistant.webmcp.unsupported.description')}
       </EmptyState>
     )
   }
   if (status === 'unavailable') {
     return (
-      <EmptyState icon={CircleAlert} title='当前页面读取不到' onRefresh={onRefresh}>
-        浏览器内置页、扩展商店等页面不允许扩展访问；如果是普通网页，刷新网页后再试。
+      <EmptyState
+        icon={CircleAlert}
+        title={t('assistant.webmcp.unavailable.title')}
+        onRefresh={onRefresh}
+      >
+        {t('assistant.webmcp.unavailable.description')}
       </EmptyState>
     )
   }
   if (status === 'loading') {
     return (
-      <EmptyState icon={Loader2} spin title='正在检测当前网页…'>
-        读取网页及其中 iframe 注册的工具。
+      <EmptyState icon={Loader2} spin title={t('assistant.webmcp.loading.title')}>
+        {t('assistant.webmcp.loading.description')}
       </EmptyState>
     )
   }
   if (tools.length === 0) {
     return (
-      <EmptyState icon={PlugZap} title='这个网页没有提供工具' onRefresh={onRefresh}>
-        网页需要通过 WebMCP（document.modelContext）注册工具，AI 才能直接替你操作网页。
+      <EmptyState icon={PlugZap} title={t('assistant.webmcp.empty.title')} onRefresh={onRefresh}>
+        {t('assistant.webmcp.empty.description')}
       </EmptyState>
     )
   }
@@ -70,9 +74,13 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
     <div className='min-h-0 flex-1 overflow-y-auto px-3 py-3'>
       <div className='mb-2 flex items-center justify-between gap-2 px-0.5'>
         <p className='text-xs text-neutral-500'>
-          当前网页提供 {tools.length} 个工具，在「对话」里描述需求，AI 会自动调用
+          {t('assistant.webmcp.summary', { count: tools.length })}
         </p>
-        <IconButton label='重新检测' onClick={onRefresh} className='!size-7 [&_svg]:!size-3.5'>
+        <IconButton
+          label={t('assistant.webmcp.refresh')}
+          onClick={onRefresh}
+          className='!size-7 [&_svg]:!size-3.5'
+        >
           <RefreshCw strokeWidth={1.8} />
         </IconButton>
       </div>
@@ -116,7 +124,7 @@ function EmptyState({
       {onRefresh && (
         <Button onClick={onRefresh} className='mt-1 !px-3 !py-1 text-xs'>
           <RefreshCw className='size-3.5' aria-hidden />
-          重新检测
+          {t('assistant.webmcp.refresh')}
         </Button>
       )}
     </div>
@@ -170,7 +178,7 @@ function ToolCard({
     try {
       parsed = args.trim() ? JSON.parse(args) : {}
     } catch {
-      setOutput({ ok: false, text: '参数不是合法的 JSON' })
+      setOutput({ ok: false, text: t('assistant.webmcp.invalidJson') })
       return
     }
     setRunning(true)
@@ -178,8 +186,8 @@ function ToolCard({
     const result = await execute(tool, parsed)
     setOutput(
       result.ok
-        ? { ok: true, text: result.result ?? '（执行成功，没有返回值）' }
-        : { ok: false, text: result.error ?? '执行失败' },
+        ? { ok: true, text: result.result ?? t('assistant.webmcp.noResult') }
+        : { ok: false, text: result.error ?? t('assistant.webmcp.failed') },
     )
     setRunning(false)
   }
@@ -199,11 +207,11 @@ function ToolCard({
             </span>
             {tool.readOnly ? (
               <Badge tone='safe' icon={ShieldCheck}>
-                只读
+                {t('assistant.webmcp.readOnly')}
               </Badge>
             ) : (
               <Badge tone='warn' icon={ShieldAlert}>
-                可能修改数据
+                {t('assistant.webmcp.mayModify')}
               </Badge>
             )}
             {tool.frameId !== 0 && (
@@ -230,7 +238,7 @@ function ToolCard({
             className='text-[11px] font-medium text-neutral-600'
             htmlFor={`args-${tool.frameId}-${tool.name}`}
           >
-            参数（JSON，已按 Schema 生成模板）
+            {t('assistant.webmcp.argsLabel')}
           </label>
           <textarea
             id={`args-${tool.frameId}-${tool.name}`}
@@ -242,7 +250,7 @@ function ToolCard({
           />
           <div className='flex items-center justify-between gap-2'>
             <span className='text-[11px] text-neutral-500'>
-              {tool.readOnly ? '只读工具，不会修改网页数据' : '执行会直接作用在网页上'}
+              {tool.readOnly ? t('assistant.webmcp.readOnlyHint') : t('assistant.webmcp.writeHint')}
             </span>
             <Button
               variant='primary'
@@ -251,7 +259,7 @@ function ToolCard({
               className='!px-3 !py-1 text-xs'
             >
               <Play className='size-3' aria-hidden />
-              执行
+              {t('assistant.webmcp.execute')}
             </Button>
           </div>
           {output && (
@@ -259,7 +267,7 @@ function ToolCard({
               <span
                 className={`text-[11px] font-medium ${output.ok ? 'text-emerald-700' : 'text-rose-600'}`}
               >
-                {output.ok ? '执行结果' : '执行失败'}
+                {output.ok ? t('assistant.webmcp.result') : t('assistant.webmcp.failed')}
               </span>
               <pre
                 className={`max-h-56 overflow-auto rounded-lg p-2 font-mono text-[11px] whitespace-pre-wrap break-all ${

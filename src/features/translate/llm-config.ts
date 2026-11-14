@@ -5,6 +5,8 @@
  * `POST {baseUrl}/chat/completions` + SSE 流式输出的服务都能使用。
  */
 
+import { t, type MessageKey } from '@/utils/i18n'
+
 export interface LlmConfig {
   /** 预设 id（仅用于界面回显，不影响请求） */
   preset: string
@@ -27,36 +29,43 @@ export interface LlmPreset {
   hint?: string
 }
 
-export const LLM_PRESETS: readonly LlmPreset[] = [
+/** 预设原始定义：品牌名直接写 label；需要翻译的名称 / 提示写文案 key，读取时再取当前界面语言 */
+interface LlmPresetDef extends Omit<LlmPreset, 'label' | 'hint'> {
+  label?: string
+  labelKey?: MessageKey
+  hintKey?: MessageKey
+}
+
+const PRESET_DEFS: readonly LlmPresetDef[] = [
   {
     id: 'custom',
-    label: '自定义',
+    labelKey: 'translate.presets.custom',
     baseUrl: '',
     model: '',
   },
   {
     id: 'zhipu',
-    label: '智谱 GLM',
+    labelKey: 'translate.presets.zhipu',
     baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
     model: 'glm-4-flash',
     models: ['glm-4-flash', 'glm-4-air', 'glm-4-plus', 'glm-4.5-air', 'glm-4.5', 'glm-4.6'],
-    hint: 'GLM-4.5 及以上模型默认会先思考再回答，整页翻译较慢；追求速度可选 glm-4-flash / glm-4-air',
+    hintKey: 'translate.presets.hint.zhipu',
   },
   {
     id: 'zhipu-coding',
-    label: '智谱 GLM Coding Plan',
+    labelKey: 'translate.presets.zhipuCoding',
     baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4',
     model: 'glm-4.6',
     models: ['glm-4.6', 'glm-4.5', 'glm-4.5-air'],
-    hint: 'Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意',
+    hintKey: 'translate.presets.hint.codingPlan',
   },
   {
     id: 'zai-coding',
-    label: 'Z.ai GLM Coding Plan（国际版）',
+    labelKey: 'translate.presets.zaiCoding',
     baseUrl: 'https://api.z.ai/api/coding/paas/v4',
     model: 'glm-4.6',
     models: ['glm-4.6', 'glm-4.5', 'glm-4.5-air'],
-    hint: 'Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意',
+    hintKey: 'translate.presets.hint.codingPlan',
   },
   {
     id: 'kimi-coding',
@@ -64,22 +73,22 @@ export const LLM_PRESETS: readonly LlmPreset[] = [
     baseUrl: 'https://api.kimi.com/coding/v1',
     model: 'kimi-for-coding',
     models: ['kimi-for-coding'],
-    hint: 'Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意',
+    hintKey: 'translate.presets.hint.codingPlan',
   },
   {
     id: 'bailian-coding',
-    label: '阿里云百炼 Coding Plan',
+    labelKey: 'translate.presets.bailianCoding',
     baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
     model: 'qwen3-coder-plus',
     models: ['qwen3-coder-plus', 'qwen3-max'],
-    hint: 'Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意',
+    hintKey: 'translate.presets.hint.codingPlan',
   },
   {
     id: 'ark-coding',
-    label: '火山方舟 Coding Plan',
+    labelKey: 'translate.presets.arkCoding',
     baseUrl: 'https://ark.cn-beijing.volces.com/api/coding/v3',
     model: '',
-    hint: '模型名填写套餐支持的模型 ID（可点开模型下拉获取）。Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意',
+    hintKey: 'translate.presets.hint.arkCoding',
   },
   {
     id: 'minimax',
@@ -104,17 +113,17 @@ export const LLM_PRESETS: readonly LlmPreset[] = [
   },
   {
     id: 'qwen',
-    label: '通义千问（阿里云百炼）',
+    labelKey: 'translate.presets.qwen',
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     model: 'qwen-plus',
     models: ['qwen-plus', 'qwen-turbo', 'qwen-max', 'qwen-mt-plus', 'qwen-mt-turbo'],
   },
   {
     id: 'doubao',
-    label: '豆包（火山方舟）',
+    labelKey: 'translate.presets.doubao',
     baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
     model: '',
-    hint: '模型名填写方舟控制台里的模型 ID 或推理接入点 ID（ep-xxxx）',
+    hintKey: 'translate.presets.hint.doubao',
   },
   {
     id: 'moonshot',
@@ -139,13 +148,26 @@ export const LLM_PRESETS: readonly LlmPreset[] = [
   },
   {
     id: 'ollama',
-    label: 'Ollama（本地）',
+    labelKey: 'translate.presets.ollama',
     baseUrl: 'http://localhost:11434/v1',
     model: 'qwen2.5:7b',
     models: ['qwen2.5:7b', 'qwen2.5:14b', 'llama3.1:8b'],
-    hint: '本地服务无需 API Key；需设置环境变量 OLLAMA_ORIGINS=chrome-extension://* 允许扩展访问',
+    hintKey: 'translate.presets.hint.ollama',
   },
 ]
+
+/** label / hint 用 getter 在读取时翻译（t() 不能在模块顶层求值） */
+export const LLM_PRESETS: readonly LlmPreset[] = PRESET_DEFS.map(
+  ({ label, labelKey, hintKey, ...rest }): LlmPreset => ({
+    ...rest,
+    get label() {
+      return labelKey ? t(labelKey) : (label ?? rest.id)
+    },
+    get hint() {
+      return hintKey ? t(hintKey) : undefined
+    },
+  }),
+)
 
 const DEFAULT_PRESET = LLM_PRESETS.find((preset) => preset.id === 'zhipu') ?? LLM_PRESETS[0]
 

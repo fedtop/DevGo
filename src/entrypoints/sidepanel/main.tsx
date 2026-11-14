@@ -4,7 +4,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import LocaleRoot from '@/ui/LocaleRoot'
-import { initI18n } from '@/utils/i18n'
+import { initI18n, onLocaleChange, t } from '@/utils/i18n'
 
 import AssistantApp from '@/features/assistant/AssistantApp'
 import { OPEN_ASSISTANT_COMMAND } from '@/utils/shortcut'
@@ -27,12 +27,15 @@ if (!import.meta.env.FIREFOX) {
 
 void Promise.all([initDocumentTheme(), initI18n()])
   .catch(() => undefined)
-  .finally(() =>
+  .finally(() => {
+    const syncTitle = () => (document.title = t('assistant.pageTitle'))
+    syncTitle()
+    onLocaleChange(syncTitle)
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
         <LocaleRoot>
           <AssistantApp />
         </LocaleRoot>
       </React.StrictMode>,
-    ),
-  )
+    )
+  })

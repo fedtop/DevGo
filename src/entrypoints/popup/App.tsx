@@ -6,7 +6,8 @@ import FunctionPage from '@/features/popup/FunctionPage'
 import NetworkPage from '@/features/popup/NetworkPage'
 import ToolsPage from '@/features/popup/ToolsPage'
 import TranslatePage from '@/features/popup/TranslatePage'
-import { POPUP_PAGES } from '@/features/popup/pages'
+import { getPopupPages } from '@/features/popup/pages'
+import { t } from '@/utils/i18n'
 import Tabs from '@/ui/Tabs'
 import {
   defaultPopupTab,
@@ -124,7 +125,7 @@ export default function App() {
           <span className='text-sm font-semibold tracking-tight text-neutral-900'>{SHIP_NAME}</span>
         </div>
         <div className='flex items-center gap-1.5'>
-          <Tabs value={active} tabs={POPUP_PAGES} onChange={handleTabChange} />
+          <Tabs value={active} tabs={getPopupPages()} onChange={handleTabChange} />
           <SettingsButton />
         </div>
       </header>
@@ -141,18 +142,18 @@ export default function App() {
       <footer className='popup-footer flex shrink-0 items-center justify-between border-t px-4 py-2 text-xs text-neutral-500'>
         <button
           type='button'
-          title='修改快捷键'
+          title={t('popup.app.editShortcut')}
           onClick={() => void openShortcutSettings().finally(() => window.close())}
           className='group flex items-center gap-1.5 transition-colors hover:text-neutral-900'
         >
-          快捷键
+          {t('popup.app.shortcut')}
           {activeShortcut ? (
             <kbd className='popup-kbd rounded px-1.5 py-0.5 text-[10px] text-neutral-600'>
               {formatShortcut(activeShortcut)}
             </kbd>
           ) : (
             <span className='text-[10px] text-neutral-500 group-hover:text-neutral-900'>
-              去设置
+              {t('popup.app.setShortcut')}
             </span>
           )}
           <ArrowUpRight
@@ -180,7 +181,7 @@ export default function App() {
 function SettingsButton() {
   return (
     <IconButton
-      label='打开设置'
+      label={t('popup.app.openSettings')}
       onClick={() => {
         void sendRuntimeMessage({ type: 'open-options-page' }).finally(() => window.close())
       }}

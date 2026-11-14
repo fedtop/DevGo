@@ -6,6 +6,7 @@ import {
   hasExtensionRuntime,
   watchLocalBooleanSetting,
 } from '@/utils/content-settings'
+import { initI18n } from '@/utils/i18n'
 import '@/features/github/style.css'
 
 const ENABLE_GITHUB_ENHANCE_KEY = 'enableGithubEnhance'
@@ -17,6 +18,7 @@ export default defineContentScript({
   runAt: 'document_idle',
   async main(ctx) {
     if (!hasExtensionRuntime()) return
+    await initI18n()
 
     const ui = await createShadowRootUi(ctx, {
       name: 'devgo-github-ui',

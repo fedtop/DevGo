@@ -5,6 +5,7 @@
  * - 屏蔽接口 / 隐藏媒体设备：按开关动态注册 MAIN world 内容脚本（document_start、所有 frame，
  *   含 about:blank / blob: 等继承来源的 frame），在网页脚本之前生效且不受 CSP 影响。
  */
+import { t } from '@/utils/i18n'
 import type { WebrtcCandidate, WebrtcLeakResult, WebrtcStatus } from '@/utils/messaging'
 import {
   isWebrtcPolicy,
@@ -146,7 +147,7 @@ export async function testWebrtcLeak(): Promise<WebrtcLeakResult> {
   const tab = tabs
     .filter((item) => item.id != null && !item.discarded)
     .sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))[0]
-  if (!tab?.id) return { candidates: [], error: '请先打开任意一个网页（http / https），再回来检测' }
+  if (!tab?.id) return { candidates: [], error: t('network.background.leakTestNoTab') }
 
   try {
     const [injection] = await chrome.scripting.executeScript({
@@ -161,9 +162,13 @@ export async function testWebrtcLeak(): Promise<WebrtcLeakResult> {
       blocked: result?.blocked,
     }
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    const host = tab.url ? new URL(tab.url).host : ''
     return {
       candidates: [],
-      error: `无法在 ${tab.url ? new URL(tab.url).host : '该网页'} 上检测：${error instanceof Error ? error.message : String(error)}`,
+      error: host
+        ? t('network.background.leakTestFailedOnHost', { host, message })
+        : t('network.background.leakTestFailed', { message }),
     }
   }
 }

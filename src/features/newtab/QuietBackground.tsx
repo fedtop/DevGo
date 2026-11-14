@@ -25,25 +25,26 @@ import {
   type ShaderMountUniforms,
 } from '@paper-design/shaders'
 
+import type { MessageKey } from '@/utils/i18n'
 import type { NewtabShaderEffect } from '@/utils/settings'
 
 const SHADER_MAX_PIXELS = 1920 * 1080
 const DEFAULT_FRAME = 18_000
 
 export const SHADER_EFFECT_OPTIONS = [
-  { id: 'mesh', label: '流体' },
-  { id: 'neuro', label: '神经' },
-  { id: 'simplex', label: '柔波' },
-  { id: 'smoke', label: '烟环' },
-  { id: 'metaballs', label: '熔球' },
-  { id: 'voronoi', label: '晶格' },
-  { id: 'warp', label: '扭曲' },
-  { id: 'heatmap', label: '热流' },
-  { id: 'grain', label: '颗粒' },
-  { id: 'panels', label: '彩幕' },
-  { id: 'water', label: '水波' },
-  { id: 'gem', label: '宝石' },
-] satisfies Array<{ id: NewtabShaderEffect; label: string }>
+  { id: 'mesh', labelKey: 'newtab.shader.effect.mesh' },
+  { id: 'neuro', labelKey: 'newtab.shader.effect.neuro' },
+  { id: 'simplex', labelKey: 'newtab.shader.effect.simplex' },
+  { id: 'smoke', labelKey: 'newtab.shader.effect.smoke' },
+  { id: 'metaballs', labelKey: 'newtab.shader.effect.metaballs' },
+  { id: 'voronoi', labelKey: 'newtab.shader.effect.voronoi' },
+  { id: 'warp', labelKey: 'newtab.shader.effect.warp' },
+  { id: 'heatmap', labelKey: 'newtab.shader.effect.heatmap' },
+  { id: 'grain', labelKey: 'newtab.shader.effect.grain' },
+  { id: 'panels', labelKey: 'newtab.shader.effect.panels' },
+  { id: 'water', labelKey: 'newtab.shader.effect.water' },
+  { id: 'gem', labelKey: 'newtab.shader.effect.gem' },
+] satisfies Array<{ id: NewtabShaderEffect; labelKey: MessageKey }>
 
 interface ShaderAssets {
   emptyImage?: HTMLImageElement

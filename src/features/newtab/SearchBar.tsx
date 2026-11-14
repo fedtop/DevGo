@@ -7,7 +7,15 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } f
 import { isImeComposing } from '@/utils/ime'
 import type { QuickNavItem } from '@/utils/settings'
 import { searchEngine } from '@/utils/settings'
-import { buildSearchUrl, ENGINES, getEngine, parseBang, type SearchEngine } from './engines'
+import { t } from '@/utils/i18n'
+import {
+  buildSearchUrl,
+  engineName,
+  ENGINES,
+  getEngine,
+  parseBang,
+  type SearchEngine,
+} from './engines'
 import SiteIcon from './SiteIcon'
 import { useSuggestions } from './useSuggestions'
 
@@ -113,7 +121,7 @@ export default function SearchBar({ navItems }: SearchBarProps) {
             className='cursor-pointer flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
           >
             <span className='text-base leading-none'>{currentEngine.icon}</span>
-            <span className='hidden sm:inline'>{currentEngine.name}</span>
+            <span className='hidden sm:inline'>{engineName(currentEngine)}</span>
             <svg width='10' height='10' viewBox='0 0 12 12' className='text-slate-400'>
               <path d='M2 4l4 4 4-4' stroke='currentColor' strokeWidth='1.5' fill='none' />
             </svg>
@@ -132,7 +140,7 @@ export default function SearchBar({ navItems }: SearchBarProps) {
                   <span className='aurora-engine-mark flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-base leading-none'>
                     {e.icon}
                   </span>
-                  <span className='min-w-0 flex-1 truncate'>{e.name}</span>
+                  <span className='min-w-0 flex-1 truncate'>{engineName(e)}</span>
                   <kbd className='aurora-engine-kbd shrink-0 rounded-md px-1.5 py-0.5 text-[10px]'>
                     !{e.bang}
                   </kbd>
@@ -174,9 +182,10 @@ export default function SearchBar({ navItems }: SearchBarProps) {
             onKeyDown={onKeyDown}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
-            placeholder={`用 ${effectiveEngine.name} 搜索，或输入 !${
-              currentEngine.bang === 'g' ? 'gh' : 'g'
-            } 切换引擎…`}
+            placeholder={t('newtab.search.placeholder', {
+              engine: engineName(effectiveEngine),
+              bang: currentEngine.bang === 'g' ? 'gh' : 'g',
+            })}
             className='aurora-input-control relative z-10 min-w-0 flex-1 bg-transparent px-0 py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100'
           />
 
@@ -184,7 +193,7 @@ export default function SearchBar({ navItems }: SearchBarProps) {
           {bangEngine && (
             <span className='aurora-bang-chip relative z-10 flex max-w-[7rem] shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-300'>
               <span>{bangEngine.icon}</span>
-              <span className='truncate'>{bangEngine.name}</span>
+              <span className='truncate'>{engineName(bangEngine)}</span>
             </span>
           )}
 
@@ -210,7 +219,7 @@ export default function SearchBar({ navItems }: SearchBarProps) {
               <circle cx='11' cy='11' r='7' strokeWidth='2.2' />
               <path d='m20.5 20.5-4.2-4.2' strokeLinecap='round' strokeWidth='2.2' />
             </svg>
-            搜索
+            {t('newtab.search.submit')}
           </span>
         </button>
       </div>
@@ -243,7 +252,9 @@ export default function SearchBar({ navItems }: SearchBarProps) {
                   s.source === 'nav' ? 'is-nav' : 'is-bookmark'
                 }`}
               >
-                {s.source === 'nav' ? '导航' : '书签'}
+                {s.source === 'nav'
+                  ? t('newtab.search.sourceNav')
+                  : t('newtab.search.sourceBookmark')}
               </span>
             </button>
           ))}

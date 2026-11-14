@@ -1,6 +1,7 @@
 /**
  * 侧边栏助手的内置工具：不依赖网页是否实现 WebMCP，任何网页都能读取正文。
  */
+import { t } from '@/utils/i18n'
 import type { PageContent, TabMessage } from '@/utils/messaging'
 
 import type { FrameTool } from './webmcp-client'
@@ -23,6 +24,14 @@ export function isBuiltinTool(tool: FrameTool): boolean {
   return tool.frameId === BUILTIN_FRAME_ID
 }
 
+/** 读取网页失败（浏览器内置页、未注入内容脚本等），message 可直接展示给用户 */
+export class PageReadError extends Error {
+  constructor() {
+    super(t('assistant.errors.readPageFailed'))
+    this.name = 'PageReadError'
+  }
+}
+
 /** 读取标签页正文；页面无法注入内容脚本时抛出可读的错误 */
 export async function readPage(tabId: number): Promise<PageContent> {
   const message: TabMessage = { type: 'read-page' }
@@ -33,7 +42,7 @@ export async function readPage(tabId: number): Promise<PageContent> {
   } catch {
     // 落到下面统一提示
   }
-  throw new Error('无法读取当前网页：浏览器内置页面不支持；如果是安装扩展前打开的页面，刷新后再试')
+  throw new PageReadError()
 }
 
 /** 把网页内容整理成交给模型的文本 */

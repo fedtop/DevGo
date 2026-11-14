@@ -4,6 +4,7 @@ import type {
   MediaResourceKind,
   MediaResourceSource,
 } from '@/utils/messaging'
+import { t } from '@/utils/i18n'
 
 const IMAGE_EXTENSIONS = new Set([
   'apng',
@@ -165,24 +166,24 @@ export function getMediaDeliveryType(url: string, mime?: string): MediaDeliveryT
 }
 
 export function getDirectMediaDownloadBlockReason(url: string, mime?: string): string | undefined {
-  if (!isDownloadableMediaUrl(url)) return '仅支持 http/https 资源下载'
+  if (!isDownloadableMediaUrl(url)) return t('common.media.blockReason.notHttp')
 
   const deliveryType = getMediaDeliveryType(url, mime)
 
   if (deliveryType === 'stream-manifest') {
-    return '这是流媒体清单，直接保存不会得到完整视频'
+    return t('common.media.blockReason.streamManifest')
   }
 
   if (deliveryType === 'stream-segment') {
-    return '这是流媒体分片，单独下载通常无法播放'
+    return t('common.media.blockReason.streamSegment')
   }
 
   if (deliveryType === 'twitter-audio-track') {
-    return '这是 X 的独立音频轨，需要和视频轨合并后才能成为完整视频'
+    return t('common.media.blockReason.twitterAudioTrack')
   }
 
   if (deliveryType === 'twitter-video-track') {
-    return '这是 X 的独立视频轨，需要和音频轨合并后才能成为完整视频'
+    return t('common.media.blockReason.twitterVideoTrack')
   }
 
   return undefined

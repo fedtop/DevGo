@@ -2,9 +2,10 @@
  * 新标签页主体：主题应用 + 搜索框 + 快捷导航。
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { SHIP_NAME, SITE_URL } from '@/utils/constants'
+import { t, type MessageKey } from '@/utils/i18n'
 import { isNewtabShaderEffect, newtabActiveCategory, newtabShaderEffect, newtabShaderMode, newtabShaderRandomSeeded, quickNavBuiltinPagesSeeded, quickNavCategoryLabels, quickNavCategorySeeded, quickNavDefaultPinsSeeded, quickNavItems, searchEngine, themeMode, type NewtabShaderEffect, type NewtabShaderMode, type QuickNavCategoryId, type QuickNavCategoryLabels, type QuickNavItem, type ThemeMode } from '@/utils/settings' // prettier-ignore
 import { applyTheme, normalizeThemeMode, watchAutoTheme } from '@/utils/theme'
 import { CATEGORY_LABEL_MAX, defaultLabelOf, isQuickNavCategory } from './categories'
@@ -14,6 +15,7 @@ import {
   DEFAULT_PINNED_NAV_IDS,
   DEFAULT_QUICK_NAV,
   isUncustomizedDefault,
+  navTitleOf,
   seedBuiltinBrowserPages,
   seedDefaultPinnedItems,
   seedEmptyCategories,
@@ -23,9 +25,16 @@ import QuickNav from './QuickNav'
 import QuietBackground, { SHADER_EFFECT_OPTIONS } from './QuietBackground'
 import SearchBar from './SearchBar'
 
-const THEME_LABEL: Record<ThemeMode, string> = { auto: '自动', light: '浅色', dark: '深色' }
+const THEME_LABEL: Record<ThemeMode, MessageKey> = {
+  auto: 'newtab.theme.auto',
+  light: 'newtab.theme.light',
+  dark: 'newtab.theme.dark',
+}
 const THEME_OPTIONS: ThemeMode[] = ['dark', 'auto', 'light']
-const SHADER_MODE_LABEL: Record<NewtabShaderMode, string> = { random: '随机', fixed: '固定' }
+const SHADER_MODE_LABEL: Record<NewtabShaderMode, MessageKey> = {
+  random: 'newtab.shader.mode.random',
+  fixed: 'newtab.shader.mode.fixed',
+}
 const FIRST_RANDOM_SHADER_EFFECT: NewtabShaderEffect = 'mesh'
 const THEME_THUMB_OFFSET: Record<ThemeMode, string> = {
   dark: 'translate-x-0',
@@ -144,10 +153,14 @@ function ThemeSwitch({
   return (
     <div
       role='radiogroup'
-      aria-label='颜色主题'
-      title={`当前：${THEME_LABEL[mode]}${
-        mode === 'auto' ? `（当前${effectiveDark ? '深色' : '浅色'}）` : ''
-      }`}
+      aria-label={t('newtab.theme.label')}
+      title={
+        mode === 'auto'
+          ? t('newtab.theme.currentAuto', {
+              effective: t(effectiveDark ? 'newtab.theme.dark' : 'newtab.theme.light'),
+            })
+          : t('newtab.theme.current', { mode: t(THEME_LABEL[mode]) })
+      }
       className={`relative grid h-10 w-[132px] grid-cols-3 items-center overflow-hidden rounded-full border p-1 shadow-sm transition-all duration-500 ${getThemeSwitchBg(
         mode,
         effectiveDark,
@@ -167,8 +180,8 @@ function ThemeSwitch({
             type='button'
             role='radio'
             aria-checked={selected}
-            aria-label={THEME_LABEL[option]}
-            title={THEME_LABEL[option]}
+            aria-label={t(THEME_LABEL[option])}
+            title={t(THEME_LABEL[option])}
             onClick={() => onChange(option)}
             className={`relative z-10 flex h-8 w-10 items-center justify-center rounded-full outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-blue-400/70 ${
               selected ? 'scale-110' : 'scale-95'
@@ -289,7 +302,7 @@ export default function NewTabApp() {
   const updateItems = (next: QuickNavItem[]) => {
     setItems(next)
     quickNavItems.setValue(next).catch(() => {
-      showToast('保存失败：同步空间已满，请删减部分导航')
+      showToast(t('newtab.app.saveFailedQuota'))
     })
   }
 
@@ -297,6 +310,12 @@ export default function NewTabApp() {
     setActiveCategory(id)
     newtabActiveCategory.setValue(id)
   }
+
+  // 搜索联想按展示标题匹配（内建页标题随界面语言）；需稳定引用，避免联想 effect 每次渲染重跑
+  const searchNavItems = useMemo(
+    () => items.map((item) => ({ ...item, title: navTitleOf(item) })),
+    [items],
+  )
 
   const pinnedItems = items
     .map((item, index) => ({ item, index }))
@@ -316,7 +335,7 @@ export default function NewTabApp() {
     const target = items.find((item) => item.id === id)
     if (!target) return
     if (!target.pinned && pinnedItems.length >= PIN_LIMIT) {
-      showToast(`固定栏已满（最多 ${PIN_LIMIT} 个），请先移出一些`)
+      showToast(t('newtab.app.pinFull', { limit: PIN_LIMIT }))
       return
     }
     updateItems(
@@ -412,15 +431,19 @@ export default function NewTabApp() {
         setCategoryLabels(nextLabels)
         quickNavCategoryLabels.setValue(nextLabels)
       }
-      showToast(added > 0 ? `已导入 ${added} 个导航` : '没有新导航（已存在的已跳过）')
+      showToast(
+        added > 0 ? t('newtab.app.imported', { count: added }) : t('newtab.app.importedNone'),
+      )
     } catch (err) {
-      showToast(err instanceof Error ? err.message : '导入失败')
+      showToast(err instanceof Error ? err.message : t('newtab.app.importFailed'))
     }
   }
 
-  const shaderEffectLabel =
-    SHADER_EFFECT_OPTIONS.find((item) => item.id === shaderEffect)?.label ?? '流体'
-  const shaderButtonLabel = `${SHADER_MODE_LABEL[shaderMode]} · ${shaderEffectLabel}`
+  const shaderEffectLabel = t(
+    SHADER_EFFECT_OPTIONS.find((item) => item.id === shaderEffect)?.labelKey ??
+      'newtab.shader.effect.mesh',
+  )
+  const shaderButtonLabel = `${t(SHADER_MODE_LABEL[shaderMode])} · ${shaderEffectLabel}`
 
   return (
     // 底色在 body.quiet-page 上（见 global.css）；根容器必须保持透明，
@@ -438,7 +461,7 @@ export default function NewTabApp() {
             <button
               type='button'
               onClick={() => setEffectMenuOpen((value) => !value)}
-              title='切换背景效果'
+              title={t('newtab.shader.switch')}
               className='flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white/70 px-3.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal-300 hover:text-teal-700 hover:shadow-md dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:border-teal-500 dark:hover:text-teal-300'
             >
               <BackgroundIcon />
@@ -458,7 +481,7 @@ export default function NewTabApp() {
                           : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-100'
                       }`}
                     >
-                      {SHADER_MODE_LABEL[item]}
+                      {t(SHADER_MODE_LABEL[item])}
                     </button>
                   ))}
                 </div>
@@ -472,7 +495,7 @@ export default function NewTabApp() {
                         item.id === shaderEffect ? 'is-selected' : ''
                       }`}
                     >
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                       {item.id === shaderEffect && (
                         <span className='h-1.5 w-1.5 rounded-full bg-teal-500' />
                       )}
@@ -499,7 +522,7 @@ export default function NewTabApp() {
               aria-hidden='true'
               className='h-px w-10 bg-gradient-to-r from-transparent to-slate-300 dark:to-slate-600'
             />
-            为开发者打造的新标签页
+            {t('newtab.app.tagline')}
             <span
               aria-hidden='true'
               className='h-px w-10 bg-gradient-to-l from-transparent to-slate-300 dark:to-slate-600'
@@ -508,7 +531,7 @@ export default function NewTabApp() {
         </div>
 
         <div className='w-full max-w-4xl'>
-          <SearchBar navItems={items} />
+          <SearchBar navItems={searchNavItems} />
         </div>
 
         {/* 固定栏：搜索框与分类列表之间 */}
@@ -528,8 +551,8 @@ export default function NewTabApp() {
               <div className='flex items-center gap-1.5'>
                 <button
                   type='button'
-                  title='重命名当前分类'
-                  aria-label='重命名当前分类'
+                  title={t('newtab.app.renameCategory')}
+                  aria-label={t('newtab.app.renameCategory')}
                   onClick={() => setRenamingCategory(activeCategory)}
                   className='rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-200'
                 >
@@ -540,14 +563,14 @@ export default function NewTabApp() {
                   onClick={handleExport}
                   className='rounded-lg px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-200'
                 >
-                  导出
+                  {t('newtab.app.export')}
                 </button>
                 <button
                   type='button'
                   onClick={() => fileRef.current?.click()}
                   className='rounded-lg px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-200'
                 >
-                  导入
+                  {t('newtab.app.import')}
                 </button>
                 <input
                   ref={fileRef}

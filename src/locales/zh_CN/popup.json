@@ -1,1 +1,126 @@
-{}
+{
+  "pages": {
+    "translate": "翻译",
+    "network": "网络",
+    "tools": "资源",
+    "function": "功能"
+  },
+  "app": {
+    "openSettings": "打开设置",
+    "editShortcut": "修改快捷键",
+    "shortcut": "快捷键",
+    "setShortcut": "去设置"
+  },
+  "common": {
+    "pageUnsupported": "当前页面不支持"
+  },
+  "lookup": {
+    "engineYoudao": "有道",
+    "engineMicrosoft": "微软",
+    "engineGoogle": "谷歌",
+    "placeholder": "输入单词或短句",
+    "submit": "查询",
+    "aiFailed": "AI 查询失败：{message}",
+    "copyTranslation": "复制译文",
+    "copy": "复制",
+    "speak": "朗读"
+  },
+  "pageTranslate": {
+    "title": "网页翻译",
+    "moreSettings": "更多设置",
+    "engine": "翻译引擎",
+    "targetLang": "目标语言",
+    "llmMissing": "还没有配置翻译模型，AI 翻译暂不可用",
+    "llmModel": "翻译模型：{model}",
+    "configure": "去配置",
+    "change": "修改",
+    "alwaysTranslate": "总是翻译该网站",
+    "showOriginal": "显示原文",
+    "translatePage": "翻译当前页面",
+    "unsupported": "当前页面不支持翻译（浏览器内置页 / 扩展商店），普通网页请刷新后重试",
+    "hintWithShortcut": "译文随滚动按需加载 · 也可通过右键菜单或 {shortcut} 切换",
+    "hintNoShortcut": "译文随滚动按需加载 · 也可通过右键菜单切换 ·",
+    "setShortcut": "设置快捷键"
+  },
+  "network": {
+    "modeTitle": "网络模式",
+    "currentPage": "当前网页：{host}",
+    "pageNotConfigurable": "当前网页不可配置代理",
+    "proxySettings": "代理设置",
+    "editProxyTitle": "在设置页编辑代理服务器与规则",
+    "bypassCount": "绕过 {count} 条",
+    "edit": "编辑",
+    "cancelHostDirect": "取消当前站点直连",
+    "hostDirect": "当前站点直连",
+    "cancelHostProxy": "取消当前站点走代理",
+    "hostProxy": "当前站点走代理"
+  },
+  "tools": {
+    "title": "资源嗅探",
+    "currentTab": "当前标签页",
+    "refresh": "刷新",
+    "clear": "清空",
+    "searchPlaceholder": "搜索名称、域名或类型",
+    "downloadAll": "下载全部",
+    "count": "{count} 个资源",
+    "scanning": "扫描中…",
+    "empty": "暂未发现图片或视频资源",
+    "filter": {
+      "all": "全部",
+      "image": "图片",
+      "video": "视频"
+    },
+    "kind": {
+      "image": "图片",
+      "video": "视频"
+    },
+    "source": {
+      "network": "请求",
+      "dom": "页面",
+      "networkDom": "请求+页面"
+    },
+    "delivery": {
+      "streamManifest": "流清单",
+      "streamSegment": "流分片",
+      "twitterAudioTrack": "X 音频轨",
+      "twitterVideoTrack": "X 视频轨"
+    },
+    "previewUnsupported": "当前格式不能在 popup 预览",
+    "collapsePreview": "收起预览",
+    "previewVideo": "预览视频",
+    "download": "下载",
+    "copyLink": "复制链接",
+    "openLink": "打开链接",
+    "readTabFailed": "无法读取当前标签页",
+    "cleared": "已清空 {count} 条资源",
+    "linkCopied": "链接已复制",
+    "copyFailed": "复制失败",
+    "downloadFailed": "下载任务创建失败",
+    "downloadCreated": "下载任务已创建",
+    "noDirectDownloadable": "没有可直接下载成完整文件的资源",
+    "noDownloadable": "没有可下载资源",
+    "bulkResultSkipped": "已创建 {ok}/{total} 个下载任务，跳过 {skipped} 个流媒体片段",
+    "bulkResult": "已创建 {ok}/{total} 个下载任务"
+  },
+  "function": {
+    "open": "打开",
+    "assistantTitle": "AI 助手",
+    "assistantDesc": "侧边栏里总结网页、就网页内容提问",
+    "assistantDescShortcut": "侧边栏里总结网页、就网页内容提问 · {shortcut}",
+    "webmcpTitle": "网页工具（WebMCP）",
+    "webmcpLoading": "正在检测当前网页…",
+    "webmcpUnsupported": "浏览器未开启 WebMCP（chrome://flags 启用 WebMCP for testing）",
+    "webmcpTools": "当前网页提供 {count} 个工具，可让 AI 调用或手动执行",
+    "webmcpNoTools": "当前网页没有提供工具",
+    "viewTools": "查看工具",
+    "selectionTitle": "划词工具条",
+    "selectionGloballyOff": "已在全部网站关闭，打开后恢复",
+    "selectionSiteDisabled": "已在 {host} 停用",
+    "selectionSiteOn": "{host}：选中文字后显示翻译与 AI 工具条",
+    "selectionSiteOnWithDisabled": "{host}：选中文字后显示翻译与 AI 工具条（{count} 个网站已停用）",
+    "unlockTitle": "解除本站复制限制",
+    "unlockDesc": "{host}：放开复制、选择与右键",
+    "unlockDescWithCount": "{host}：放开复制、选择与右键（共 {count} 个站点已开启）",
+    "manageAll": "管理全部网站与更多功能"
+  }
+}

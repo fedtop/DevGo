@@ -22,6 +22,7 @@ import {
   syncStatus,
   type SyncStatus,
 } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 
 interface MirrorItem<T> {
   fallback: T
@@ -114,11 +115,11 @@ function isMirrorMeta(value: unknown): value is MirrorMeta {
 /** chrome.storage.sync 的英文报错 → 用户可读提示 */
 function describeSyncError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
-  if (/QUOTA_BYTES_PER_ITEM/i.test(message)) return '单项数据超过同步上限'
-  if (/QUOTA_BYTES/i.test(message)) return '同步空间已满（Chrome 同步上限 100KB）'
-  if (/MAX_WRITE_OPERATIONS/i.test(message)) return '同步过于频繁，稍后会自动重试'
-  if (/MAX_ITEMS/i.test(message)) return '同步条目数超过上限'
-  return `同步失败：${message}`
+  if (/QUOTA_BYTES_PER_ITEM/i.test(message)) return t('common.sync.itemTooLarge')
+  if (/QUOTA_BYTES/i.test(message)) return t('common.sync.quotaExceeded')
+  if (/MAX_WRITE_OPERATIONS/i.test(message)) return t('common.sync.tooFrequent')
+  if (/MAX_ITEMS/i.test(message)) return t('common.sync.tooManyItems')
+  return t('common.sync.failed', { message })
 }
 
 function isRetryableSyncError(error: unknown): boolean {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { t, useLocale } from '@/utils/i18n'
+
 import FloatButton from './components/FloatButton'
 import { ArrowUpward, EditIcon, WikiIcon } from './components/icons'
 import { useScrollToTop } from './useScrollToTop'
@@ -8,6 +10,7 @@ import { isGithubCodePage, openInDeepWiki, openInGithub1s } from './utils'
 export default function GithubApp() {
   const [isCodePage, setIsCodePage] = useState(() => isGithubCodePage())
   const [isTop, scrollToTop] = useScrollToTop()
+  useLocale()
 
   useEffect(() => {
     // 快捷键 "," 直接在 github1s 中打开
@@ -54,10 +57,19 @@ export default function GithubApp() {
         gap: '8px',
       }}
     >
-      <FloatButton icon={<EditIcon />} title='在线编辑' onClick={openInGithub1s} />
+      <FloatButton
+        icon={<EditIcon />}
+        title={t('github.floatButton.editOnline')}
+        onClick={openInGithub1s}
+      />
       <FloatButton icon={<WikiIcon />} title='DeepWiki' onClick={openInDeepWiki} />
       {!isTop && (
-        <FloatButton icon={<ArrowUpward />} title='回到顶部' iconOnly onClick={scrollToTop} />
+        <FloatButton
+          icon={<ArrowUpward />}
+          title={t('github.floatButton.backToTop')}
+          iconOnly
+          onClick={scrollToTop}
+        />
       )}
     </div>
   )

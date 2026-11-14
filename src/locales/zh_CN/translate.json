@@ -1,1 +1,136 @@
-{}
+{
+  "languages": {
+    "auto": "自动（中⇄英）",
+    "zhCN": "简体中文",
+    "zhTW": "繁体中文",
+    "en": "英语",
+    "ja": "日语",
+    "ko": "韩语",
+    "fr": "法语",
+    "de": "德语",
+    "es": "西班牙语",
+    "ru": "俄语",
+    "pt": "葡萄牙语",
+    "it": "意大利语",
+    "vi": "越南语",
+    "th": "泰语",
+    "ar": "阿拉伯语",
+    "id": "印尼语",
+    "tr": "土耳其语"
+  },
+  "provider": {
+    "microsoft": "微软 · 免翻墙",
+    "google": "Google · 需翻墙",
+    "llm": "AI 大模型"
+  },
+  "displayMode": {
+    "bilingual": "双语对照",
+    "translation": "仅译文"
+  },
+  "hoverMode": {
+    "off": "关闭",
+    "pressKey": "按 {key}",
+    "dwell": "停留自动翻译",
+    "hint": {
+      "pressKey": "鼠标指向段落，按一下 {key} 翻译，再按一次恢复",
+      "dwell": "鼠标在段落上停留片刻自动翻译",
+      "off": "已关闭"
+    }
+  },
+  "services": {
+    "microsoft": "微软翻译",
+    "google": "Google 翻译"
+  },
+  "errors": {
+    "aborted": "翻译已取消",
+    "network": "网络请求失败：{message}",
+    "unknown": "未知错误",
+    "detailSuffix": "：{detail}",
+    "auth": "鉴权失败（{status}）{detail}",
+    "rateLimit": "请求过于频繁（429）{detail}",
+    "notFound": "接口地址或模型不存在（404）{detail}",
+    "badRequest": "请求参数无效（{status}）{detail}",
+    "server": "服务端错误（{status}）{detail}",
+    "microsoftAuth": "微软翻译鉴权失败（{status}）",
+    "microsoftNoToken": "微软翻译鉴权失败：未获取到 token",
+    "resultCountMismatch": "{service}返回的结果数量与请求不一致",
+    "emptyResult": "服务返回了空结果",
+    "timeout": "请求超时",
+    "aiSegmentMissing": "AI 未返回该段译文",
+    "noResult": "翻译服务没有返回结果",
+    "segmentMissing": "翻译服务没有返回该段结果",
+    "portDisconnected": "与扩展后台的连接已断开，请重试；若扩展刚更新请刷新页面",
+    "extensionUpdated": "扩展已更新，请刷新页面后重试"
+  },
+  "serviceError": {
+    "auth": "API Key 无效，或不属于当前接口地址对应的服务",
+    "config": "接口地址或模型不正确",
+    "network": "无法连接到接口地址，请检查网络或地址是否正确",
+    "timeout": "请求超时，请稍后重试",
+    "rateLimit": "请求过于频繁或额度不足，请稍后重试",
+    "server": "服务端出错，请稍后重试",
+    "parse": "服务返回了无法识别的内容",
+    "default": "请求失败"
+  },
+  "page": {
+    "unavailable": "翻译服务不可用：{message}",
+    "openSettings": "打开设置",
+    "partialFailed": "部分段落翻译失败：{message}。点击段落后的 ↻ 可重试，或在 DevGo 弹窗中切换翻译引擎。",
+    "retryTitle": "翻译失败：{message}（点击重试）",
+    "close": "关闭"
+  },
+  "presets": {
+    "custom": "自定义",
+    "zhipu": "智谱 GLM",
+    "zhipuCoding": "智谱 GLM Coding Plan",
+    "zaiCoding": "Z.ai GLM Coding Plan（国际版）",
+    "bailianCoding": "阿里云百炼 Coding Plan",
+    "arkCoding": "火山方舟 Coding Plan",
+    "qwen": "通义千问（阿里云百炼）",
+    "doubao": "豆包（火山方舟）",
+    "ollama": "Ollama（本地）",
+    "hint": {
+      "zhipu": "GLM-4.5 及以上模型默认会先思考再回答，整页翻译较慢；追求速度可选 glm-4-flash / glm-4-air",
+      "codingPlan": "Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意",
+      "arkCoding": "模型名填写套餐支持的模型 ID（可点开模型下拉获取）。Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意",
+      "doubao": "模型名填写方舟控制台里的模型 ID 或推理接入点 ID（ep-xxxx）",
+      "ollama": "本地服务无需 API Key；需设置环境变量 OLLAMA_ORIGINS=chrome-extension://* 允许扩展访问"
+    }
+  },
+  "llmForm": {
+    "preset": "服务预设",
+    "model": "模型",
+    "modelPlaceholder": "选择或输入模型名",
+    "commonModel": "常用",
+    "models": {
+      "fallbackCommon": "，以下为常用模型，也可直接输入",
+      "fallbackInput": "，可直接输入模型名",
+      "needBaseUrl": "填写接口地址后可自动获取模型列表",
+      "needApiKey": "填写 API Key 后可获取完整模型列表{fallback}",
+      "loading": "正在获取模型列表…",
+      "unsupported": "该服务不支持自动获取模型列表{fallback}",
+      "failed": "未能获取模型列表：{reason}{fallback}",
+      "count": "共 {count} 个可用模型，可输入筛选"
+    },
+    "baseUrl": "接口地址（Base URL）",
+    "baseUrlHint": "填到 /v1 即可，会自动补全 /chat/completions",
+    "apiKey": "API Key（仅存本机，不进备份）",
+    "apiKeyPlaceholder": "sk-...（本地服务可留空）",
+    "hideKey": "隐藏",
+    "showKey": "显示",
+    "assistantPrefilled": "已用翻译的 AI 配置预填。助手需要模型支持工具调用，可改用 Coding Plan 等更强的模型，保存后生效。",
+    "prompt": "自定义要求（可选）",
+    "promptHintAssistant": "追加到助手的系统提示词末尾，例如「回答尽量简短」「操作前先列出步骤」",
+    "promptHintTranslate": "追加到系统提示词末尾，例如术语表、语气风格：「技术文档风格；Token 不翻译」",
+    "addPromptAssistant": "+ 自定义要求",
+    "addPromptTranslate": "+ 自定义要求（术语表、语气风格）",
+    "test": "测试连接",
+    "save": "保存",
+    "saveAndUse": "保存并设为翻译引擎",
+    "saved": "已保存",
+    "savedAndUsed": "已保存，并设为当前翻译引擎",
+    "testSuccess": "连接成功：Hello, world! → {sample}",
+    "testFailed": "连接失败：{reason}",
+    "testFailedAuth": "连接失败：{reason}。若刚切换了服务预设，请确认 Key 来自该服务"
+  }
+}

@@ -7,6 +7,7 @@ import { useScenarioHostProxy } from '@/features/network/ScenarioRulesSection'
 import { useNetworkController } from '@/features/network/useNetworkController'
 import WebrtcStatusSection from '@/features/network/WebrtcStatusSection'
 import Button from '@/ui/Button'
+import { t } from '@/utils/i18n'
 import { ArrowUpRight } from 'lucide-react'
 
 /** 打开设置页「网络」分区（可带分区内锚点），并关闭 popup */
@@ -36,9 +37,13 @@ export default function NetworkPage() {
       <section className='rounded-lg border border-neutral-200 bg-white p-2.5'>
         <div className='mb-2 flex items-center justify-between gap-3'>
           <div className='min-w-0'>
-            <h2 className='text-sm font-semibold text-neutral-800'>网络模式</h2>
+            <h2 className='text-sm font-semibold text-neutral-800'>
+              {t('popup.network.modeTitle')}
+            </h2>
             <p className='truncate text-xs text-neutral-500'>
-              {c.currentHost ? `当前网页：${c.currentHost}` : '当前网页不可配置代理'}
+              {c.currentHost
+                ? t('popup.network.currentPage', { host: c.currentHost })
+                : t('popup.network.pageNotConfigurable')}
             </p>
           </div>
           <button
@@ -46,7 +51,7 @@ export default function NetworkPage() {
             onClick={() => openNetworkSettings()}
             className='shrink-0 text-xs text-neutral-500 transition-colors hover:text-accent-600'
           >
-            代理设置
+            {t('popup.network.proxySettings')}
             <ArrowUpRight className='ml-0.5 inline size-3 -translate-y-px' aria-hidden />
           </button>
         </div>
@@ -77,7 +82,7 @@ export default function NetworkPage() {
           <button
             type='button'
             onClick={() => openNetworkSettings()}
-            title='在设置页编辑代理服务器与规则'
+            title={t('popup.network.editProxyTitle')}
             className='group flex items-center justify-between gap-2 text-left'
           >
             <span className='min-w-0'>
@@ -87,12 +92,12 @@ export default function NetworkPage() {
               <span className='block truncate font-mono text-xs text-neutral-700'>
                 {scheme} {c.profile.host}:{c.profile.port}
                 <span className='ml-2 font-sans text-neutral-500'>
-                  绕过 {c.bypassList.length} 条
+                  {t('popup.network.bypassCount', { count: c.bypassList.length })}
                 </span>
               </span>
             </span>
             <span className='shrink-0 text-xs text-neutral-500 group-hover:text-accent-600'>
-              编辑
+              {t('popup.network.edit')}
               <ArrowUpRight className='ml-0.5 inline size-3 -translate-y-px' aria-hidden />
             </span>
           </button>
@@ -107,7 +112,9 @@ export default function NetworkPage() {
                 }}
                 className='!px-2 !py-1 text-xs'
               >
-                {c.currentHostBypassed ? '取消当前站点直连' : '当前站点直连'}
+                {c.currentHostBypassed
+                  ? t('popup.network.cancelHostDirect')
+                  : t('popup.network.hostDirect')}
               </Button>
               {c.showRuleListSettings && (
                 <Button
@@ -115,7 +122,9 @@ export default function NetworkPage() {
                   onClick={() => void hostProxy.toggle().then(setHostTip)}
                   className='!px-2 !py-1 text-xs'
                 >
-                  {hostProxy.proxied ? '取消当前站点走代理' : '当前站点走代理'}
+                  {hostProxy.proxied
+                    ? t('popup.network.cancelHostProxy')
+                    : t('popup.network.hostProxy')}
                 </Button>
               )}
             </div>

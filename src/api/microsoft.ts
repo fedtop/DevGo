@@ -13,6 +13,7 @@
 import { httpStatusToError, TranslateError } from '@/features/translate/errors'
 import type { DictResult } from '@/types/dict'
 import { hasChinese, pickTarget } from '@/utils/lang'
+import { t } from '@/utils/i18n'
 
 const AUTH_URL = 'https://edge.microsoft.com/translate/auth'
 const TRANS_URL = 'https://edge.microsoft.com/translate/translatetext'
@@ -62,9 +63,10 @@ async function getToken(signal?: AbortSignal): Promise<string> {
     },
     signal,
   })
-  if (!res.ok) throw new TranslateError('auth', `微软翻译鉴权失败（${res.status}）`)
+  if (!res.ok)
+    throw new TranslateError('auth', t('translate.errors.microsoftAuth', { status: res.status }))
   const token = await res.text()
-  if (!token) throw new TranslateError('auth', '微软翻译鉴权失败：未获取到 token')
+  if (!token) throw new TranslateError('auth', t('translate.errors.microsoftNoToken'))
   tokenCache = { token, expireAt: parseJwtExpire(token) }
   return token
 }
@@ -86,11 +88,14 @@ export async function microsoftTranslate(
     credentials: 'omit',
     signal: options.signal,
   })
-  if (!res.ok) throw httpStatusToError(res.status, '微软翻译')
+  if (!res.ok) throw httpStatusToError(res.status, t('translate.services.microsoft'))
 
   const data: unknown = await res.json()
   if (!Array.isArray(data) || data.length !== texts.length) {
-    throw new TranslateError('parse', '微软翻译返回的结果数量与请求不一致')
+    throw new TranslateError(
+      'parse',
+      t('translate.errors.resultCountMismatch', { service: t('translate.services.microsoft') }),
+    )
   }
   return (data as MicrosoftTransItem[]).map((item) => item?.translations?.[0]?.text ?? '')
 }

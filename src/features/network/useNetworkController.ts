@@ -4,6 +4,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 
+import { t } from '@/utils/i18n'
 import { getUrlHostname, isValidNetworkProxyProfile, normalizeBypassList } from '@/utils/network'
 import { sendRuntimeMessage, type NetworkProxyStatus } from '@/utils/messaging'
 import {
@@ -220,12 +221,12 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
 
     if (!isValidNetworkProxyProfile(nextProfile)) {
       setCustomModeError(true)
-      setCustomModeStatus('请填写有效的代理主机和端口')
+      setCustomModeStatus(t('network.controller.invalidProxy'))
       setStatus({
         ok: false,
         mode,
         managed: true,
-        error: '请填写有效的代理主机和端口',
+        error: t('network.controller.invalidProxy'),
       })
       return null
     }
@@ -267,7 +268,7 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
             ok: false,
             mode: nextMode,
             managed: true,
-            error: '请填写有效的代理主机和端口',
+            error: t('network.controller.invalidProxy'),
           })
           return
         }
@@ -316,9 +317,9 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
         setCustomModeStatus(
           nextStatus.ok
             ? activeCustomProxyMode
-              ? `已更新「${activeCustomProxyMode.name}」并应用`
-              : '已保存并应用到当前模式'
-            : nextStatus.error || '代理设置失败',
+              ? t('network.controller.updatedCustom', { name: activeCustomProxyMode.name })
+              : t('network.controller.savedApplied')
+            : nextStatus.error || t('network.status.applyFailed'),
         )
         return
       }
@@ -329,13 +330,15 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
         setStatus(nextStatus)
         setCustomModeError(!nextStatus.ok)
         setCustomModeStatus(
-          nextStatus.ok ? '已保存并同步到当前代理' : nextStatus.error || '代理设置失败',
+          nextStatus.ok
+            ? t('network.controller.savedSynced')
+            : nextStatus.error || t('network.status.applyFailed'),
         )
         return
       }
 
       setStatus(await sendRuntimeMessage({ type: 'get-network-status' }))
-      setCustomModeStatus('已保存')
+      setCustomModeStatus(t('network.controller.saved'))
     } catch (error) {
       setCustomModeError(true)
       setCustomModeStatus(error instanceof Error ? error.message : String(error))
@@ -379,14 +382,18 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
         setCustomModeStatus(
           nextStatus.ok
             ? currentHostBypassed
-              ? '已取消当前站点直连'
-              : '已将当前站点加入直连'
-            : nextStatus.error || '代理设置失败',
+              ? t('network.controller.hostBypassRemoved')
+              : t('network.controller.hostBypassAdded')
+            : nextStatus.error || t('network.status.applyFailed'),
         )
       } else {
         setStatus(await sendRuntimeMessage({ type: 'get-network-status' }))
         setCustomModeError(false)
-        setCustomModeStatus(currentHostBypassed ? '已取消当前站点直连' : '已将当前站点加入直连')
+        setCustomModeStatus(
+          currentHostBypassed
+            ? t('network.controller.hostBypassRemoved')
+            : t('network.controller.hostBypassAdded'),
+        )
       }
     } catch (error) {
       setCustomModeError(true)
@@ -441,7 +448,7 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
         ok: false,
         mode: 'global',
         managed: true,
-        error: '自定义模式里的代理主机或端口无效',
+        error: t('network.controller.invalidCustomProxy'),
       })
       return
     }
@@ -465,7 +472,7 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
       setMode(nextStatus.mode)
       setAppliedMode(nextStatus.mode)
       setStatus(nextStatus)
-      setCustomModeStatus(`已切换到「${customMode.name}」`)
+      setCustomModeStatus(t('network.controller.switched', { name: customMode.name }))
 
       if (reloadOnSwitch && nextStatus.ok && nextStatus.mode !== prevAppliedMode) {
         await reloadActiveTab()
@@ -485,7 +492,7 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
 
     if (!name) {
       setCustomModeError(true)
-      setCustomModeStatus('请填写自定义模式名称')
+      setCustomModeStatus(t('network.controller.nameRequired'))
       return
     }
 
@@ -497,12 +504,12 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
       const nextProfile = normalizeProfileFromForm(customModeProfile, getDefaultBypassText())
       if (!isValidNetworkProxyProfile(nextProfile)) {
         setCustomModeError(true)
-        setCustomModeStatus('请填写有效的代理主机和端口')
+        setCustomModeStatus(t('network.controller.invalidProxy'))
         setStatus({
           ok: false,
           mode: 'global',
           managed: true,
-          error: '请填写有效的代理主机和端口',
+          error: t('network.controller.invalidProxy'),
         })
         return
       }
@@ -529,7 +536,7 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
       setCustomModeName('')
       setCustomModeProfile(createDefaultProxyProfile())
       setCustomModeOpen(false)
-      setCustomModeStatus(`已添加「${nextCustomMode.name}」`)
+      setCustomModeStatus(t('network.controller.added', { name: nextCustomMode.name }))
     } catch (error) {
       setCustomModeError(true)
       setCustomModeStatus(error instanceof Error ? error.message : String(error))
@@ -556,7 +563,11 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
         resetProfileForm(nextProfile)
         await syncProxyIfActive()
       }
-      setCustomModeStatus(target ? `已删除「${target.name}」` : '自定义模式已删除')
+      setCustomModeStatus(
+        target
+          ? t('network.controller.deleted', { name: target.name })
+          : t('network.controller.deletedFallback'),
+      )
       return true
     } catch (error) {
       setCustomModeError(true)
@@ -576,15 +587,15 @@ export function useNetworkController({ withPageContext }: { withPageContext: boo
   const showRuleListSettings = mode === 'scenario'
   const canSaveProxyProfile = usesProxyProfile(mode) || Boolean(activeCustomProxyMode)
   const saveProxyLabel = activeCustomProxyMode
-    ? '更新并应用'
+    ? t('network.controller.saveLabel.update')
     : usesProxyProfile(appliedMode)
-      ? '保存并应用'
-      : '保存并启用'
+      ? t('network.controller.saveLabel.apply')
+      : t('network.controller.saveLabel.enable')
   const proxyConfigDescription = activeCustomProxyMode
-    ? `${activeCustomProxyMode.name} · 自定义代理`
+    ? t('network.controller.configDesc.custom', { name: activeCustomProxyMode.name })
     : mode === 'scenario'
-      ? '自动模式 · 独立代理与规则'
-      : '代理模式 · 全部流量走代理'
+      ? t('network.controller.configDesc.scenario')
+      : t('network.controller.configDesc.global')
 
   return {
     mode,

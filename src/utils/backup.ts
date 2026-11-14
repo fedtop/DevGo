@@ -47,6 +47,7 @@ import {
   dockDisabledHosts,
   type NetworkProxyProfile,
 } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 
 /** 备份文件结构 */
 export interface BackupFile {
@@ -150,12 +151,12 @@ export async function restoreBackup(
   try {
     parsed = JSON.parse(text)
   } catch {
-    throw new Error('文件不是有效的 JSON')
+    throw new Error(t('common.backup.invalidJson'))
   }
 
   const data = (parsed as Partial<BackupFile>)?.data
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error('不是 DevGo 的备份文件')
+    throw new Error(t('common.backup.notBackupFile'))
   }
 
   const skipped: string[] = []

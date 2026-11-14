@@ -1,4 +1,5 @@
 import Button from '@/ui/Button'
+import { t } from '@/utils/i18n'
 
 interface DeleteModeDialogProps {
   name: string
@@ -25,7 +26,7 @@ export default function DeleteModeDialog({
       <div
         role='dialog'
         aria-modal='true'
-        aria-label='删除自定义代理模式'
+        aria-label={t('network.deleteMode.dialogLabel')}
         className='w-full max-w-[340px] rounded-xl border border-rose-100 bg-white p-3 shadow-[0_18px_60px_rgba(127,29,29,0.18)]'
         onClick={(event) => event.stopPropagation()}
       >
@@ -34,10 +35,14 @@ export default function DeleteModeDialog({
             !
           </div>
           <div className='min-w-0'>
-            <h3 className='text-sm font-semibold text-neutral-800'>删除自定义代理</h3>
-            <p className='mt-1 truncate text-xs font-medium text-neutral-700'>「{name}」</p>
+            <h3 className='text-sm font-semibold text-neutral-800'>
+              {t('network.deleteMode.title')}
+            </h3>
+            <p className='mt-1 truncate text-xs font-medium text-neutral-700'>
+              {t('network.deleteMode.name', { name })}
+            </p>
             <p className='mt-1 text-xs leading-5 text-neutral-500'>
-              删除后会回到内置代理配置，不影响自动模式、代理模式和其他自定义模式。
+              {t('network.deleteMode.desc')}
             </p>
           </div>
         </div>
@@ -50,7 +55,7 @@ export default function DeleteModeDialog({
 
         <div className='mt-3 flex justify-end gap-2'>
           <Button onClick={onClose} disabled={busy} className='!px-2.5 text-xs'>
-            取消
+            {t('network.actions.cancel')}
           </Button>
           <button
             type='button'
@@ -64,7 +69,7 @@ export default function DeleteModeDialog({
                 aria-hidden='true'
               />
             )}
-            确认删除
+            {t('network.deleteMode.confirm')}
           </button>
         </div>
       </div>

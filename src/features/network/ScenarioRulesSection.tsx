@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import Button from '@/ui/Button'
 import Tabs from '@/ui/Tabs'
+import { t } from '@/utils/i18n'
 import { normalizeProxyList, type NetworkScenarioDefaultAction } from '@/utils/network'
 import { networkScenarioDefaultAction, networkScenarioProxyList } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
@@ -21,10 +22,12 @@ function findCoveringEntries(list: string[], host: string): string[] {
   })
 }
 
-const DEFAULT_ACTION_OPTIONS: Array<{ value: NetworkScenarioDefaultAction; label: string }> = [
-  { value: 'direct', label: '直连' },
-  { value: 'proxy', label: '走代理' },
-]
+function getDefaultActionOptions(): Array<{ value: NetworkScenarioDefaultAction; label: string }> {
+  return [
+    { value: 'direct', label: t('network.scenario.defaultAction.direct') },
+    { value: 'proxy', label: t('network.scenario.defaultAction.proxy') },
+  ]
+}
 
 /**
  * 自动模式下「当前站点走代理」的开关：已被代理域名（含父域名、通配）覆盖时为已开启，
@@ -45,12 +48,14 @@ export function useScenarioHostProxy(
     if (proxied) {
       setProxyList(proxyList.filter((item) => !coveringEntries.includes(item)))
       await syncProxyIfActive().catch(() => undefined)
-      return `已移除 ${coveringEntries.join('、')}`
+      return t('network.scenario.removed', {
+        hosts: coveringEntries.join(t('network.scenario.listSeparator')),
+      })
     }
     setProxyList([...proxyList, currentHost])
     onHostProxied?.(currentHost)
     await syncProxyIfActive().catch(() => undefined)
-    return `${currentHost} 及其子域名将走代理`
+    return t('network.scenario.hostProxied', { host: currentHost })
   }
 
   return { proxied, toggle }
@@ -103,7 +108,7 @@ export default function ScenarioRulesSection({
       setText(next.join('\n'))
       return
     }
-    void saveList(next, `已保存 ${next.length} 个代理域名`)
+    void saveList(next, t('network.scenario.saved', { count: next.length }))
   }
 
   const toggleCurrentHost = () => {
@@ -114,7 +119,11 @@ export default function ScenarioRulesSection({
     const next = value as NetworkScenarioDefaultAction
     if (next === defaultAction) return
     setDefaultAction(next)
-    setStatus(next === 'proxy' ? '未命中规则的请求将走代理' : '未命中规则的请求将直连')
+    setStatus(
+      next === 'proxy'
+        ? t('network.scenario.defaultAction.proxyStatus')
+        : t('network.scenario.defaultAction.directStatus'),
+    )
     void syncProxyIfActive().catch(() => undefined)
   }
 
@@ -122,9 +131,9 @@ export default function ScenarioRulesSection({
     <div className='border-t border-neutral-100 pt-3'>
       <div className='mb-2 flex items-center justify-between gap-2'>
         <div className='min-w-0'>
-          <h3 className='text-xs font-semibold text-neutral-700'>自定义代理域名</h3>
+          <h3 className='text-xs font-semibold text-neutral-700'>{t('network.scenario.title')}</h3>
           <p className='truncate text-[10px] leading-4 text-neutral-500'>
-            规则列表没收录、但需要走代理的站点
+            {t('network.scenario.desc')}
           </p>
         </div>
         {currentHost && (
@@ -133,7 +142,7 @@ export default function ScenarioRulesSection({
             onClick={toggleCurrentHost}
             className='shrink-0 !px-2 !py-1 text-xs'
           >
-            {hostProxy.proxied ? '取消代理' : '当前站点走代理'}
+            {hostProxy.proxied ? t('network.scenario.unproxy') : t('network.scenario.proxyHost')}
           </Button>
         )}
       </div>
@@ -148,20 +157,24 @@ export default function ScenarioRulesSection({
         placeholder={'npmjs.org\ncursor.com\n*.example.com'}
         className='w-full resize-none rounded-lg border border-neutral-300 bg-white px-2.5 py-2 font-mono text-xs leading-5 text-neutral-700 placeholder:text-neutral-400 outline-none transition-colors focus:border-accent-500 disabled:opacity-60'
       />
-      <p className='mt-1 text-[10px] leading-4 text-neutral-500'>
-        每行一个域名，自动包含子域名；优先于规则列表，失焦后自动保存。
-      </p>
+      <p className='mt-1 text-[10px] leading-4 text-neutral-500'>{t('network.scenario.hint')}</p>
 
       <div className='mt-2.5 flex items-center justify-between gap-3'>
         <div className='min-w-0'>
-          <p className='text-xs font-medium text-neutral-700'>未命中规则时</p>
+          <p className='text-xs font-medium text-neutral-700'>
+            {t('network.scenario.defaultAction.title')}
+          </p>
           <p className='text-[10px] leading-4 text-neutral-500'>
             {defaultAction === 'proxy'
-              ? '除绕过列表、局域网和 .cn 域名外都走代理；适合代理软件自带分流时'
-              : '只有命中规则的站点走代理，其余直连'}
+              ? t('network.scenario.defaultAction.proxyHint')
+              : t('network.scenario.defaultAction.directHint')}
           </p>
         </div>
-        <Tabs value={defaultAction} tabs={DEFAULT_ACTION_OPTIONS} onChange={changeDefaultAction} />
+        <Tabs
+          value={defaultAction}
+          tabs={getDefaultActionOptions()}
+          onChange={changeDefaultAction}
+        />
       </div>
 
       {status && <p className='mt-1.5 text-[10px] leading-4 text-neutral-500'>{status}</p>}

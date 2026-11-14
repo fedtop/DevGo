@@ -1,8 +1,9 @@
+import { t } from '@/utils/i18n'
 import type { NetworkCustomProxyModeProfile, NetworkMode } from '@/utils/settings'
 
 import { Globe, MonitorCog, Plug, Route, Waypoints, type LucideIcon } from 'lucide-react'
 
-import { MODE_OPTIONS } from './model'
+import { getModeOptions } from './model'
 
 const MODE_ICONS: Record<NetworkMode, LucideIcon> = {
   direct: Plug,
@@ -35,7 +36,7 @@ export default function ModeSelector({
   return (
     <div className='popup-mode-scroll -mx-1 overflow-x-auto px-1'>
       <div className='flex w-max gap-1.5 py-0.5 pb-1.5'>
-        {MODE_OPTIONS.map((item) => {
+        {getModeOptions().map((item) => {
           const selected = mode === item.value && !(item.value === 'global' && customModeActive)
           const Icon = MODE_ICONS[item.value]
           return (
@@ -81,7 +82,7 @@ export default function ModeSelector({
                 <span className='truncate'>{item.name}</span>
               </span>
               <span className='block max-w-full truncate text-[10px] leading-3 text-neutral-500'>
-                自定义代理
+                {t('network.mode.customBadge')}
               </span>
             </button>
           )

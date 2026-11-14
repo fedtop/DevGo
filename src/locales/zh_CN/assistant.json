@@ -1,1 +1,125 @@
-{}
+{
+  "pageTitle": "DevGo 助手",
+  "header": {
+    "currentPage": "当前页面",
+    "webToolCount": "{count} 个网页工具",
+    "newChat": "新对话",
+    "backToChat": "返回对话",
+    "settings": "设置"
+  },
+  "nav": {
+    "label": "侧边栏页面",
+    "chat": "对话",
+    "tools": "网页工具"
+  },
+  "quickActions": {
+    "summarize": {
+      "label": "总结本页",
+      "prompt": "总结这个网页的主要内容：先用一两句话概括，再分点列出关键信息。"
+    },
+    "keyPoints": {
+      "label": "提取要点",
+      "prompt": "提取这个网页里的关键信息（结论、数据、步骤、注意事项等），用列表列出，不要遗漏重要细节。"
+    },
+    "explain": {
+      "label": "用中文讲讲",
+      "prompt": "用简体中文介绍这个网页讲了什么、适合谁看，以及最值得关注的部分。"
+    }
+  },
+  "chat": {
+    "placeholder": {
+      "notConfigured": "先在设置里配置对话模型",
+      "quote": "就选中的内容提问…",
+      "withTools": "问问这个网页，或让 AI 用网页工具帮你做点什么…",
+      "default": "问问这个网页，比如「这篇文章的结论是什么」"
+    },
+    "thinking": "思考中…",
+    "removeQuote": "移除引用",
+    "stop": "停止",
+    "send": "发送",
+    "inputHint": "Enter 发送，Shift + Enter 换行",
+    "stopped": "已停止",
+    "noTab": "没有可用的标签页",
+    "errorDetail": "{reason}：{detail}",
+    "withPage": "已附带网页内容",
+    "reasoning": "思考过程"
+  },
+  "empty": {
+    "title": "有什么可以帮你？",
+    "description": "可以总结网页、就网页内容提问；在网页上选中文字后点「问 AI」，会带着选中内容来这里。",
+    "descriptionWithTools": "可以总结网页、就网页内容提问；在网页上选中文字后点「问 AI」，会带着选中内容来这里。当前网页还提供了 {count} 个工具，AI 可以替你在网页上操作。"
+  },
+  "tool": {
+    "status": {
+      "running": "执行中",
+      "awaiting": "待确认",
+      "done": "完成",
+      "error": "失败",
+      "rejected": "已拒绝"
+    },
+    "readPage": "读取网页内容",
+    "argsAndResult": "参数与结果",
+    "mayModify": "该工具可能修改网页数据",
+    "reject": "拒绝",
+    "allow": "允许执行"
+  },
+  "settings": {
+    "modelTitle": "对话模型",
+    "modelHint": "用于侧边栏助手和划词的解释、总结、润色，建议选能力强、支持工具调用的模型。翻译模型在设置页单独配置，可以选更快的模型。",
+    "modelHintInherited": "用于侧边栏助手和划词的解释、总结、润色，建议选能力强、支持工具调用的模型。翻译模型在设置页单独配置，可以选更快的模型。当前沿用翻译模型，保存后单独生效。",
+    "confirmTools": "执行网页工具前确认",
+    "confirmToolsHint": "网页通过 WebMCP 提供、且未声明为只读的工具（可能提交表单、下单等），执行前先让你确认",
+    "confirmToolsHintUnsupported": "网页通过 WebMCP 提供、且未声明为只读的工具（可能提交表单、下单等），执行前先让你确认。浏览器尚未开启 WebMCP：在 chrome://flags 启用「WebMCP for testing」后可用",
+    "openOptions": "打开完整设置页"
+  },
+  "agent": {
+    "toolNotFound": "工具「{name}」不存在，请只使用提供的工具",
+    "invalidArgs": "参数不是合法的 JSON：{raw}",
+    "rejectedByUser": "用户拒绝执行该工具",
+    "noResult": "（工具执行成功，没有返回值）",
+    "failed": "工具执行失败",
+    "maxSteps": "已连续调用工具 {count} 次仍未完成，先停在这里。",
+    "maxStepsHistory": "已连续调用工具 {count} 次仍未完成，先停在这里。可以补充说明后继续。"
+  },
+  "errors": {
+    "readPageFailed": "无法读取当前网页：浏览器内置页面不支持；如果是安装扩展前打开的页面，刷新后再试",
+    "noResponse": "网页没有响应，请刷新页面后重试",
+    "scriptNotReady": "网页上的 DevGo 脚本未就绪，请刷新页面后重试",
+    "navigatedNoResult": "工具已执行，页面发生了跳转，未在新页面中找到返回结果",
+    "toolMissing": "网页上没有找到工具「{name}」",
+    "webmcpDisabled": "浏览器未开启 WebMCP",
+    "llmNotConfigured": "AI 翻译未配置：请在设置中填写接口地址和模型",
+    "chatNotConfigured": "AI 未配置：请填写接口地址和模型",
+    "baseUrlRequired": "请先填写接口地址"
+  },
+  "webmcp": {
+    "unsupported": {
+      "title": "浏览器还没开启 WebMCP",
+      "description": "WebMCP 目前是 Chrome 的实验功能：需要 Chrome 150 及以上，在 chrome://flags 搜索「WebMCP for testing」并启用，重启浏览器后回到这里刷新。"
+    },
+    "unavailable": {
+      "title": "当前页面读取不到",
+      "description": "浏览器内置页、扩展商店等页面不允许扩展访问；如果是普通网页，刷新网页后再试。"
+    },
+    "loading": {
+      "title": "正在检测当前网页…",
+      "description": "读取网页及其中 iframe 注册的工具。"
+    },
+    "empty": {
+      "title": "这个网页没有提供工具",
+      "description": "网页需要通过 WebMCP（document.modelContext）注册工具，AI 才能直接替你操作网页。"
+    },
+    "summary": "当前网页提供 {count} 个工具，在「对话」里描述需求，AI 会自动调用",
+    "refresh": "重新检测",
+    "readOnly": "只读",
+    "mayModify": "可能修改数据",
+    "argsLabel": "参数（JSON，已按 Schema 生成模板）",
+    "readOnlyHint": "只读工具，不会修改网页数据",
+    "writeHint": "执行会直接作用在网页上",
+    "execute": "执行",
+    "invalidJson": "参数不是合法的 JSON",
+    "noResult": "（执行成功，没有返回值）",
+    "failed": "执行失败",
+    "result": "执行结果"
+  }
+}

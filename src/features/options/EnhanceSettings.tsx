@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
+import { t } from '@/utils/i18n'
 import { dockDisabledHosts, dockEnabled, enableGithubEnhance, unlockHosts } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
@@ -67,28 +68,22 @@ export default function EnhanceSettings() {
       </Card>
 
       <Card title='GitHub'>
-        <Row
-          label='GitHub 增强'
-          hint='代码页悬浮按钮（在线编辑、DeepWiki、回到顶部），快捷键 , 打开 github1s'
-        >
+        <Row label={t('options.enhance.github.label')} hint={t('options.enhance.github.hint')}>
           <Switch checked={githubOn} onChange={setGithubOn} />
         </Row>
       </Card>
 
-      <Card
-        title='解除复制限制的网站'
-        desc='放开这些网站的复制、选择与右键限制。只对列表里的网站生效（全局放开会让在线编辑器等网站失灵），也可以在弹窗「功能」页一键开关当前网站。'
-      >
+      <Card title={t('options.enhance.unlock.title')} desc={t('options.enhance.unlock.desc')}>
         <div className='flex gap-2'>
           <input
             className={INPUT_CLASS}
             value={input}
-            placeholder='例如 www.example.com'
+            placeholder={t('options.enhance.unlock.placeholder')}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && add()}
           />
           <Button onClick={add} className='shrink-0'>
-            添加
+            {t('options.hostList.add')}
           </Button>
         </div>
         {hosts.length > 0 ? (
@@ -101,7 +96,7 @@ export default function EnhanceSettings() {
                 {host}
                 <button
                   type='button'
-                  aria-label={`移除 ${host}`}
+                  aria-label={t('options.hostList.remove', { host })}
                   onClick={() => setHosts(hosts.filter((item) => item !== host))}
                   className='flex h-4 w-4 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-600'
                 >
@@ -111,7 +106,7 @@ export default function EnhanceSettings() {
             ))}
           </ul>
         ) : (
-          <p className='text-xs text-neutral-500'>暂无</p>
+          <p className='text-xs text-neutral-500'>{t('options.hostList.empty')}</p>
         )}
       </Card>
     </div>

@@ -9,6 +9,7 @@ import {
   type LlmConfig,
 } from '@/features/translate/llm-config'
 import { describeServiceError } from '@/features/translate/errors'
+import { t } from '@/utils/i18n'
 import {
   sendRuntimeMessage,
   type LlmModelListResult,
@@ -132,7 +133,10 @@ export default function LlmConfigForm({
     fetched.forEach((id) => {
       if (!ordered.includes(id)) ordered.push(id)
     })
-    return ordered.map((id) => ({ value: id, note: common.includes(id) ? '常用' : undefined }))
+    return ordered.map((id) => ({
+      value: id,
+      note: common.includes(id) ? t('translate.llmForm.commonModel') : undefined,
+    }))
   }, [matchedPreset, remote, modelSource])
 
   /** 远程服务没填 Key 时不发请求：必然鉴权失败，直接提示先填 Key */
@@ -162,22 +166,28 @@ export default function LlmConfigForm({
   }
 
   const modelStatus = ((): ReactNode => {
-    const fallback = modelOptions.length ? '，以下为常用模型，也可直接输入' : '，可直接输入模型名'
-    if (!draft.baseUrl.trim()) return '填写接口地址后可自动获取模型列表'
-    if (missingKey) return `填写 API Key 后可获取完整模型列表${fallback}`
+    const fallback = modelOptions.length
+      ? t('translate.llmForm.models.fallbackCommon')
+      : t('translate.llmForm.models.fallbackInput')
+    if (!draft.baseUrl.trim()) return t('translate.llmForm.models.needBaseUrl')
+    if (missingKey) return t('translate.llmForm.models.needApiKey', { fallback })
     if (remote?.source !== modelSource) return undefined
-    if (remote.status === 'loading') return '正在获取模型列表…'
+    if (remote.status === 'loading') return t('translate.llmForm.models.loading')
     if (remote.status === 'error' && remote.error) {
       return (
         <span title={remote.error.message} className='text-amber-600'>
           {remote.error.code === 'config'
-            ? '该服务不支持自动获取模型列表'
-            : `未能获取模型列表：${describeServiceError(remote.error.code)}`}
-          {fallback}
+            ? t('translate.llmForm.models.unsupported', { fallback })
+            : t('translate.llmForm.models.failed', {
+                reason: describeServiceError(remote.error.code),
+                fallback,
+              })}
         </span>
       )
     }
-    return remote.models.length ? `共 ${remote.models.length} 个可用模型，可输入筛选` : undefined
+    return remote.models.length
+      ? t('translate.llmForm.models.count', { count: remote.models.length })
+      : undefined
   })()
   const dirty =
     assistantPrefilled ||
@@ -209,14 +219,14 @@ export default function LlmConfigForm({
     if (forAssistant) {
       setAssistantConfig(nextConfig)
       setAssistantKey(apiKey.trim())
-      setSavedTip('已保存')
+      setSavedTip(t('translate.llmForm.saved'))
       onSaved?.()
       return
     }
     setTranslateConfig(nextConfig)
     setTranslateKey(apiKey.trim())
     if (!isActiveEngine) setProvider('llm')
-    setSavedTip(isActiveEngine ? '已保存' : '已保存，并设为当前翻译引擎')
+    setSavedTip(isActiveEngine ? t('translate.llmForm.saved') : t('translate.llmForm.savedAndUsed'))
     onSaved?.()
   }
 
@@ -243,19 +253,19 @@ export default function LlmConfigForm({
   return (
     <div className={`flex flex-col ${compact ? 'gap-2.5' : 'gap-4'}`}>
       <div className={compact ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-4'}>
-        <Field label='服务预设' compact={compact}>
+        <Field label={t('translate.llmForm.preset')} compact={compact}>
           <Select
             value={draft.preset}
             options={LLM_PRESETS.map((item) => ({ value: item.id, label: item.label }))}
             onChange={choosePreset}
           />
         </Field>
-        <Field label='模型' compact={compact}>
+        <Field label={t('translate.llmForm.model')} compact={compact}>
           <Combobox
             value={draft.model}
             options={modelOptions}
             status={modelStatus}
-            placeholder='选择或输入模型名'
+            placeholder={t('translate.llmForm.modelPlaceholder')}
             onOpen={() => void loadModels()}
             onChange={(model) => update({ model })}
             inputClassName={compact ? 'py-1.5 pl-2.5 text-[13px]' : 'py-2 pl-3 text-sm'}
@@ -270,9 +280,9 @@ export default function LlmConfigForm({
       )}
 
       <Field
-        label='接口地址（Base URL）'
+        label={t('translate.llmForm.baseUrl')}
         compact={compact}
-        hint={compact ? undefined : '填到 /v1 即可，会自动补全 /chat/completions'}
+        hint={compact ? undefined : t('translate.llmForm.baseUrlHint')}
       >
         <input
           className={inputClass}
@@ -288,13 +298,13 @@ export default function LlmConfigForm({
         />
       </Field>
 
-      <Field label='API Key（仅存本机，不进备份）' compact={compact}>
+      <Field label={t('translate.llmForm.apiKey')} compact={compact}>
         <div className='flex gap-2'>
           <input
             className={inputClass}
             type={showKey ? 'text' : 'password'}
             value={apiKey}
-            placeholder='sk-...（本地服务可留空）'
+            placeholder={t('translate.llmForm.apiKeyPlaceholder')}
             autoComplete='off'
             spellCheck={false}
             onChange={(e) => {
@@ -303,26 +313,25 @@ export default function LlmConfigForm({
             }}
           />
           <Button onClick={() => setShowKey((v) => !v)} className={`shrink-0 ${buttonClass}`}>
-            {showKey ? '隐藏' : '显示'}
+            {showKey ? t('translate.llmForm.hideKey') : t('translate.llmForm.showKey')}
           </Button>
         </div>
       </Field>
 
       {assistantPrefilled && (
         <p className={`leading-relaxed text-neutral-500 ${compact ? 'text-[11px]' : 'text-xs'}`}>
-          已用翻译的 AI 配置预填。助手需要模型支持工具调用，可改用 Coding Plan
-          等更强的模型，保存后生效。
+          {t('translate.llmForm.assistantPrefilled')}
         </p>
       )}
 
       {showPrompt ? (
         <Field
-          label='自定义要求（可选）'
+          label={t('translate.llmForm.prompt')}
           compact={compact}
           hint={
             forAssistant
-              ? '追加到助手的系统提示词末尾，例如「回答尽量简短」「操作前先列出步骤」'
-              : '追加到系统提示词末尾，例如术语表、语气风格：「技术文档风格；Token 不翻译」'
+              ? t('translate.llmForm.promptHintAssistant')
+              : t('translate.llmForm.promptHintTranslate')
           }
         >
           <textarea
@@ -337,7 +346,9 @@ export default function LlmConfigForm({
           onClick={() => setShowPrompt(true)}
           className='self-start text-[11px] text-neutral-500 transition-colors hover:text-accent-600'
         >
-          {forAssistant ? '+ 自定义要求' : '+ 自定义要求（术语表、语气风格）'}
+          {forAssistant
+            ? t('translate.llmForm.addPromptAssistant')
+            : t('translate.llmForm.addPromptTranslate')}
         </button>
       )}
 
@@ -348,7 +359,7 @@ export default function LlmConfigForm({
           disabled={!ready}
           className={buttonClass}
         >
-          测试连接
+          {t('translate.llmForm.test')}
         </Button>
         <Button
           variant='primary'
@@ -356,7 +367,7 @@ export default function LlmConfigForm({
           disabled={!ready || (!dirty && isActiveEngine)}
           className={buttonClass}
         >
-          {isActiveEngine ? '保存' : '保存并设为翻译引擎'}
+          {isActiveEngine ? t('translate.llmForm.save') : t('translate.llmForm.saveAndUse')}
         </Button>
         {savedTip && <span className='text-xs text-emerald-600'>{savedTip}</span>}
       </div>
@@ -375,13 +386,20 @@ export default function LlmConfigForm({
             forAssistant ? (
               testResult.sample
             ) : (
-              `连接成功：Hello, world! → ${testResult.sample}`
+              t('translate.llmForm.testSuccess', { sample: testResult.sample ?? '' })
             )
           ) : (
             <span title={testResult.error?.message}>
-              连接失败：
-              {testResult.error ? describeServiceError(testResult.error.code) : '未知错误'}
-              {testResult.error?.code === 'auth' && '。若刚切换了服务预设，请确认 Key 来自该服务'}
+              {t(
+                testResult.error?.code === 'auth'
+                  ? 'translate.llmForm.testFailedAuth'
+                  : 'translate.llmForm.testFailed',
+                {
+                  reason: testResult.error
+                    ? describeServiceError(testResult.error.code)
+                    : t('translate.errors.unknown'),
+                },
+              )}
             </span>
           )}
         </div>

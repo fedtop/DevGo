@@ -22,6 +22,7 @@ import type {
   TranslateTextResult,
 } from '@/utils/messaging'
 import { translateProvider, translateTargetLang } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 
 /** 划词翻译：按目标语言设置翻译；选中文本已是目标语言时自动反向（中⇄英） */
 export async function translateSelectionText(text: string): Promise<TranslateTextResult> {
@@ -51,7 +52,7 @@ export async function testTranslate(request: TranslateTestRequest): Promise<Tran
     })
     return sample
       ? { ok: true, sample }
-      : { ok: false, error: { code: 'parse', message: '服务返回了空结果' } }
+      : { ok: false, error: { code: 'parse', message: t('translate.errors.emptyResult') } }
   } catch (error) {
     return { ok: false, error: toTranslateError(error).toJSON() }
   }
@@ -63,7 +64,7 @@ export async function listLlmModels(baseUrl: string, apiKey: string): Promise<Ll
     return { models: await listModels(baseUrl, apiKey) }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
-      return { models: [], error: { code: 'timeout', message: '请求超时' } }
+      return { models: [], error: { code: 'timeout', message: t('translate.errors.timeout') } }
     }
     const { code, message } = toTranslateError(error)
     return { models: [], error: { code, message } }
@@ -134,7 +135,7 @@ export async function aiLookup(text: string): Promise<AiLookupResult> {
     return { result: parseAiLookup(query, output) }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
-      return { result: null, error: { code: 'network', message: '请求超时' } }
+      return { result: null, error: { code: 'network', message: t('translate.errors.timeout') } }
     }
     return { result: null, error: toTranslateError(error).toJSON() }
   }

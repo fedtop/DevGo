@@ -6,6 +6,7 @@
  * 若服务端忽略 stream 参数直接返回 JSON，也能正常解析。
  */
 
+import { t } from '@/utils/i18n'
 import { httpStatusToError, TranslateError } from '@/features/translate/errors'
 import {
   isLlmConfigReady,
@@ -110,7 +111,7 @@ export async function* streamChatCompletion(
 ): AsyncGenerator<string> {
   const { config, apiKey, messages, signal } = request
   if (!isLlmConfigReady(config)) {
-    throw new TranslateError('config', 'AI 翻译未配置：请在设置中填写接口地址和模型')
+    throw new TranslateError('config', t('assistant.errors.llmNotConfigured'))
   }
 
   const headers: Record<string, string> = {
@@ -164,7 +165,7 @@ interface ModelListResponse {
  * 并非所有服务都实现了该接口，失败时抛 TranslateError，由调用方回落到预设候选。
  */
 export async function listModels(baseUrl: string, apiKey: string): Promise<string[]> {
-  if (!baseUrl.trim()) throw new TranslateError('config', '请先填写接口地址')
+  if (!baseUrl.trim()) throw new TranslateError('config', t('assistant.errors.baseUrlRequired'))
 
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (apiKey.trim()) headers.Authorization = `Bearer ${apiKey.trim()}`
@@ -254,7 +255,7 @@ interface ToolChatChunk {
 export async function chatWithTools(request: ToolChatRequest): Promise<ToolChatResult> {
   const { config, apiKey, messages, tools, signal, onText, onReasoning } = request
   if (!isLlmConfigReady(config)) {
-    throw new TranslateError('config', 'AI 未配置：请填写接口地址和模型')
+    throw new TranslateError('config', t('assistant.errors.chatNotConfigured'))
   }
 
   const headers: Record<string, string> = {

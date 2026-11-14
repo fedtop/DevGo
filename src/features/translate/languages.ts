@@ -7,6 +7,8 @@
  * - 大模型：直接用语言的英文名 + 本地名，提示词里更不容易歧义
  */
 
+import { t, type MessageKey } from '@/utils/i18n'
+
 export type TranslateLangCode =
   | 'zh-CN'
   | 'zh-TW'
@@ -30,8 +32,8 @@ export type TranslateTargetSetting = 'auto' | TranslateLangCode
 
 interface LanguageInfo {
   code: TranslateLangCode
-  /** 界面展示名 */
-  label: string
+  /** 界面展示名（文案 key，渲染时再取当前界面语言） */
+  labelKey: MessageKey
   /** 给大模型的语言名 */
   llmName: string
   microsoft: string
@@ -41,39 +43,136 @@ interface LanguageInfo {
 export const TRANSLATE_LANGUAGES: readonly LanguageInfo[] = [
   {
     code: 'zh-CN',
-    label: '简体中文',
+    labelKey: 'translate.languages.zhCN',
     llmName: 'Simplified Chinese (简体中文)',
     microsoft: 'zh-Hans',
     google: 'zh-CN',
   },
   {
     code: 'zh-TW',
-    label: '繁體中文',
+    labelKey: 'translate.languages.zhTW',
     llmName: 'Traditional Chinese (繁體中文)',
     microsoft: 'zh-Hant',
     google: 'zh-TW',
   },
-  { code: 'en', label: 'English', llmName: 'English', microsoft: 'en', google: 'en' },
-  { code: 'ja', label: '日本語', llmName: 'Japanese (日本語)', microsoft: 'ja', google: 'ja' },
-  { code: 'ko', label: '한국어', llmName: 'Korean (한국어)', microsoft: 'ko', google: 'ko' },
-  { code: 'fr', label: 'Français', llmName: 'French', microsoft: 'fr', google: 'fr' },
-  { code: 'de', label: 'Deutsch', llmName: 'German', microsoft: 'de', google: 'de' },
-  { code: 'es', label: 'Español', llmName: 'Spanish', microsoft: 'es', google: 'es' },
-  { code: 'ru', label: 'Русский', llmName: 'Russian', microsoft: 'ru', google: 'ru' },
-  { code: 'pt', label: 'Português', llmName: 'Portuguese', microsoft: 'pt', google: 'pt' },
-  { code: 'it', label: 'Italiano', llmName: 'Italian', microsoft: 'it', google: 'it' },
-  { code: 'vi', label: 'Tiếng Việt', llmName: 'Vietnamese', microsoft: 'vi', google: 'vi' },
-  { code: 'th', label: 'ไทย', llmName: 'Thai', microsoft: 'th', google: 'th' },
-  { code: 'ar', label: 'العربية', llmName: 'Arabic', microsoft: 'ar', google: 'ar' },
-  { code: 'id', label: 'Bahasa Indonesia', llmName: 'Indonesian', microsoft: 'id', google: 'id' },
-  { code: 'tr', label: 'Türkçe', llmName: 'Turkish', microsoft: 'tr', google: 'tr' },
+  {
+    code: 'en',
+    labelKey: 'translate.languages.en',
+    llmName: 'English',
+    microsoft: 'en',
+    google: 'en',
+  },
+  {
+    code: 'ja',
+    labelKey: 'translate.languages.ja',
+    llmName: 'Japanese (日本語)',
+    microsoft: 'ja',
+    google: 'ja',
+  },
+  {
+    code: 'ko',
+    labelKey: 'translate.languages.ko',
+    llmName: 'Korean (한국어)',
+    microsoft: 'ko',
+    google: 'ko',
+  },
+  {
+    code: 'fr',
+    labelKey: 'translate.languages.fr',
+    llmName: 'French',
+    microsoft: 'fr',
+    google: 'fr',
+  },
+  {
+    code: 'de',
+    labelKey: 'translate.languages.de',
+    llmName: 'German',
+    microsoft: 'de',
+    google: 'de',
+  },
+  {
+    code: 'es',
+    labelKey: 'translate.languages.es',
+    llmName: 'Spanish',
+    microsoft: 'es',
+    google: 'es',
+  },
+  {
+    code: 'ru',
+    labelKey: 'translate.languages.ru',
+    llmName: 'Russian',
+    microsoft: 'ru',
+    google: 'ru',
+  },
+  {
+    code: 'pt',
+    labelKey: 'translate.languages.pt',
+    llmName: 'Portuguese',
+    microsoft: 'pt',
+    google: 'pt',
+  },
+  {
+    code: 'it',
+    labelKey: 'translate.languages.it',
+    llmName: 'Italian',
+    microsoft: 'it',
+    google: 'it',
+  },
+  {
+    code: 'vi',
+    labelKey: 'translate.languages.vi',
+    llmName: 'Vietnamese',
+    microsoft: 'vi',
+    google: 'vi',
+  },
+  {
+    code: 'th',
+    labelKey: 'translate.languages.th',
+    llmName: 'Thai',
+    microsoft: 'th',
+    google: 'th',
+  },
+  {
+    code: 'ar',
+    labelKey: 'translate.languages.ar',
+    llmName: 'Arabic',
+    microsoft: 'ar',
+    google: 'ar',
+  },
+  {
+    code: 'id',
+    labelKey: 'translate.languages.id',
+    llmName: 'Indonesian',
+    microsoft: 'id',
+    google: 'id',
+  },
+  {
+    code: 'tr',
+    labelKey: 'translate.languages.tr',
+    llmName: 'Turkish',
+    microsoft: 'tr',
+    google: 'tr',
+  },
 ]
 
 const LANGUAGE_MAP = new Map(TRANSLATE_LANGUAGES.map((lang) => [lang.code, lang]))
 
+/**
+ * 目标语言下拉选项。label 用 getter 在读取时取当前界面语言的文案（不能在模块顶层求值）。
+ */
 export const TARGET_LANGUAGE_OPTIONS: Array<{ value: TranslateTargetSetting; label: string }> = [
-  { value: 'auto', label: '自动（中⇄英）' },
-  ...TRANSLATE_LANGUAGES.map((lang) => ({ value: lang.code, label: lang.label })),
+  {
+    value: 'auto',
+    get label() {
+      return t('translate.languages.auto')
+    },
+  },
+  ...TRANSLATE_LANGUAGES.map((lang) => ({
+    value: lang.code,
+    get label() {
+      return t(lang.labelKey)
+    },
+  })),
 ]
 
 export function isTranslateLangCode(value: unknown): value is TranslateLangCode {
@@ -85,7 +184,8 @@ export function isTranslateTargetSetting(value: unknown): value is TranslateTarg
 }
 
 export function getLanguageLabel(code: TranslateLangCode): string {
-  return LANGUAGE_MAP.get(code)?.label ?? code
+  const info = LANGUAGE_MAP.get(code)
+  return info ? t(info.labelKey) : code
 }
 
 export function toMicrosoftLang(code: TranslateLangCode): string {

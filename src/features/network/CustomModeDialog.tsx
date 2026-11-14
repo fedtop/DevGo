@@ -1,4 +1,5 @@
 import Button from '@/ui/Button'
+import { t } from '@/utils/i18n'
 import type { NetworkProxyProfile } from '@/utils/settings'
 
 import { CUSTOM_PROXY_MODE_NAME_MAX } from './model'
@@ -37,18 +38,20 @@ export default function CustomModeDialog({
       <div
         role='dialog'
         aria-modal='true'
-        aria-label='新增自定义代理模式'
+        aria-label={t('network.customMode.dialogLabel')}
         className='w-full max-w-[340px] rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_18px_60px_rgba(15,23,42,0.28)]'
         onClick={(event) => event.stopPropagation()}
       >
         <div className='mb-3 flex items-center justify-between gap-3'>
-          <h3 className='text-sm font-semibold text-neutral-800'>新增自定义代理</h3>
+          <h3 className='text-sm font-semibold text-neutral-800'>
+            {t('network.customMode.title')}
+          </h3>
           <button
             type='button'
             disabled={busy}
             onClick={onClose}
             className='flex h-7 w-7 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition-[transform,border-color,color] duration-150 ease-out hover:border-neutral-300 hover:text-neutral-600 enabled:active:translate-y-px enabled:active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50'
-            aria-label='关闭'
+            aria-label={t('network.actions.close')}
           >
             <X className='size-4' aria-hidden />
           </button>
@@ -56,12 +59,14 @@ export default function CustomModeDialog({
 
         <div className='flex flex-col gap-2.5'>
           <label className='flex flex-col gap-1'>
-            <span className='text-[11px] font-medium text-neutral-500'>名称</span>
+            <span className='text-[11px] font-medium text-neutral-500'>
+              {t('network.customMode.name')}
+            </span>
             <input
               autoFocus
               value={name}
               maxLength={CUSTOM_PROXY_MODE_NAME_MAX}
-              placeholder='代理名称'
+              placeholder={t('network.customMode.namePlaceholder')}
               onChange={(event) => onNameChange(event.target.value)}
               className={INPUT_CLASS}
             />
@@ -80,10 +85,10 @@ export default function CustomModeDialog({
 
         <div className='mt-3 flex justify-end gap-2'>
           <Button onClick={onClose} disabled={busy} className='!px-2.5 text-xs'>
-            取消
+            {t('network.actions.cancel')}
           </Button>
           <Button variant='primary' onClick={onSave} loading={busy} className='!px-2.5 text-xs'>
-            保存
+            {t('network.actions.save')}
           </Button>
         </div>
       </div>

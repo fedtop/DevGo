@@ -3,6 +3,7 @@
  */
 
 import { ensureStorageMigrated } from '@/background/migration'
+import { t } from '@/utils/i18n'
 import type { NetworkProxyStatus, NetworkRuleListDownloadStatus } from '@/utils/messaging'
 import {
   buildNetworkPacScript,
@@ -28,7 +29,7 @@ import {
 } from '@/utils/settings'
 
 function getProxyApiError(): string {
-  return '当前浏览器不支持 chrome.proxy API，或扩展未授予 proxy 权限'
+  return t('network.background.proxyApiUnavailable')
 }
 
 function getProxySettings(): chrome.types.ChromeSetting {
@@ -225,26 +226,26 @@ export async function downloadNetworkRuleList(url: string): Promise<NetworkRuleL
   try {
     parsedUrl = new URL(url.trim())
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      throw new Error('规则列表 URL 仅支持 http/https')
+      throw new Error(t('network.background.ruleListHttpOnly'))
     }
   } catch (error) {
     return {
       ok: false,
       url,
-      error: error instanceof Error ? error.message : '请输入有效的规则列表 URL',
+      error: error instanceof Error ? error.message : t('network.background.ruleListInvalidUrl'),
     }
   }
 
   try {
     const response = await fetch(parsedUrl.href, { cache: 'no-store' })
     if (!response.ok) {
-      throw new Error(`下载失败：HTTP ${response.status}`)
+      throw new Error(t('network.background.downloadFailed', { status: response.status }))
     }
 
     const text = decodeNetworkRuleListText(await response.text())
     const parsed = parseNetworkRuleList(text)
     if (parsed.proxyRules.length === 0 && parsed.directRules.length === 0) {
-      throw new Error('未解析到有效的 AutoProxy 规则')
+      throw new Error(t('network.background.noRules'))
     }
 
     const lastUpdate = new Date().toISOString()

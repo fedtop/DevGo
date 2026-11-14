@@ -2,6 +2,7 @@
  * 快捷键命令与右键菜单：打开 popup 并定位到指定 Tab、切换整页翻译。
  */
 
+import { initI18n, onLocaleChange, t, uiLanguage } from '@/utils/i18n'
 import {
   sendTabMessage,
   type PopupShortcutMessage,
@@ -75,11 +76,38 @@ async function handlePopupShortcutCommand(command: string): Promise<void> {
 
 /** 安装 / 更新时创建右键菜单（只能在 onInstalled 里创建，SW 重启时重复创建会报错） */
 export function createContextMenus() {
-  browser.contextMenus.create({
-    id: INLINE_TRANSLATE_ID,
-    title: '翻译当前页面（再次点击恢复原文）',
-    contexts: ['page', 'selection'],
+  void (async () => {
+    // 标题跟随界面语言，需先读取语言设置
+    await initI18n()
+    browser.contextMenus.create({
+      id: INLINE_TRANSLATE_ID,
+      title: t('background.contextMenu.inlineTranslate'),
+      contexts: ['page', 'selection'],
+    })
+  })().catch((error: unknown) => console.warn('[DevGo] create context menus failed:', error))
+}
+
+/** 按当前界面语言刷新已创建的右键菜单标题 */
+async function updateContextMenuTitles(): Promise<void> {
+  try {
+    await browser.contextMenus.update(INLINE_TRANSLATE_ID, {
+      title: t('background.contextMenu.inlineTranslate'),
+    })
+  } catch (error) {
+    console.warn('[DevGo] update context menus failed:', error)
+  }
+}
+
+/**
+ * 界面语言切换时更新右键菜单标题。需在 SW 启动时同步注册：
+ * - 直接监听设置项，保证 SW 休眠时改语言也能唤醒并刷新（被唤醒时语言已按新设置初始化）；
+ * - 运行中的 SW 由 onLocaleChange 在语言真正切换后再刷新一次，避免读到旧语言。
+ */
+export function registerContextMenuLocaleWatcher() {
+  uiLanguage.watch(() => {
+    void initI18n().then(updateContextMenuTitles)
   })
+  onLocaleChange(() => void updateContextMenuTitles())
 }
 
 /** 注册右键菜单点击与快捷键命令监听 */

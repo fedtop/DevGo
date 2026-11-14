@@ -4,9 +4,11 @@
 
 import { useLayoutEffect, useRef, useState } from 'react'
 
+import { t } from '@/utils/i18n'
 import { isImeComposing } from '@/utils/ime'
 import type { QuickNavCategoryId, QuickNavCategoryLabels, QuickNavItem } from '@/utils/settings'
 import { categoryOf, labelOf, QUICK_NAV_CATEGORIES } from './categories'
+import { navTitleOf } from './engines'
 import { normalizeNavUrl, openBrowserInternalUrl } from './navUrl'
 import { PinIcon } from './PinnedNav'
 import SiteIcon from './SiteIcon'
@@ -52,7 +54,7 @@ export default function QuickNav({
 
   const openAdd = () => setEdit({ ...EMPTY, category: activeCategory })
   const openEdit = (item: QuickNavItem) =>
-    setEdit({ id: item.id, title: item.title, url: item.url, category: categoryOf(item) })
+    setEdit({ id: item.id, title: navTitleOf(item), url: item.url, category: categoryOf(item) })
 
   const remove = (id: string) => onChange(items.filter((i) => i.id !== id))
 
@@ -177,7 +179,17 @@ export default function QuickNav({
     if (!title || !url) return
     if (edit.id) {
       onChange(
-        items.map((i) => (i.id === edit.id ? { ...i, title, url, category: edit.category } : i)),
+        items.map((i) =>
+          i.id === edit.id
+            ? // 标题没改（仍是内建页按语言显示的默认名）时保留原存储值
+              {
+                ...i,
+                title: title === navTitleOf(i) ? i.title : title,
+                url,
+                category: edit.category,
+              }
+            : i,
+        ),
       )
     } else {
       onChange([...items, { id: crypto.randomUUID(), title, url, category: edit.category }])
@@ -233,15 +245,15 @@ export default function QuickNav({
                   isDragging ? 'scale-95 opacity-40' : ''
                 } border-transparent`}
               >
-                <SiteIcon url={item.url} title={item.title} className='h-8 w-8 rounded-lg' />
+                <SiteIcon url={item.url} title={navTitleOf(item)} className='h-8 w-8 rounded-lg' />
                 <span className='line-clamp-1 w-full text-xs text-slate-600 dark:text-slate-300'>
-                  {item.title}
+                  {navTitleOf(item)}
                 </span>
               </a>
               {/* 固定开关：已固定常显蓝色，未固定悬停浮现 */}
               <button
                 type='button'
-                title={item.pinned ? '取消固定' : '固定到搜索框下方'}
+                title={item.pinned ? t('newtab.quickNav.unpin') : t('newtab.quickNav.pin')}
                 onClick={() => onTogglePin(item.id)}
                 className={`absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full transition-all ${
                   item.pinned
@@ -255,7 +267,7 @@ export default function QuickNav({
               <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
                 <button
                   type='button'
-                  title='编辑'
+                  title={t('newtab.quickNav.edit')}
                   onClick={() => openEdit(item)}
                   className='flex h-5 w-5 items-center justify-center rounded-full bg-slate-200/90 text-[10px] text-slate-600 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200'
                 >
@@ -263,7 +275,7 @@ export default function QuickNav({
                 </button>
                 <button
                   type='button'
-                  title='删除'
+                  title={t('newtab.quickNav.delete')}
                   onClick={() => remove(item.id)}
                   className='flex h-5 w-5 items-center justify-center rounded-full bg-slate-200/90 text-[10px] text-slate-600 hover:bg-red-500 hover:text-white dark:bg-slate-700 dark:text-slate-200'
                 >
@@ -281,7 +293,7 @@ export default function QuickNav({
           className='flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-2 py-4 text-slate-400 transition-colors hover:border-blue-400 hover:text-blue-500 dark:border-slate-600'
         >
           <span className='text-2xl leading-none'>+</span>
-          <span className='text-xs'>添加</span>
+          <span className='text-xs'>{t('newtab.quickNav.add')}</span>
         </button>
       </div>
 
@@ -296,11 +308,13 @@ export default function QuickNav({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className='mb-4 text-sm font-semibold text-slate-800 dark:text-slate-100'>
-              {edit.id ? '编辑导航' : '添加导航'}
+              {edit.id ? t('newtab.quickNav.editTitle') : t('newtab.quickNav.addTitle')}
             </h3>
             <div className='flex flex-col gap-3'>
               <label className='flex flex-col gap-1'>
-                <span className='text-xs text-slate-500 dark:text-slate-400'>名称</span>
+                <span className='text-xs text-slate-500 dark:text-slate-400'>
+                  {t('newtab.quickNav.name')}
+                </span>
                 <input
                   autoFocus
                   value={edit.title}
@@ -310,7 +324,9 @@ export default function QuickNav({
                 />
               </label>
               <label className='flex flex-col gap-1'>
-                <span className='text-xs text-slate-500 dark:text-slate-400'>网址</span>
+                <span className='text-xs text-slate-500 dark:text-slate-400'>
+                  {t('newtab.quickNav.url')}
+                </span>
                 <input
                   value={edit.url}
                   onChange={(e) => setEdit({ ...edit, url: e.target.value })}
@@ -328,7 +344,9 @@ export default function QuickNav({
                 />
               </label>
               <div className='flex flex-col gap-1'>
-                <span className='text-xs text-slate-500 dark:text-slate-400'>分类</span>
+                <span className='text-xs text-slate-500 dark:text-slate-400'>
+                  {t('newtab.quickNav.category')}
+                </span>
                 <div className='flex flex-wrap gap-1.5'>
                   {QUICK_NAV_CATEGORIES.map((category) => (
                     <button
@@ -353,14 +371,14 @@ export default function QuickNav({
                 onClick={() => setEdit(null)}
                 className='rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700'
               >
-                取消
+                {t('newtab.quickNav.cancel')}
               </button>
               <button
                 type='button'
                 onClick={save}
                 className='rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-500'
               >
-                保存
+                {t('newtab.quickNav.save')}
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import Switch from '@/ui/Switch'
+import { t } from '@/utils/i18n'
 import { sendRuntimeMessage } from '@/utils/messaging'
 import { enableCorsBypass } from '@/utils/settings'
 
@@ -36,20 +37,20 @@ export default function CorsSection() {
         await enableCorsBypass.setValue(true)
         const active = await sendRuntimeMessage({ type: 'sync-cors-bypass' })
         setCorsOn(active)
-        setCorsStatus(active ? '已对网页 XHR/fetch 响应补充 CORS 头' : '规则未生效')
+        setCorsStatus(active ? t('network.cors.enabled') : t('network.cors.notActive'))
         return
       }
 
       await enableCorsBypass.setValue(false)
       await sendRuntimeMessage({ type: 'sync-cors-bypass' })
       setCorsOn(false)
-      setCorsStatus('已关闭')
+      setCorsStatus(t('network.cors.disabled'))
     } catch (error) {
       console.warn('[DevGo] toggle CORS bypass failed:', error)
       await enableCorsBypass.setValue(false)
       await sendRuntimeMessage({ type: 'sync-cors-bypass' }).catch(() => false)
       setCorsOn(false)
-      setCorsStatus('启用失败，请查看扩展权限或重新加载插件')
+      setCorsStatus(t('network.cors.failed'))
     } finally {
       setCorsBusy(false)
     }
@@ -59,17 +60,12 @@ export default function CorsSection() {
     <section className='rounded-lg border border-neutral-200 bg-white p-2.5'>
       <div className='flex items-center justify-between gap-3'>
         <div className='min-w-0'>
-          <h2 className='text-sm font-semibold text-neutral-800'>
-            解除 CORS 限制（关闭浏览器“接口跨域”限制）
-          </h2>
-          <p className='text-xs text-neutral-500'>为网页 XHR/fetch 响应补充跨域响应头</p>
+          <h2 className='text-sm font-semibold text-neutral-800'>{t('network.cors.title')}</h2>
+          <p className='text-xs text-neutral-500'>{t('network.cors.desc')}</p>
         </div>
         <Switch checked={corsOn} onChange={toggleCors} disabled={corsBusy} />
       </div>
-      <p className='mt-2 text-[10px] leading-4 text-neutral-500'>
-        仅用于本地开发调试；无法修复服务器拒绝 OPTIONS、带凭证请求、CSP
-        或混合内容限制。开关切换后需刷新页面生效。
-      </p>
+      <p className='mt-2 text-[10px] leading-4 text-neutral-500'>{t('network.cors.note')}</p>
       {corsStatus && <p className='mt-1 text-[10px] leading-4 text-neutral-500'>{corsStatus}</p>}
     </section>
   )

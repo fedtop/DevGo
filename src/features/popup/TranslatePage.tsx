@@ -4,6 +4,7 @@ import CopyIcon from '@/assets/copy.svg'
 import { lookupWord } from '@/api/lookup'
 import PageTranslatePanel from '@/features/popup/PageTranslatePanel'
 import { isLlmUsable } from '@/features/translate/llm-config'
+import { t } from '@/utils/i18n'
 import { sendRuntimeMessage } from '@/utils/messaging'
 import {
   lookupProvider,
@@ -54,7 +55,7 @@ export default function TranslatePage() {
         }),
       )
       setResult(res.result)
-      if (res.error) setError(`AI 查询失败：${res.error.message}`)
+      if (res.error) setError(t('popup.lookup.aiFailed', { message: res.error.message }))
     } else {
       setResult(await lookupWord(text.trim(), engine))
     }
@@ -84,22 +85,22 @@ export default function TranslatePage() {
             onChange={changeLookupEngine}
             className='w-[72px] shrink-0'
             options={[
-              { value: 'youdao', label: '有道' },
-              { value: 'microsoft', label: '微软' },
-              { value: 'google', label: '谷歌' },
+              { value: 'youdao', label: t('popup.lookup.engineYoudao') },
+              { value: 'microsoft', label: t('popup.lookup.engineMicrosoft') },
+              { value: 'google', label: t('popup.lookup.engineGoogle') },
               ...(aiAvailable ? [{ value: 'ai', label: 'AI' }] : []),
             ]}
           />
           <input
             ref={inputRef}
-            placeholder='输入单词或短句'
+            placeholder={t('popup.lookup.placeholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && translate()}
             className='min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-700 placeholder:text-neutral-400 outline-none transition-colors focus:border-accent-500'
           />
           <Button variant='primary' onClick={translate} loading={loading} className='shrink-0'>
-            查询
+            {t('popup.lookup.submit')}
           </Button>
         </div>
 
@@ -112,11 +113,11 @@ export default function TranslatePage() {
           <div className='relative rounded-lg border border-neutral-200 bg-white p-3'>
             <button
               type='button'
-              title='复制译文'
+              title={t('popup.lookup.copyTranslation')}
               onClick={() => navigator.clipboard.writeText(result.translation)}
               className='absolute right-2.5 top-2.5 opacity-40 transition-opacity hover:opacity-80'
             >
-              <img src={CopyIcon} alt='复制' className='w-4' />
+              <img src={CopyIcon} alt={t('popup.lookup.copy')} className='w-4' />
             </button>
 
             {/* 词 + 音标 + 朗读 */}
@@ -127,7 +128,7 @@ export default function TranslatePage() {
               )}
               <button
                 type='button'
-                title='朗读'
+                title={t('popup.lookup.speak')}
                 onClick={() => readText(result.speakUrl)}
                 className='text-neutral-500 transition-colors hover:text-accent-600'
               >

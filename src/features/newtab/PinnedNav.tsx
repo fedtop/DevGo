@@ -3,7 +3,9 @@
  * 上限 20 个（满两行），满后由 NewTabApp 拦截并提示；这里负责展示与移出。
  */
 
+import { t } from '@/utils/i18n'
 import type { QuickNavItem } from '@/utils/settings'
+import { navTitleOf } from './engines'
 import { openBrowserInternalUrl } from './navUrl'
 import SiteIcon from './SiteIcon'
 
@@ -42,7 +44,7 @@ export default function PinnedNav({ items, onUnpin }: PinnedNavProps) {
     <section className='mt-8 w-full'>
       <div className='mb-2 flex items-center gap-1.5 px-1 text-xs text-slate-400 dark:text-slate-500'>
         <PinIcon className='h-3 w-3' />
-        <span>固定</span>
+        <span>{t('newtab.pinned.title')}</span>
         <span className='text-slate-500 dark:text-slate-600'>
           {items.length}/{PIN_LIMIT}
         </span>
@@ -57,14 +59,14 @@ export default function PinnedNav({ items, onUnpin }: PinnedNavProps) {
               onClick={(event) => openItem(event, item.url)}
               className='flex flex-col items-center gap-1.5 rounded-xl border border-transparent bg-white/70 px-1.5 py-2.5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md dark:bg-white/[0.06] dark:hover:border-white/10'
             >
-              <SiteIcon url={item.url} title={item.title} className='h-7 w-7 rounded-lg' />
+              <SiteIcon url={item.url} title={navTitleOf(item)} className='h-7 w-7 rounded-lg' />
               <span className='line-clamp-1 w-full text-[11px] text-slate-600 dark:text-slate-300'>
-                {item.title}
+                {navTitleOf(item)}
               </span>
             </a>
             <button
               type='button'
-              title='移出固定栏（不删除导航）'
+              title={t('newtab.pinned.unpin')}
               onClick={() => onUnpin(item.id)}
               className='absolute right-1 top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-slate-200/90 text-[10px] text-slate-600 opacity-0 transition-opacity hover:bg-red-500 hover:text-white group-hover:opacity-100 dark:bg-slate-700 dark:text-slate-200'
             >

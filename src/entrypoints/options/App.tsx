@@ -19,22 +19,43 @@ import NetworkSettings from '@/features/network/NetworkSettings'
 import TranslateSettings from '@/features/options/TranslateSettings'
 import GithubMark from '@/ui/GithubMark'
 import { SHIP_NAME, SITE_URL } from '@/utils/constants'
+import { t, type MessageKey } from '@/utils/i18n'
 
 interface Section {
   id: string
-  label: string
+  labelKey: MessageKey
   icon: LucideIcon
   component: ComponentType
 }
 
 const SECTIONS: Section[] = [
-  { id: 'translate', label: '翻译', icon: Languages, component: TranslateSettings },
-  { id: 'models', label: 'AI 模型', icon: Brain, component: AiModelSettings },
-  { id: 'selection', label: '划词', icon: TextSelect, component: SelectionSettings },
-  { id: 'assistant', label: 'AI 助手', icon: MessageSquare, component: AssistantSettings },
-  { id: 'network', label: '网络', icon: Globe, component: NetworkSettings },
-  { id: 'enhance', label: '网页增强', icon: Puzzle, component: EnhanceSettings },
-  { id: 'general', label: '通用', icon: Settings, component: GeneralSettings },
+  {
+    id: 'translate',
+    labelKey: 'options.app.nav.translate',
+    icon: Languages,
+    component: TranslateSettings,
+  },
+  { id: 'models', labelKey: 'options.app.nav.models', icon: Brain, component: AiModelSettings },
+  {
+    id: 'selection',
+    labelKey: 'options.app.nav.selection',
+    icon: TextSelect,
+    component: SelectionSettings,
+  },
+  {
+    id: 'assistant',
+    labelKey: 'options.app.nav.assistant',
+    icon: MessageSquare,
+    component: AssistantSettings,
+  },
+  { id: 'network', labelKey: 'options.app.nav.network', icon: Globe, component: NetworkSettings },
+  { id: 'enhance', labelKey: 'options.app.nav.enhance', icon: Puzzle, component: EnhanceSettings },
+  {
+    id: 'general',
+    labelKey: 'options.app.nav.general',
+    icon: Settings,
+    component: GeneralSettings,
+  },
 ]
 
 /** 已并入其他分区的旧 hash：旧书签、外部链接仍能直达对应位置 */
@@ -56,6 +77,12 @@ function readHash(): { section: string; anchor: string } {
 
 export default function App() {
   const [{ section: current, anchor }, setLocation] = useState(readHash)
+
+  const title = t('options.app.title', { name: SHIP_NAME })
+
+  useEffect(() => {
+    document.title = title
+  }, [title])
 
   useEffect(() => {
     const onHashChange = () => setLocation(readHash())
@@ -95,12 +122,10 @@ export default function App() {
       <aside className='sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-black/5 bg-[var(--ui-bg-sidebar)] px-3 py-5'>
         <div className='flex items-center gap-2 px-2.5 pb-5'>
           <img src='/icons/48.png' alt='' className='h-6 w-6' />
-          <span className='text-[15px] font-semibold tracking-tight text-neutral-900'>
-            {SHIP_NAME} 设置
-          </span>
+          <span className='text-[15px] font-semibold tracking-tight text-neutral-900'>{title}</span>
         </div>
         <nav className='flex flex-col gap-0.5'>
-          {SECTIONS.map(({ id, label, icon: Icon }) => (
+          {SECTIONS.map(({ id, labelKey, icon: Icon }) => (
             <a
               key={id}
               href={`#${id}`}
@@ -112,7 +137,7 @@ export default function App() {
               }`}
             >
               <Icon className='size-4 shrink-0' strokeWidth={1.8} aria-hidden />
-              {label}
+              {t(labelKey)}
             </a>
           ))}
         </nav>

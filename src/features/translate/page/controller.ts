@@ -8,6 +8,7 @@ import {
   type TranslateLangCode,
   type TranslateTargetSetting,
 } from '@/features/translate/languages'
+import { t } from '@/utils/i18n'
 import { sendRuntimeMessage, type PageTranslationState } from '@/utils/messaging'
 import {
   hoverTranslateMode,
@@ -126,15 +127,15 @@ export class PageTranslationController {
 
     if (error.code === 'config' || error.code === 'auth') {
       showToast({
-        message: `翻译服务不可用：${error.message}`,
-        actionLabel: '打开设置',
+        message: t('translate.page.unavailable', { message: error.message }),
+        actionLabel: t('translate.page.openSettings'),
         onAction: () => void sendRuntimeMessage({ type: 'open-options-page' }),
       })
       return
     }
 
     showToast({
-      message: `部分段落翻译失败：${error.message}。点击段落后的 ↻ 可重试，或在 DevGo 弹窗中切换翻译引擎。`,
+      message: t('translate.page.partialFailed', { message: error.message }),
     })
   }
 }

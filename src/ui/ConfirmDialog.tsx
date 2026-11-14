@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { TriangleAlert } from 'lucide-react'
 
 import Button from '@/ui/Button'
+import { t } from '@/utils/i18n'
 
 interface ConfirmDialogProps {
   title: string
@@ -15,8 +16,8 @@ interface ConfirmDialogProps {
 /** 通用确认框：开启有副作用的设置前，讲清楚会做什么、影响什么 */
 export default function ConfirmDialog({
   title,
-  confirmLabel = '确认开启',
-  cancelLabel = '取消',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onClose,
   children,
@@ -53,9 +54,9 @@ export default function ConfirmDialog({
           </div>
         </div>
         <div className='mt-5 flex justify-end gap-2'>
-          <Button onClick={onClose}>{cancelLabel}</Button>
+          <Button onClick={onClose}>{cancelLabel ?? t('common.confirmDialog.cancel')}</Button>
           <Button variant='primary' onClick={onConfirm}>
-            {confirmLabel}
+            {confirmLabel ?? t('common.confirmDialog.confirm')}
           </Button>
         </div>
       </div>

@@ -1,1 +1,8 @@
-{}
+{
+  "contextMenu": {
+    "inlineTranslate": "翻译当前页面（再次点击恢复原文）"
+  },
+  "media": {
+    "noActiveTab": "无法获取当前标签页"
+  }
+}

@@ -14,6 +14,7 @@
 
 import { toTranslateError, type TranslateError } from '@/features/translate/errors'
 import { isLikelyInTargetLang, type TranslateLangCode } from '@/features/translate/languages'
+import { t } from '@/utils/i18n'
 import type { TranslatePageContext } from '@/utils/messaging'
 import type { TranslateDisplayMode } from '@/utils/settings'
 
@@ -440,7 +441,7 @@ export class PageTranslator {
 
     const retry = document.createElement(RETRY_TAG)
     retry.textContent = '↻'
-    retry.title = `翻译失败：${error.message}（点击重试）`
+    retry.title = t('translate.page.retryTitle', { message: error.message })
     retry.setAttribute('role', 'button')
     retry.tabIndex = 0
 

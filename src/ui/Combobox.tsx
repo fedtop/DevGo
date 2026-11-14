@@ -9,6 +9,8 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 
+import { t } from '@/utils/i18n'
+
 import { useFloatingMenu } from './useFloatingMenu'
 
 export interface ComboboxOption {
@@ -143,7 +145,7 @@ export default function Combobox({
       <button
         type='button'
         tabIndex={-1}
-        aria-label='展开选项'
+        aria-label={t('common.combobox.expand')}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {
           if (open) close()

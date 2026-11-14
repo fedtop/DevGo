@@ -1,5 +1,6 @@
 import { PageTranslationController } from '@/features/translate/page/controller'
 import { hasExtensionRuntime } from '@/utils/content-settings'
+import { initI18n } from '@/utils/i18n'
 import type { TabMessage, TabResponseMap } from '@/utils/messaging'
 import { setNotranslateNode } from '@/utils/no-translate'
 
@@ -11,6 +12,8 @@ export default defineContentScript({
   runAt: 'document_idle',
   async main(ctx) {
     if (!hasExtensionRuntime()) return
+    // 出错提示条、重试按钮等页面内文案依赖界面语言，先读取设置
+    await initI18n()
 
     const controller = new PageTranslationController()
     ctx.onInvalidated(() => controller.destroy())

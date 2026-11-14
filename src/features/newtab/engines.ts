@@ -2,14 +2,17 @@
  * 新标签页搜索引擎定义、bang 语法解析、默认快捷导航。
  */
 
+import { t, type MessageKey } from '@/utils/i18n'
 import type { QuickNavItem } from '@/utils/settings'
 import { categoryOf } from './categories'
 import { isFaviconSupportedUrl } from './navUrl'
 
 export interface SearchEngine {
   id: string
-  /** 展示名 */
+  /** 展示名（品牌名，不随语言变化） */
   name: string
+  /** 需要按界面语言显示的展示名（如「百度」→ Baidu），优先于 name */
+  nameKey?: MessageKey
   /** 搜索 URL 前缀，拼接 encodeURIComponent(query) */
   queryUrl: string
   /** bang 触发词（不含 !），如 npm → 输入 `!npm xxx` 临时切换 */
@@ -20,7 +23,7 @@ export interface SearchEngine {
 
 export const ENGINES: SearchEngine[] = [
   { id: 'google', name: 'Google', queryUrl: 'https://www.google.com/search?q=', bang: 'g', icon: 'G' }, // prettier-ignore
-  { id: 'baidu', name: '百度', queryUrl: 'https://www.baidu.com/s?wd=', bang: 'bd', icon: '百' },
+  { id: 'baidu', name: '百度', nameKey: 'newtab.engine.baidu', queryUrl: 'https://www.baidu.com/s?wd=', bang: 'bd', icon: '百' }, // prettier-ignore
   { id: 'bing', name: 'Bing', queryUrl: 'https://www.bing.com/search?q=', bang: 'b', icon: 'B' },
   { id: 'npm', name: 'npm', queryUrl: 'https://www.npmjs.com/search?q=', bang: 'npm', icon: '📦' },
   { id: 'github', name: 'GitHub', queryUrl: 'https://github.com/search?q=', bang: 'gh', icon: '🐙' }, // prettier-ignore
@@ -29,6 +32,11 @@ export const ENGINES: SearchEngine[] = [
 ]
 
 export const DEFAULT_ENGINE_ID = 'google'
+
+/** 引擎展示名（当前界面语言） */
+export function engineName(engine: SearchEngine): string {
+  return engine.nameKey ? t(engine.nameKey) : engine.name
+}
 
 /** 根据 id 取引擎，找不到回退到默认 */
 export function getEngine(id: string): SearchEngine {
@@ -186,6 +194,24 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'photopea', title: 'Photopea', url: 'https://www.photopea.com', category: 'tools' },
   { id: 'caoliao', title: '草料二维码', url: 'https://cli.im', category: 'tools' },
 ]
+
+/** 浏览器内建页默认导航的标题文案 key（落库的是中文默认标题，展示时按界面语言翻译） */
+const BUILTIN_TITLE_KEYS: Record<(typeof BUILTIN_BROWSER_PAGE_IDS)[number], MessageKey> = {
+  'browser-history': 'newtab.builtinPage.history',
+  'browser-downloads': 'newtab.builtinPage.downloads',
+  'browser-extensions': 'newtab.builtinPage.extensions',
+}
+
+/**
+ * 导航项展示标题：内建默认项且用户没改过标题时按界面语言显示，其余原样（用户数据 / 品牌名）。
+ * 只影响展示，不改存储。
+ */
+export function navTitleOf(item: QuickNavItem): string {
+  const key = BUILTIN_TITLE_KEYS[item.id as keyof typeof BUILTIN_TITLE_KEYS]
+  if (!key) return item.title
+  const preset = DEFAULT_QUICK_NAV.find((entry) => entry.id === item.id)
+  return preset && item.title === preset.title ? t(key) : item.title
+}
 
 /** 历史版本的默认导航 id 排列（顺序严格），用于识别从未自定义过的老用户 */
 const LEGACY_DEFAULT_IDS_V1 = [

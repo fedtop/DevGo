@@ -1,1 +1,263 @@
-{}
+{
+  "actions": {
+    "cancel": "取消",
+    "save": "保存",
+    "close": "关闭"
+  },
+  "settings": {
+    "title": "网络",
+    "desc": "网络模式、代理配置与真实 IP 防护。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。",
+    "modeTitle": "网络模式",
+    "addCustomMode": "新增自定义模式",
+    "reloadOnSwitch": "切换代理后刷新页面",
+    "reloadOnSwitchHint": "在弹窗里切换网络模式后，自动刷新当前网页",
+    "proxyConfig": "代理配置",
+    "deleteMode": "删除该模式",
+    "proxyServer": "代理服务器",
+    "bypassTitle": "绕过列表（不走当前代理的域名）",
+    "bypassHint": "每行一个域名或 Chrome 代理绕过规则；代理模式、自动模式与每个自定义代理模式都会独立保存。",
+    "unsaved": "代理服务器或绕过列表有未保存的修改，保存后才会生效",
+    "saveHint": "代理服务器与绕过列表修改后需保存；规则列表、代理域名与下方 WebRTC 设置即时生效",
+    "noConfigDesc": "直连与系统代理模式不需要配置。切换到「自动模式」「代理模式」或自定义模式后，可在这里配置代理服务器、规则列表与绕过列表。",
+    "noConfig": "当前模式无需配置"
+  },
+  "mode": {
+    "direct": {
+      "label": "直连",
+      "desc": "不使用代理"
+    },
+    "system": {
+      "label": "系统代理",
+      "desc": "跟随系统设置"
+    },
+    "scenario": {
+      "label": "自动模式",
+      "desc": "规则自动切换"
+    },
+    "global": {
+      "label": "代理模式",
+      "desc": "全部走代理"
+    },
+    "customBadge": "自定义代理"
+  },
+  "proxyControl": {
+    "notControllable": "浏览器不允许扩展控制代理",
+    "byOther": "代理已被其他扩展控制",
+    "controllable": "可由 DevGo 控制",
+    "byThis": "已由 DevGo 控制"
+  },
+  "status": {
+    "applyFailed": "代理设置失败",
+    "synced": "代理设置已同步"
+  },
+  "server": {
+    "scheme": "协议",
+    "host": "Host",
+    "port": "端口"
+  },
+  "customMode": {
+    "dialogLabel": "新增自定义代理模式",
+    "title": "新增自定义代理",
+    "name": "名称",
+    "namePlaceholder": "代理名称"
+  },
+  "deleteMode": {
+    "dialogLabel": "删除自定义代理模式",
+    "title": "删除自定义代理",
+    "name": "「{name}」",
+    "desc": "删除后会回到内置代理配置，不影响自动模式、代理模式和其他自定义模式。",
+    "confirm": "确认删除"
+  },
+  "controller": {
+    "invalidProxy": "请填写有效的代理主机和端口",
+    "invalidCustomProxy": "自定义模式里的代理主机或端口无效",
+    "nameRequired": "请填写自定义模式名称",
+    "updatedCustom": "已更新「{name}」并应用",
+    "savedApplied": "已保存并应用到当前模式",
+    "savedSynced": "已保存并同步到当前代理",
+    "saved": "已保存",
+    "hostBypassRemoved": "已取消当前站点直连",
+    "hostBypassAdded": "已将当前站点加入直连",
+    "switched": "已切换到「{name}」",
+    "added": "已添加「{name}」",
+    "deleted": "已删除「{name}」",
+    "deletedFallback": "自定义模式已删除",
+    "saveLabel": {
+      "update": "更新并应用",
+      "apply": "保存并应用",
+      "enable": "保存并启用"
+    },
+    "configDesc": {
+      "custom": "{name} · 自定义代理",
+      "scenario": "自动模式 · 独立代理与规则",
+      "global": "代理模式 · 全部流量走代理"
+    }
+  },
+  "ruleList": {
+    "title": "规则列表",
+    "summary": "{time} · {count} 条代理规则",
+    "update": "更新",
+    "download": "下载",
+    "hint": "启用后命中规则的站点走代理，每 6 小时自动更新。未启用规则列表、也没有自定义代理域名时，自动模式全部直连。",
+    "recommended": "规则 {index} · {source}",
+    "downloadFirst": "请先下载规则列表",
+    "enabled": "规则列表已启用",
+    "disabled": "规则列表已停用",
+    "downloadFailed": "规则列表下载失败",
+    "updated": "已更新 {proxy} 条代理规则，{direct} 条直连例外",
+    "directSummary": "包含 {count} 条直连例外，最后更新 {time}"
+  },
+  "scenario": {
+    "title": "自定义代理域名",
+    "desc": "规则列表没收录、但需要走代理的站点",
+    "unproxy": "取消代理",
+    "proxyHost": "当前站点走代理",
+    "hint": "每行一个域名，自动包含子域名；优先于规则列表，失焦后自动保存。",
+    "removed": "已移除 {hosts}",
+    "listSeparator": "、",
+    "hostProxied": "{host} 及其子域名将走代理",
+    "saved": "已保存 {count} 个代理域名",
+    "defaultAction": {
+      "title": "未命中规则时",
+      "direct": "直连",
+      "proxy": "走代理",
+      "proxyHint": "除绕过列表、局域网和 .cn 域名外都走代理；适合代理软件自带分流时",
+      "directHint": "只有命中规则的站点走代理，其余直连",
+      "proxyStatus": "未命中规则的请求将走代理",
+      "directStatus": "未命中规则的请求将直连"
+    }
+  },
+  "cors": {
+    "title": "解除 CORS 限制（关闭浏览器“接口跨域”限制）",
+    "desc": "为网页 XHR/fetch 响应补充跨域响应头",
+    "note": "仅用于本地开发调试；无法修复服务器拒绝 OPTIONS、带凭证请求、CSP 或混合内容限制。开关切换后需刷新页面生效。",
+    "enabled": "已对网页 XHR/fetch 响应补充 CORS 头",
+    "notActive": "规则未生效",
+    "disabled": "已关闭",
+    "failed": "启用失败，请查看扩展权限或重新加载插件"
+  },
+  "webrtc": {
+    "title": "真实 IP 防护",
+    "intro": "开着代理上网时，网站仍然可以借助浏览器的 WebRTC（网页音视频通话用的技术）绕过代理，悄悄拿到你的真实 IP，从而判断你大概在哪个城市、用的哪家运营商。开启防护后，网站只能看到代理的 IP。",
+    "scope": "只作用于浏览器里的网页，不影响电脑上的其他应用；网页申请定位权限（精确位置）由浏览器单独询问，不在这里控制。这里的设置改完即保存，不需要点上方的「保存并应用」。",
+    "unknown": "未知",
+    "permissionRequired": "需要授予「更改隐私设置」权限才能开启防护",
+    "policy": {
+      "default": {
+        "label": "不防护（浏览器默认）",
+        "hint": "网页可以悄悄拿到你的真实 IP 和局域网地址，开着代理也一样"
+      },
+      "hideVpn": {
+        "label": "隐藏 VPN / 虚拟网卡",
+        "hint": "不暴露 VPN、虚拟机等额外网卡的地址；真实 IP 和局域网地址仍然可见"
+      },
+      "hideLan": {
+        "label": "隐藏局域网地址",
+        "hint": "网页看不到你家里或公司内网的地址；真实 IP 仍然可见，网页视频通话不受影响"
+      },
+      "hideRealIp": {
+        "label": "隐藏真实 IP（推荐）",
+        "hint": "开着代理时，网页只能看到代理的 IP，没法据此判断你的真实位置和运营商；少数网页视频通话可能变慢或连不上"
+      }
+    },
+    "control": {
+      "byThis": "已由 DevGo 接管",
+      "controllable": "未接管（浏览器默认）",
+      "byOther": "被其他扩展接管（如 WebRTC Control），DevGo 的设置不会生效，请先停用该扩展",
+      "byOtherShort": "被其他扩展接管，防护未生效",
+      "locked": "浏览器策略锁定，扩展无法修改",
+      "lockedShort": "浏览器策略锁定，防护未生效"
+    },
+    "impact": {
+      "whatWeDo": "DevGo 会做什么",
+      "affects": "可能受影响的功能",
+      "unaffectedDownload": "普通浏览、看视频、下载，以及电脑上的客户端 App 都不受影响。",
+      "undoPolicy": "遇到网页通话异常，把级别改回「不防护」即可恢复。",
+      "undoToggle": "关掉这个开关，再刷新网页即可恢复。",
+      "hideVpn": {
+        "title": "开启「隐藏 VPN / 虚拟网卡」",
+        "action": "修改浏览器的 WebRTC 设置，只允许网页使用默认网卡建立连接，VPN、虚拟机等额外网卡的地址不再提供给网页。对所有网页生效。",
+        "affect1": "只能通过 VPN / 虚拟网卡才能连通的网页音视频通话，可能连不上"
+      },
+      "hideLan": {
+        "title": "开启「隐藏局域网地址」",
+        "action": "修改浏览器的 WebRTC 设置，网页只能拿到公网地址，拿不到你家里或公司内网的地址。对所有网页生效。",
+        "affect1": "同一 Wi-Fi / 内网下的网页通话、P2P 传文件不能直连，会改走公网，可能稍慢",
+        "affect2": "只在内网可用的网页会议系统可能连不上"
+      },
+      "hideRealIp": {
+        "title": "开启「隐藏真实 IP」",
+        "action": "修改浏览器的 WebRTC 设置（禁止不经代理的 UDP 连接），网页的音视频连接只能通过代理建立，网站因此拿不到你的真实 IP。对所有网页生效。",
+        "affect1": "网页版视频会议、语音通话（如腾讯会议 / 飞书 / Google Meet 网页版）可能变慢、卡顿或连不上，代理不支持 UDP 时更明显",
+        "affect2": "网页 P2P 传文件、网页直播连麦、部分网页游戏的实时连接",
+        "affect3": "没开代理时，部分网页通话也可能无法建立连接",
+        "unaffected": "普通浏览、看视频、下载，以及电脑上的客户端 App（如会议客户端）都不受影响。",
+        "undo": "遇到网页会议连不上，先把级别改回「不防护」试试；弹窗「网络」页能看到防护是否开启。"
+      },
+      "blockApis": {
+        "title": "禁用网页音视频通话",
+        "action": "在每个网页加载前移除 WebRTC 相关接口（RTCPeerConnection 等），网站彻底无法建立音视频连接，也就拿不到你的任何 IP。对所有网页生效，刷新网页后生效。",
+        "affect1": "所有网页版视频会议、语音通话、屏幕共享都无法使用，网站可能提示「浏览器不支持」",
+        "affect2": "网页 P2P 传文件、网页直播连麦、在线客服的语音 / 视频通话"
+      },
+      "hideDevices": {
+        "title": "隐藏摄像头和麦克风",
+        "action": "在每个网页加载前屏蔽读取媒体设备的接口，网站读不到你有哪些摄像头、麦克风，也无法调用它们。对所有网页生效，刷新网页后生效。",
+        "affect1": "网页视频会议里打不开摄像头和麦克风",
+        "affect2": "网页录音、录像、拍照上传、语音输入、人脸核验等功能",
+        "unaffected": "普通浏览、看视频，以及电脑上的客户端 App 都不受影响。"
+      }
+    },
+    "level": {
+      "title": "防护级别",
+      "label": "级别",
+      "hint": "对所有网页生效；第一次开启时浏览器会请求「更改隐私设置」权限",
+      "enabledTip": "已开启：如果网页会议、语音通话连不上，先把级别改回「不防护」试试。",
+      "notGranted": "还没授权，防护没有生效：重新选择一次级别即可授权",
+      "unsupported": "当前浏览器不支持这项设置",
+      "effective": "浏览器当前生效：{policy} · {control}"
+    },
+    "strict": {
+      "title": "更彻底的屏蔽",
+      "desc": "直接关掉网页里的相关功能，任何网站都绕不过去，但对应功能会用不了。修改后刷新网页生效。",
+      "blockApis": "禁用网页音视频通话（WebRTC）",
+      "blockApisHint": "网站彻底拿不到你的 IP；网页版视频会议、语音通话、P2P 传文件会用不了",
+      "hideDevices": "隐藏摄像头和麦克风",
+      "hideDevicesHint": "网站读不到你有哪些设备（常被用来识别、追踪同一台电脑），也就用不了摄像头和麦克风"
+    },
+    "leakTest": {
+      "title": "检测一下",
+      "desc": "用你最近打开的网页试一次，看看网站实际能拿到哪些地址。开着代理时，如果列表里出现你的真实 IP，说明防护没生效；改完设置可以重新检测对比。",
+      "online": "在线检测",
+      "start": "开始检测",
+      "idle": "点击「开始检测」，结果以网站视角为准",
+      "host": "检测网页：{host}",
+      "blocked": "网页音视频通话已禁用，网站拿不到任何地址",
+      "none": "网站没有拿到任何地址",
+      "candidate": {
+        "mdns": "本机地址（浏览器已做匿名处理，安全）",
+        "public": "公网 IP（开着代理时，这里应该是代理的 IP）",
+        "relay": "中继服务器地址",
+        "lan": "局域网地址"
+      }
+    },
+    "status": {
+      "notGranted": "还没授权，防护没有生效",
+      "apisBlocked": "已禁用网页音视频通话",
+      "offWithProxy": "未开启：开着代理，网站仍可能看到你的真实 IP",
+      "off": "未开启：防止网站绕过代理看到你的真实 IP",
+      "tooltip": "网站可能借助 WebRTC 绕过代理拿到你的真实 IP；点击去设置页开启防护",
+      "settings": "设置"
+    }
+  },
+  "background": {
+    "proxyApiUnavailable": "当前浏览器不支持 chrome.proxy API，或扩展未授予 proxy 权限",
+    "ruleListHttpOnly": "规则列表 URL 仅支持 http/https",
+    "ruleListInvalidUrl": "请输入有效的规则列表 URL",
+    "downloadFailed": "下载失败：HTTP {status}",
+    "noRules": "未解析到有效的 AutoProxy 规则",
+    "leakTestNoTab": "请先打开任意一个网页（http / https），再回来检测",
+    "leakTestFailedOnHost": "无法在 {host} 上检测：{message}",
+    "leakTestFailed": "无法在该网页上检测：{message}"
+  }
+}

@@ -10,30 +10,31 @@ import {
 } from '@/utils/media'
 import { sendRuntimeMessage, type MediaResource, type MediaResourceKind } from '@/utils/messaging'
 import Button from '@/ui/Button'
+import { t, type MessageKey } from '@/utils/i18n'
 
 type ResourceFilter = 'all' | MediaResourceKind
 
-const FILTERS: Array<{ value: ResourceFilter; label: string }> = [
-  { value: 'all', label: '全部' },
-  { value: 'image', label: '图片' },
-  { value: 'video', label: '视频' },
+const FILTERS: Array<{ value: ResourceFilter; labelKey: MessageKey }> = [
+  { value: 'all', labelKey: 'popup.tools.filter.all' },
+  { value: 'image', labelKey: 'popup.tools.filter.image' },
+  { value: 'video', labelKey: 'popup.tools.filter.video' },
 ]
 
-const KIND_LABELS: Record<MediaResourceKind, string> = {
-  image: '图片',
-  video: '视频',
+const KIND_LABEL_KEYS: Record<MediaResourceKind, MessageKey> = {
+  image: 'popup.tools.kind.image',
+  video: 'popup.tools.kind.video',
 }
 
-const SOURCE_LABELS: Record<MediaResource['source'], string> = {
-  network: '请求',
-  dom: '页面',
-  'network+dom': '请求+页面',
+const SOURCE_LABEL_KEYS: Record<MediaResource['source'], MessageKey> = {
+  network: 'popup.tools.source.network',
+  dom: 'popup.tools.source.dom',
+  'network+dom': 'popup.tools.source.networkDom',
 }
-const DELIVERY_LABELS: Partial<Record<MediaDeliveryType, string>> = {
-  'stream-manifest': '流清单',
-  'stream-segment': '流分片',
-  'twitter-audio-track': 'X 音频轨',
-  'twitter-video-track': 'X 视频轨',
+const DELIVERY_LABEL_KEYS: Partial<Record<MediaDeliveryType, MessageKey>> = {
+  'stream-manifest': 'popup.tools.delivery.streamManifest',
+  'stream-segment': 'popup.tools.delivery.streamSegment',
+  'twitter-audio-track': 'popup.tools.delivery.twitterAudioTrack',
+  'twitter-video-track': 'popup.tools.delivery.twitterVideoTrack',
 }
 const VIDEO_PREVIEW_EXTENSIONS = new Set(['mp4', 'webm', 'ogv', 'mov', 'm4v'])
 
@@ -61,25 +62,25 @@ function getHostname(url: string): string {
 }
 
 function getPageLabel(tab: chrome.tabs.Tab | null): string {
-  if (!tab?.url) return '当前标签页'
+  if (!tab?.url) return t('popup.tools.currentTab')
 
   try {
     return new URL(tab.url).hostname
   } catch {
-    return tab.title || '当前标签页'
+    return tab.title || t('popup.tools.currentTab')
   }
 }
 
 function getResourceMeta(resource: MediaResource): string[] {
-  const deliveryLabel = DELIVERY_LABELS[getMediaDeliveryType(resource.url, resource.mime)]
+  const deliveryKey = DELIVERY_LABEL_KEYS[getMediaDeliveryType(resource.url, resource.mime)]
 
   return [
-    deliveryLabel,
+    deliveryKey && t(deliveryKey),
     resource.extension?.toUpperCase(),
     resource.mime,
     resource.width && resource.height ? `${resource.width}x${resource.height}` : '',
     formatBytes(resource.size),
-    SOURCE_LABELS[resource.source],
+    t(SOURCE_LABEL_KEYS[resource.source]),
   ].filter(Boolean) as string[]
 }
 
@@ -251,8 +252,8 @@ function ResourceThumbnail({
   return (
     <button
       type='button'
-      title={previewing ? '收起预览' : '预览视频'}
-      aria-label={previewing ? '收起预览' : '预览视频'}
+      title={previewing ? t('popup.tools.collapsePreview') : t('popup.tools.previewVideo')}
+      aria-label={previewing ? t('popup.tools.collapsePreview') : t('popup.tools.previewVideo')}
       onClick={() => onTogglePreview(resource)}
       className='relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-neutral-100 text-neutral-500 outline-none transition-shadow hover:ring-2 hover:ring-accent-200'
     >
@@ -283,12 +284,12 @@ function ResourceItem({
   const meta = getResourceMeta(resource)
   const previewable = canPreviewVideo(resource)
   const downloadBlockReason = getDirectMediaDownloadBlockReason(resource.url, resource.mime)
-  let previewTitle = '当前格式不能在 popup 预览'
+  let previewTitle = t('popup.tools.previewUnsupported')
 
   if (previewing) {
-    previewTitle = '收起预览'
+    previewTitle = t('popup.tools.collapsePreview')
   } else if (previewable) {
-    previewTitle = '预览视频'
+    previewTitle = t('popup.tools.previewVideo')
   }
 
   return (
@@ -309,7 +310,7 @@ function ResourceItem({
                   : 'bg-accent-50 text-accent-700'
               }`}
             >
-              {KIND_LABELS[resource.kind]}
+              {t(KIND_LABEL_KEYS[resource.kind])}
             </span>
             <span
               className='truncate text-xs font-medium text-neutral-800'
@@ -352,16 +353,16 @@ function ResourceItem({
             <span className='h-7 w-7' aria-hidden='true' />
           )}
           <IconButton
-            title={downloadBlockReason || '下载'}
+            title={downloadBlockReason || t('popup.tools.download')}
             disabled={downloading || Boolean(downloadBlockReason)}
             onClick={() => onDownload(resource)}
           >
             <DownloadIcon />
           </IconButton>
-          <IconButton title='复制链接' onClick={() => onCopy(resource)}>
+          <IconButton title={t('popup.tools.copyLink')} onClick={() => onCopy(resource)}>
             <CopyIcon />
           </IconButton>
-          <IconButton title='打开链接' onClick={() => onOpen(resource)}>
+          <IconButton title={t('popup.tools.openLink')} onClick={() => onOpen(resource)}>
             <ExternalLinkIcon />
           </IconButton>
         </div>
@@ -435,7 +436,7 @@ export default function ToolsPage() {
 
       if (tab?.id == null) {
         setStatusError(true)
-        setStatus('无法读取当前标签页')
+        setStatus(t('popup.tools.readTabFailed'))
         setResources([])
         return
       }
@@ -482,7 +483,7 @@ export default function ToolsPage() {
       })
       setResources([])
       setPreviewingId('')
-      setStatus(`已清空 ${result.removed} 条资源`)
+      setStatus(t('popup.tools.cleared', { count: result.removed }))
     } catch (error) {
       setStatusError(true)
       setStatus(error instanceof Error ? error.message : String(error))
@@ -494,11 +495,11 @@ export default function ToolsPage() {
   const copyResourceUrl = async (resource: MediaResource) => {
     try {
       await navigator.clipboard.writeText(resource.url)
-      setStatus('链接已复制')
+      setStatus(t('popup.tools.linkCopied'))
       setStatusError(false)
     } catch {
       setStatusError(true)
-      setStatus('复制失败')
+      setStatus(t('popup.tools.copyFailed'))
     }
   }
 
@@ -532,12 +533,12 @@ export default function ToolsPage() {
 
       if (!result.ok) {
         setStatusError(true)
-        setStatus(result.error || '下载任务创建失败')
+        setStatus(result.error || t('popup.tools.downloadFailed'))
         return false
       }
 
       setStatusError(false)
-      setStatus('下载任务已创建')
+      setStatus(t('popup.tools.downloadCreated'))
       return true
     } catch (error) {
       setStatusError(true)
@@ -558,7 +559,9 @@ export default function ToolsPage() {
 
     if (downloadables.length === 0) {
       setStatusError(true)
-      setStatus(skippedCount > 0 ? '没有可直接下载成完整文件的资源' : '没有可下载资源')
+      setStatus(
+        skippedCount > 0 ? t('popup.tools.noDirectDownloadable') : t('popup.tools.noDownloadable'),
+      )
       return
     }
 
@@ -573,8 +576,12 @@ export default function ToolsPage() {
     setStatusError(okCount === 0)
     setStatus(
       skippedCount > 0
-        ? `已创建 ${okCount}/${downloadables.length} 个下载任务，跳过 ${skippedCount} 个流媒体片段`
-        : `已创建 ${okCount}/${downloadables.length} 个下载任务`,
+        ? t('popup.tools.bulkResultSkipped', {
+            ok: okCount,
+            total: downloadables.length,
+            skipped: skippedCount,
+          })
+        : t('popup.tools.bulkResult', { ok: okCount, total: downloadables.length }),
     )
   }
 
@@ -583,7 +590,7 @@ export default function ToolsPage() {
       <section className='rounded-lg border border-neutral-200 bg-white p-3'>
         <div className='flex items-start justify-between gap-3'>
           <div className='min-w-0'>
-            <div className='text-sm font-semibold text-neutral-800'>资源嗅探</div>
+            <div className='text-sm font-semibold text-neutral-800'>{t('popup.tools.title')}</div>
             <div className='mt-0.5 truncate text-xs text-neutral-500'>
               {getPageLabel(currentTab)}
             </div>
@@ -594,14 +601,14 @@ export default function ToolsPage() {
               loading={loading}
               className='!px-2 !py-1 text-xs'
             >
-              刷新
+              {t('popup.tools.refresh')}
             </Button>
             <Button
               onClick={clearResources}
               disabled={loading || resources.length === 0}
               className='!px-2 !py-1 text-xs'
             >
-              清空
+              {t('popup.tools.clear')}
             </Button>
           </div>
         </div>
@@ -618,7 +625,7 @@ export default function ToolsPage() {
                   : 'border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300'
               }`}
             >
-              <span className='block text-[10px]'>{item.label}</span>
+              <span className='block text-[10px]'>{t(item.labelKey)}</span>
               <span className='mt-0.5 block text-sm font-semibold'>{counts[item.value]}</span>
             </button>
           ))}
@@ -628,7 +635,7 @@ export default function ToolsPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder='搜索名称、域名或类型'
+            placeholder={t('popup.tools.searchPlaceholder')}
             className='min-w-0 flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-700 outline-none transition-colors placeholder:text-neutral-400 focus:border-accent-400 focus:bg-white'
           />
           <Button
@@ -637,7 +644,7 @@ export default function ToolsPage() {
             disabled={filteredResources.length === 0}
             className='!px-2.5 !py-1.5 text-xs'
           >
-            下载全部
+            {t('popup.tools.downloadAll')}
           </Button>
         </div>
       </section>
@@ -653,14 +660,14 @@ export default function ToolsPage() {
       )}
 
       <div className='flex items-center justify-between text-xs text-neutral-500'>
-        <span>{filteredResources.length} 个资源</span>
-        {loading && <span>扫描中…</span>}
+        <span>{t('popup.tools.count', { count: filteredResources.length })}</span>
+        {loading && <span>{t('popup.tools.scanning')}</span>}
       </div>
 
       <div className='flex max-h-[390px] flex-col gap-2 overflow-y-auto pr-1'>
         {!loading && filteredResources.length === 0 ? (
           <div className='rounded-lg border border-dashed border-neutral-200 bg-white px-4 py-10 text-center text-xs text-neutral-500'>
-            暂未发现图片或视频资源
+            {t('popup.tools.empty')}
           </div>
         ) : (
           filteredResources.map((resource) => (

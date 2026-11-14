@@ -27,6 +27,7 @@ import {
   translateProvider,
   type TranslateProvider,
 } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 
 export type SegmentResult = { text: string } | { error: TranslateError }
 
@@ -113,7 +114,7 @@ function hashString(value: string): string {
 }
 
 function throwIfAborted(signal?: AbortSignal) {
-  if (signal?.aborted) throw new TranslateError('aborted', '翻译已取消')
+  if (signal?.aborted) throw new TranslateError('aborted', t('translate.errors.aborted'))
 }
 
 /* -------------------------------- 缓存 -------------------------------- */
@@ -315,7 +316,7 @@ const runLlm: ProviderRunner = async (texts, job, settings) => {
           return
         }
 
-        const missing = new TranslateError('parse', 'AI 未返回该段译文')
+        const missing = new TranslateError('parse', t('translate.errors.aiSegmentMissing'))
         indexes.forEach((index, localId) => {
           if (!parser.has(localId)) job.onResult(index, { error: missing })
         })
@@ -406,7 +407,7 @@ export async function translateSingleText(
     settings,
   )
 
-  if (!result) throw new TranslateError('unknown', '翻译服务没有返回结果')
+  if (!result) throw new TranslateError('unknown', t('translate.errors.noResult'))
   if ('error' in result) throw result.error
   return stripMarkers(result.text).trim()
 }

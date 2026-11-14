@@ -10,6 +10,7 @@ import {
 } from '@/features/translate/llm-config'
 import LlmConfigForm from '@/features/translate/LlmConfigForm'
 import Button from '@/ui/Button'
+import { t } from '@/utils/i18n'
 import {
   assistantLlmApiKey,
   assistantLlmConfig,
@@ -24,7 +25,7 @@ import { ChevronDown } from 'lucide-react'
 /** 当前配置的一行摘要：服务 · 模型 · Key 状态 */
 function ConfigSummary({ config, apiKey }: { config: LlmConfig; apiKey: string }) {
   if (!isLlmConfigReady(config)) {
-    return <span className='text-amber-600'>还没有配置</span>
+    return <span className='text-amber-600'>{t('options.models.notConfigured')}</span>
   }
   const preset = getLlmPreset(config.preset)
   const service = (preset?.id === 'custom' ? findPresetByBaseUrl(config.baseUrl) : preset)?.label
@@ -36,7 +37,7 @@ function ConfigSummary({ config, apiKey }: { config: LlmConfig; apiKey: string }
       <span className='rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[12px] text-neutral-700'>
         {config.model}
       </span>
-      {missingKey && <span className='text-amber-600'>缺少 API Key</span>}
+      {missingKey && <span className='text-amber-600'>{t('options.models.missingKey')}</span>}
     </span>
   )
 }
@@ -85,7 +86,7 @@ function ModelCard({
           onClick={() => setOpen((value) => !value)}
           className='shrink-0 !px-3.5 !py-1.5 text-sm'
         >
-          {open ? '收起' : '配置'}
+          {open ? t('options.models.collapse') : t('options.models.configure')}
           <ChevronDown
             className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
             aria-hidden
@@ -107,28 +108,27 @@ export default function AiModelSettings() {
 
   return (
     <div className='flex flex-col gap-5'>
-      <SectionHeader
-        title='AI 模型'
-        desc='支持任意 OpenAI 兼容接口（含各家 Coding Plan）。翻译和对话分开配置：翻译要快，对话要强。'
-      />
+      <SectionHeader title={t('options.models.title')} desc={t('options.models.desc')} />
 
       <ModelCard
-        title='翻译模型'
-        badge={{ text: '追求速度', tone: 'fast' }}
-        desc='整页 / 悬停 / 划词翻译，翻译引擎选「AI 大模型」时生效。建议选不带深度思考的快模型，如 glm-4-flash、qwen-turbo、deepseek-chat。'
+        title={t('options.models.translateModel.title')}
+        badge={{ text: t('options.models.translateModel.badge'), tone: 'fast' }}
+        desc={t('options.models.translateModel.desc')}
         summary={<ConfigSummary config={translateConfig} apiKey={translateKey} />}
       >
         <LlmConfigForm />
       </ModelCard>
 
       <ModelCard
-        title='对话模型'
-        badge={{ text: '追求能力', tone: 'smart' }}
-        desc='划词解释 / 总结 / 润色与侧边栏 AI 助手。建议选能力强、支持工具调用的模型，如 GLM-4.6、Kimi K2、qwen3-max 或 Coding Plan。'
+        title={t('options.models.chatModel.title')}
+        badge={{ text: t('options.models.chatModel.badge'), tone: 'smart' }}
+        desc={t('options.models.chatModel.desc')}
         summary={
           <span className='flex flex-wrap items-center gap-x-2'>
             <ConfigSummary config={chatModel.config} apiKey={chatModel.apiKey} />
-            {chatModel.inherited && <span className='text-neutral-500'>（沿用翻译模型）</span>}
+            {chatModel.inherited && (
+              <span className='text-neutral-500'>{t('options.models.chatModel.inherited')}</span>
+            )}
           </span>
         }
       >
@@ -137,7 +137,7 @@ export default function AiModelSettings() {
           {!chatModel.inherited && (
             <div className='flex items-center justify-between gap-4 border-t border-neutral-100 pt-3'>
               <span className='text-xs text-neutral-500'>
-                不想单独维护一套配置时，可以改回沿用翻译模型
+                {t('options.models.chatModel.resetHint')}
               </span>
               <Button
                 onClick={() => {
@@ -146,7 +146,7 @@ export default function AiModelSettings() {
                 }}
                 className='shrink-0 !px-2.5 !py-1 text-xs'
               >
-                改回沿用翻译模型
+                {t('options.models.chatModel.reset')}
               </Button>
             </div>
           )}

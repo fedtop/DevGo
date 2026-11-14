@@ -9,6 +9,7 @@
  */
 import { readPageContent } from '@/features/assistant/page-reader'
 import { hasExtensionRuntime } from '@/utils/content-settings'
+import { initI18n, t } from '@/utils/i18n'
 import type {
   TabMessage,
   WebmcpExecuteResult,
@@ -76,7 +77,7 @@ async function executeTool(
 ): Promise<WebmcpExecuteResult> {
   try {
     const tool = (await getOwnTools(context)).find((item) => item.name === name)
-    if (!tool) return { ok: false, error: `网页上没有找到工具「${name}」` }
+    if (!tool) return { ok: false, error: t('assistant.errors.toolMissing', { name }) }
 
     let result: unknown
     try {
@@ -107,6 +108,8 @@ export default defineContentScript({
   main() {
     if (!hasExtensionRuntime()) return
 
+    // 只有执行工具时会回报错误文案；不阻塞监听注册，回报前等语言就绪即可
+    const i18nReady = initI18n().catch(() => undefined)
     const context = getModelContext()
     const isTop = window === window.top
     let subscribed = false
@@ -147,10 +150,17 @@ export default defineContentScript({
           return undefined
         case 'webmcp-execute':
           if (!context) {
-            sendResponse({ ok: false, error: '浏览器未开启 WebMCP' } satisfies WebmcpExecuteResult)
-            return undefined
+            void i18nReady.then(() =>
+              sendResponse({
+                ok: false,
+                error: t('assistant.errors.webmcpDisabled'),
+              } satisfies WebmcpExecuteResult),
+            )
+            return true
           }
-          void executeTool(context, message.name, message.args).then(sendResponse)
+          void i18nReady
+            .then(() => executeTool(context, message.name, message.args))
+            .then(sendResponse)
           return true
         case 'webmcp-read-result':
           if (isTop) sendResponse(readDocumentResult())

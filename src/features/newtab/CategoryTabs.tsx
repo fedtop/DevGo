@@ -8,6 +8,7 @@ import { useRef } from 'react'
 
 import { isImeComposing } from '@/utils/ime'
 import type { QuickNavCategoryId, QuickNavCategoryLabels } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 import { CATEGORY_LABEL_MAX, labelOf, QUICK_NAV_CATEGORIES } from './categories'
 
 interface CategoryTabsProps {
@@ -49,7 +50,11 @@ export default function CategoryTabs({
   }
 
   return (
-    <div role='tablist' aria-label='导航分类' className='flex items-center gap-1'>
+    <div
+      role='tablist'
+      aria-label={t('newtab.category.tablist')}
+      className='flex items-center gap-1'
+    >
       {QUICK_NAV_CATEGORIES.map((category) => {
         const selected = category.id === active
 
@@ -74,7 +79,7 @@ export default function CategoryTabs({
                 if (e.key === 'Escape') onEditingChange(null)
               }}
               onFocus={(e) => e.target.select()}
-              aria-label='重命名分类'
+              aria-label={t('newtab.category.renameInput')}
               className='w-20 rounded-full border border-blue-400 bg-white px-3 py-1 text-center text-xs text-slate-800 outline-none dark:bg-slate-800 dark:text-slate-100'
             />
           )
@@ -86,7 +91,7 @@ export default function CategoryTabs({
             type='button'
             role='tab'
             aria-selected={selected}
-            title='双击重命名'
+            title={t('newtab.category.doubleClickRename')}
             onClick={() => onChange(category.id)}
             onDoubleClick={() => onEditingChange(category.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs transition-colors ${

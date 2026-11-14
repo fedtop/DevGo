@@ -5,6 +5,8 @@
  * 是否提示用户去配置、是否允许重试。
  */
 
+import { t } from '@/utils/i18n'
+
 export type TranslateErrorCode =
   /** 配置缺失或无效（如 AI 翻译未填写接口地址 / 模型） */
   | 'config'
@@ -50,27 +52,32 @@ export function isAbortError(error: unknown): boolean {
 
 export function toTranslateError(error: unknown): TranslateError {
   if (error instanceof TranslateError) return error
-  if (isAbortError(error)) return new TranslateError('aborted', '翻译已取消')
+  if (isAbortError(error)) return new TranslateError('aborted', t('translate.errors.aborted'))
   if (error instanceof TypeError) {
     // fetch 网络层失败统一抛 TypeError（DNS、断网、证书、被拦截等）
-    return new TranslateError('network', `网络请求失败：${error.message}`)
+    return new TranslateError('network', t('translate.errors.network', { message: error.message }))
   }
   const message = error instanceof Error ? error.message : String(error)
-  return new TranslateError('unknown', message || '未知错误')
+  return new TranslateError('unknown', message || t('translate.errors.unknown'))
 }
 
 /** 按 HTTP 状态码归类错误 */
 export function httpStatusToError(status: number, detail: string): TranslateError {
-  const suffix = detail ? `：${detail}` : ''
+  const suffix = detail ? t('translate.errors.detailSuffix', { detail }) : ''
   if (status === 401 || status === 403) {
-    return new TranslateError('auth', `鉴权失败（${status}）${suffix}`)
+    return new TranslateError('auth', t('translate.errors.auth', { status, detail: suffix }))
   }
-  if (status === 429) return new TranslateError('rate-limit', `请求过于频繁（429）${suffix}`)
-  if (status === 404) return new TranslateError('config', `接口地址或模型不存在（404）${suffix}`)
+  if (status === 429)
+    return new TranslateError('rate-limit', t('translate.errors.rateLimit', { detail: suffix }))
+  if (status === 404)
+    return new TranslateError('config', t('translate.errors.notFound', { detail: suffix }))
   if (status >= 400 && status < 500) {
-    return new TranslateError('config', `请求参数无效（${status}）${suffix}`)
+    return new TranslateError(
+      'config',
+      t('translate.errors.badRequest', { status, detail: suffix }),
+    )
   }
-  return new TranslateError('server', `服务端错误（${status}）${suffix}`)
+  return new TranslateError('server', t('translate.errors.server', { status, detail: suffix }))
 }
 
 /**
@@ -79,20 +86,20 @@ export function httpStatusToError(status: number, detail: string): TranslateErro
 export function describeServiceError(code: TranslateErrorCode | 'timeout'): string {
   switch (code) {
     case 'auth':
-      return 'API Key 无效，或不属于当前接口地址对应的服务'
+      return t('translate.serviceError.auth')
     case 'config':
-      return '接口地址或模型不正确'
+      return t('translate.serviceError.config')
     case 'network':
-      return '无法连接到接口地址，请检查网络或地址是否正确'
+      return t('translate.serviceError.network')
     case 'timeout':
-      return '请求超时，请稍后重试'
+      return t('translate.serviceError.timeout')
     case 'rate-limit':
-      return '请求过于频繁或额度不足，请稍后重试'
+      return t('translate.serviceError.rateLimit')
     case 'server':
-      return '服务端出错，请稍后重试'
+      return t('translate.serviceError.server')
     case 'parse':
-      return '服务返回了无法识别的内容'
+      return t('translate.serviceError.parse')
     default:
-      return '请求失败'
+      return t('translate.serviceError.default')
   }
 }

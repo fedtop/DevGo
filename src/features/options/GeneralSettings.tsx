@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-import { POPUP_PAGES } from '@/features/popup/pages'
+import { getPopupPages } from '@/features/popup/pages'
 import Button from '@/ui/Button'
 import Tabs from '@/ui/Tabs'
 import Select from '@/ui/Select'
@@ -261,7 +261,7 @@ export default function GeneralSettings() {
         >
           <Select
             value={defaultTab}
-            options={POPUP_PAGES}
+            options={getPopupPages()}
             onChange={setDefaultTab}
             className='w-32'
           />

@@ -2,6 +2,8 @@
  * 页面内轻量提示条（Shadow DOM 隔离样式），用于翻译出错、配置缺失等提示。
  */
 
+import { t } from '@/utils/i18n'
+
 const HOST_TAG = 'devgo-toast'
 const DISPLAY_MS = 6000
 
@@ -90,7 +92,7 @@ export function showToast({ message, actionLabel, onAction }: ToastOptions) {
   close.type = 'button'
   close.className = 'close'
   close.textContent = '✕'
-  close.setAttribute('aria-label', '关闭')
+  close.setAttribute('aria-label', t('translate.page.close'))
   close.addEventListener('click', hideToast)
   toast.append(close)
 

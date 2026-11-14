@@ -21,6 +21,7 @@ import {
   type TranslateDisplayMode,
   type TranslateProvider,
 } from '@/utils/settings'
+import { t } from '@/utils/i18n'
 import { useStorageItem } from '@/utils/useStorageItem'
 import Button from '@/ui/Button'
 import Select from '@/ui/Select'
@@ -50,23 +51,29 @@ function GeneralSettings() {
   const llmReady = isLlmConfigReady(llmConfig)
 
   return (
-    <Card title='网页翻译' desc='整页双语对照翻译：译文插在原文段落之后，随页面滚动按需翻译。'>
+    <Card title={t('options.translate.page.title')} desc={t('options.translate.page.desc')}>
       <Row
-        label='翻译引擎'
+        label={t('options.translate.page.provider')}
         hint={
           provider === 'llm' ? (
             <>
               {llmReady ? (
-                <>使用翻译模型 {llmConfig.model}</>
+                t('options.translate.page.usingModel', { model: llmConfig.model })
               ) : (
-                <span className='text-amber-600'>还没有配置翻译模型，AI 翻译暂时不可用</span>
+                <span className='text-amber-600'>{t('options.translate.page.modelMissing')}</span>
               )}
-              <ModelLink label={llmReady ? '修改' : '去配置'} />
+              <ModelLink
+                label={
+                  llmReady
+                    ? t('options.translate.page.editModel')
+                    : t('options.translate.page.configureModel')
+                }
+              />
             </>
           ) : (
             <>
-              谷歌、微软免费可用；想用大模型翻译可配置自己的模型
-              <ModelLink label='配置 AI 模型' />
+              {t('options.translate.page.freeHint')}
+              <ModelLink label={t('options.translate.page.configureAiModel')} />
             </>
           )
         }
@@ -78,7 +85,7 @@ function GeneralSettings() {
           className='w-44'
         />
       </Row>
-      <Row label='目标语言' hint='自动：中文页面译成英文，其余页面译成简体中文'>
+      <Row label={t('options.translate.page.target')} hint={t('options.translate.page.targetHint')}>
         <Select
           value={target}
           options={TARGET_LANGUAGE_OPTIONS}
@@ -86,17 +93,23 @@ function GeneralSettings() {
           className='w-44'
         />
       </Row>
-      <Row label='展示方式' hint='仅译文：隐藏原文，只保留译文'>
+      <Row
+        label={t('options.translate.page.displayMode')}
+        hint={t('options.translate.page.displayModeHint')}
+      >
         <Tabs
           value={displayMode}
           tabs={DISPLAY_MODE_OPTIONS}
           onChange={(value) => setDisplayMode(value as TranslateDisplayMode)}
         />
       </Row>
-      <Row label='译文下划线' hint='用虚线标出译文，方便区分原文'>
+      <Row
+        label={t('options.translate.page.underline')}
+        hint={t('options.translate.page.underlineHint')}
+      >
         <Switch checked={underline} onChange={setUnderline} />
       </Row>
-      <Row label='悬停翻译' hint={describeHoverMode(hoverMode)}>
+      <Row label={t('options.translate.page.hover')} hint={describeHoverMode(hoverMode)}>
         <Select
           value={hoverMode}
           options={HOVER_MODE_OPTIONS}
@@ -126,17 +139,20 @@ function AutoHostsSettings() {
   }
 
   return (
-    <Card title='总是翻译的网站' desc='打开这些网站时自动整页翻译。也可在弹窗中一键开关当前网站。'>
+    <Card
+      title={t('options.translate.autoHosts.title')}
+      desc={t('options.translate.autoHosts.desc')}
+    >
       <div className='flex gap-2'>
         <input
           className={INPUT_CLASS}
           value={input}
-          placeholder='例如 developer.mozilla.org'
+          placeholder={t('options.translate.autoHosts.placeholder')}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && add()}
         />
         <Button onClick={add} className='shrink-0'>
-          添加
+          {t('options.hostList.add')}
         </Button>
       </div>
       {hosts.length > 0 ? (
@@ -149,7 +165,7 @@ function AutoHostsSettings() {
               {host}
               <button
                 type='button'
-                aria-label={`移除 ${host}`}
+                aria-label={t('options.hostList.remove', { host })}
                 onClick={() => setHosts(hosts.filter((item) => item !== host))}
                 className='flex h-4 w-4 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-600'
               >
@@ -159,7 +175,7 @@ function AutoHostsSettings() {
           ))}
         </ul>
       ) : (
-        <p className='text-xs text-neutral-500'>暂无</p>
+        <p className='text-xs text-neutral-500'>{t('options.hostList.empty')}</p>
       )}
     </Card>
   )
@@ -169,7 +185,7 @@ function AutoHostsSettings() {
 export default function TranslateSettings() {
   return (
     <div className='flex flex-col gap-5'>
-      <SectionHeader title='翻译' desc='整页双语翻译、悬停翻译与总是翻译的网站' />
+      <SectionHeader title={t('options.translate.title')} desc={t('options.translate.desc')} />
       <GeneralSettings />
       <AutoHostsSettings />
     </div>

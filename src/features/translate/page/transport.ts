@@ -14,6 +14,7 @@ import {
   type TranslatePortRequest,
   type TranslateSegment,
 } from '@/utils/messaging'
+import { t } from '@/utils/i18n'
 
 export interface TranslateBatchHandlers {
   onSegment: (id: string, text: string) => void
@@ -59,7 +60,7 @@ export class TranslatePortClient {
       const request = this.pending.get(requestId)
       if (!request) return
       this.pending.delete(requestId)
-      request.reject(new TranslateError('aborted', '翻译已取消'))
+      request.reject(new TranslateError('aborted', t('translate.errors.aborted')))
       try {
         this.port?.postMessage({ type: 'cancel', requestId } satisfies TranslatePortRequest)
       } catch {
@@ -72,7 +73,7 @@ export class TranslatePortClient {
 
   /** 取消所有在途请求并断开连接 */
   dispose() {
-    const error = new TranslateError('aborted', '翻译已取消')
+    const error = new TranslateError('aborted', t('translate.errors.aborted'))
     this.pending.forEach((request) => request.reject(error))
     this.pending.clear()
     this.port?.disconnect()
@@ -80,7 +81,7 @@ export class TranslatePortClient {
   }
 
   private disconnectedError(): TranslateError {
-    return new TranslateError('network', '与扩展后台的连接已断开，请重试；若扩展刚更新请刷新页面')
+    return new TranslateError('network', t('translate.errors.portDisconnected'))
   }
 
   private post(message: TranslatePortRequest) {
@@ -95,7 +96,7 @@ export class TranslatePortClient {
       port = browser.runtime.connect({ name: TRANSLATE_PORT_NAME })
     } catch {
       // 扩展被重新加载后旧内容脚本的上下文失效，无法再连接
-      throw new TranslateError('config', '扩展已更新，请刷新页面后重试')
+      throw new TranslateError('config', t('translate.errors.extensionUpdated'))
     }
 
     port.onMessage.addListener((event: TranslatePortEvent) => this.handleEvent(event))

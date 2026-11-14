@@ -8,6 +8,7 @@
 
 import { TranslateError } from '@/features/translate/errors'
 import type { TranslateLangCode } from '@/features/translate/languages'
+import { t } from '@/utils/i18n'
 import type { TranslatePageContext } from '@/utils/messaging'
 
 import type { TranslatePortClient } from './transport'
@@ -100,7 +101,7 @@ export class TranslationQueue {
     if (this.timer) window.clearTimeout(this.timer)
     this.timer = null
 
-    const aborted = new TranslateError('aborted', '翻译已取消')
+    const aborted = new TranslateError('aborted', t('translate.errors.aborted'))
     this.waiting.forEach((item) => item.reject(aborted))
     this.waiting = []
     this.cancels.forEach((cancel) => cancel())
@@ -177,7 +178,7 @@ export class TranslationQueue {
 
     try {
       await promise
-      const missing = new TranslateError('parse', '翻译服务没有返回该段结果')
+      const missing = new TranslateError('parse', t('translate.errors.segmentMissing'))
       batch.forEach((item) => item.reject(missing))
     } catch (error) {
       const translateError =

@@ -3,6 +3,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { t } from '@/utils/i18n'
 import {
   isWebmcpFrameReport,
   type TabMessage,
@@ -73,14 +74,14 @@ export async function executeFrameTool(
       { type: 'webmcp-execute', name, args },
       frameId,
     )
-    return result ?? { ok: false, error: '网页没有响应，请刷新页面后重试' }
+    return result ?? { ok: false, error: t('assistant.errors.noResponse') }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (!/message channel (is )?closed|message port closed/i.test(message)) {
       return {
         ok: false,
         error: /Receiving end does not exist/i.test(message)
-          ? '网页上的 DevGo 脚本未就绪，请刷新页面后重试'
+          ? t('assistant.errors.scriptNotReady')
           : message,
       }
     }
@@ -94,7 +95,7 @@ export async function executeFrameTool(
   ).catch(() => null)
   return {
     ok: true,
-    result: documentResult ?? '工具已执行，页面发生了跳转，未在新页面中找到返回结果',
+    result: documentResult ?? t('assistant.errors.navigatedNoResult'),
   }
 }
 

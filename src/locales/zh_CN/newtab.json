@@ -1,1 +1,90 @@
-{}
+{
+  "app": {
+    "tagline": "为开发者打造的新标签页",
+    "renameCategory": "重命名当前分类",
+    "export": "导出",
+    "import": "导入",
+    "saveFailedQuota": "保存失败：同步空间已满，请删减部分导航",
+    "pinFull": "固定栏已满（最多 {limit} 个），请先移出一些",
+    "imported": "已导入 {count} 个导航",
+    "importedNone": "没有新导航（已存在的已跳过）",
+    "importFailed": "导入失败"
+  },
+  "theme": {
+    "label": "颜色主题",
+    "auto": "自动",
+    "light": "浅色",
+    "dark": "深色",
+    "current": "当前：{mode}",
+    "currentAuto": "当前：自动（当前{effective}）"
+  },
+  "shader": {
+    "switch": "切换背景效果",
+    "mode": {
+      "random": "随机",
+      "fixed": "固定"
+    },
+    "effect": {
+      "mesh": "流体",
+      "neuro": "神经",
+      "simplex": "柔波",
+      "smoke": "烟环",
+      "metaballs": "熔球",
+      "voronoi": "晶格",
+      "warp": "扭曲",
+      "heatmap": "热流",
+      "grain": "颗粒",
+      "panels": "彩幕",
+      "water": "水波",
+      "gem": "宝石"
+    }
+  },
+  "category": {
+    "common": "常用",
+    "dev": "开发",
+    "ai": "AI",
+    "community": "社区",
+    "tools": "工具",
+    "tablist": "导航分类",
+    "renameInput": "重命名分类",
+    "doubleClickRename": "双击重命名"
+  },
+  "builtinPage": {
+    "history": "历史记录",
+    "downloads": "下载管理",
+    "extensions": "扩展管理"
+  },
+  "engine": {
+    "baidu": "百度"
+  },
+  "search": {
+    "placeholder": "用 {engine} 搜索，或输入 !{bang} 切换引擎…",
+    "submit": "搜索",
+    "sourceNav": "导航",
+    "sourceBookmark": "书签"
+  },
+  "pinned": {
+    "title": "固定",
+    "unpin": "移出固定栏（不删除导航）"
+  },
+  "quickNav": {
+    "pin": "固定到搜索框下方",
+    "unpin": "取消固定",
+    "edit": "编辑",
+    "delete": "删除",
+    "add": "添加",
+    "editTitle": "编辑导航",
+    "addTitle": "添加导航",
+    "name": "名称",
+    "url": "网址",
+    "category": "分类",
+    "cancel": "取消",
+    "save": "保存"
+  },
+  "config": {
+    "invalidJson": "文件不是合法的 JSON",
+    "invalidFormat": "配置格式不正确",
+    "notDevgoFile": "不是 DevGo 新标签页配置文件",
+    "noItems": "文件中没有可导入的导航项"
+  }
+}

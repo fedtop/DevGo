@@ -1,4 +1,5 @@
 import Select from '@/ui/Select'
+import { t } from '@/utils/i18n'
 import type { NetworkProxyProfile, NetworkProxyScheme } from '@/utils/settings'
 
 import { SCHEME_OPTIONS } from './model'
@@ -17,7 +18,8 @@ interface ProxyServerFieldsProps {
 export default function ProxyServerFields({ profile, onChange, labeled }: ProxyServerFieldsProps) {
   const fields = [
     {
-      label: '协议',
+      key: 'scheme',
+      label: t('network.server.scheme'),
       control: (
         <Select
           value={profile.scheme}
@@ -29,7 +31,8 @@ export default function ProxyServerFields({ profile, onChange, labeled }: ProxyS
       ),
     },
     {
-      label: 'Host',
+      key: 'host',
+      label: t('network.server.host'),
       control: (
         <input
           value={profile.host}
@@ -40,7 +43,8 @@ export default function ProxyServerFields({ profile, onChange, labeled }: ProxyS
       ),
     },
     {
-      label: '端口',
+      key: 'port',
+      label: t('network.server.port'),
       control: (
         <input
           value={profile.port || ''}
@@ -58,14 +62,14 @@ export default function ProxyServerFields({ profile, onChange, labeled }: ProxyS
 
   return (
     <div className='grid grid-cols-[92px_1fr_72px] gap-2'>
-      {fields.map(({ label, control }) =>
+      {fields.map(({ key, label, control }) =>
         labeled ? (
-          <label key={label} className='flex min-w-0 flex-col gap-1'>
+          <label key={key} className='flex min-w-0 flex-col gap-1'>
             <span className='text-[11px] font-medium text-neutral-500'>{label}</span>
             {control}
           </label>
         ) : (
-          <div key={label} className='contents'>
+          <div key={key} className='contents'>
             {control}
           </div>
         ),

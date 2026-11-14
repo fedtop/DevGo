@@ -5,7 +5,9 @@ import { sendRuntimeMessage, type WebrtcStatus } from '@/utils/messaging'
 import { webrtcBlockApis, webrtcPolicy } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
-import { CONTROL_HINTS, policyLabel } from './webrtc'
+import { t } from '@/utils/i18n'
+
+import { getControlHints, policyLabel } from './webrtc'
 
 /** popup「网络」页的 WebRTC 防泄露状态：只展示是否生效，点击进设置页对应分组修改 */
 export default function WebrtcStatusSection({
@@ -27,24 +29,27 @@ export default function WebrtcStatusSection({
   }, [policy])
 
   const enabled = policy !== 'default' || blockApis
-  const control = status?.control ? CONTROL_HINTS[status.control] : undefined
+  const control = status?.control ? getControlHints()[status.control] : undefined
   // 选了策略却没生效：没授权，或被其他扩展 / 浏览器策略接管
   const problem =
     policy === 'default' || !status
       ? ''
       : !status.permission
-        ? '还没授权，防护没有生效'
+        ? t('network.webrtc.status.notGranted')
         : (control?.short ?? '')
 
   const detail = problem
     ? problem
     : enabled
-      ? [policy !== 'default' && policyLabel(policy), blockApis && '已禁用网页音视频通话']
+      ? [
+          policy !== 'default' && policyLabel(policy),
+          blockApis && t('network.webrtc.status.apisBlocked'),
+        ]
           .filter(Boolean)
           .join(' · ')
       : proxyActive
-        ? '未开启：开着代理，网站仍可能看到你的真实 IP'
-        : '未开启：防止网站绕过代理看到你的真实 IP'
+        ? t('network.webrtc.status.offWithProxy')
+        : t('network.webrtc.status.off')
 
   const Icon = problem ? ShieldAlert : enabled ? ShieldCheck : ShieldOff
 
@@ -53,7 +58,7 @@ export default function WebrtcStatusSection({
       <button
         type='button'
         onClick={onOpenSettings}
-        title='网站可能借助 WebRTC 绕过代理拿到你的真实 IP；点击去设置页开启防护'
+        title={t('network.webrtc.status.tooltip')}
         className='group flex w-full items-center justify-between gap-3 text-left'
       >
         <span className='flex min-w-0 items-center gap-2'>
@@ -65,7 +70,9 @@ export default function WebrtcStatusSection({
             aria-hidden
           />
           <span className='min-w-0'>
-            <span className='block text-sm font-semibold text-neutral-800'>真实 IP 防护</span>
+            <span className='block text-sm font-semibold text-neutral-800'>
+              {t('network.webrtc.title')}
+            </span>
             <span
               className={`block truncate text-xs ${
                 problem || (!enabled && proxyActive) ? 'text-amber-600' : 'text-neutral-500'
@@ -76,7 +83,7 @@ export default function WebrtcStatusSection({
           </span>
         </span>
         <span className='shrink-0 text-xs text-neutral-500 group-hover:text-accent-600'>
-          设置
+          {t('network.webrtc.status.settings')}
           <ArrowUpRight className='ml-0.5 inline size-3 -translate-y-px' aria-hidden />
         </span>
       </button>

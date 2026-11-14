@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
+import { t } from '@/utils/i18n'
 import {
   dockDisabledHosts,
   dockEnabled,
@@ -36,7 +37,7 @@ function Row({ title, desc, children }: { title: string; desc: ReactNode; childr
  */
 function OpenSidePanelButton({
   view,
-  label = '打开',
+  label,
   disabled = false,
 }: {
   view: SidepanelView
@@ -64,7 +65,7 @@ function OpenSidePanelButton({
       disabled={windowId == null || disabled}
       className='!px-3 !py-1 text-xs'
     >
-      {label}
+      {label ?? t('popup.function.open')}
     </Button>
   )
 }
@@ -74,8 +75,12 @@ function AssistantRow() {
 
   return (
     <Row
-      title='AI 助手'
-      desc={`侧边栏里总结网页、就网页内容提问${shortcut ? ` · ${formatShortcut(shortcut)}` : ''}`}
+      title={t('popup.function.assistantTitle')}
+      desc={
+        shortcut
+          ? t('popup.function.assistantDescShortcut', { shortcut: formatShortcut(shortcut) })
+          : t('popup.function.assistantDesc')
+      }
     >
       <OpenSidePanelButton view='chat' />
     </Row>
@@ -89,20 +94,20 @@ function WebmcpRow() {
 
   const desc =
     status === 'loading'
-      ? '正在检测当前网页…'
+      ? t('popup.function.webmcpLoading')
       : status === 'unsupported'
-        ? '浏览器未开启 WebMCP（chrome://flags 启用 WebMCP for testing）'
+        ? t('popup.function.webmcpUnsupported')
         : status === 'unavailable'
-          ? '当前页面不支持'
+          ? t('popup.common.pageUnsupported')
           : tools.length
-            ? `当前网页提供 ${tools.length} 个工具，可让 AI 调用或手动执行`
-            : '当前网页没有提供工具'
+            ? t('popup.function.webmcpTools', { count: tools.length })
+            : t('popup.function.webmcpNoTools')
 
   return (
-    <Row title='网页工具（WebMCP）' desc={desc}>
+    <Row title={t('popup.function.webmcpTitle')} desc={desc}>
       <OpenSidePanelButton
         view='tools'
-        label='查看工具'
+        label={t('popup.function.viewTools')}
         disabled={status !== 'ready' || tools.length === 0}
       />
     </Row>
@@ -155,9 +160,9 @@ function SiteSwitchRow({
   }
 
   const desc = !enabled
-    ? '已在全部网站关闭，打开后恢复'
+    ? t('popup.function.selectionGloballyOff')
     : !hostname
-      ? '当前页面不支持'
+      ? t('popup.common.pageUnsupported')
       : siteDisabled
         ? `已在 ${hostname} 停用`
         : `${hostname}：${feature}${
@@ -188,11 +193,13 @@ function UnlockSiteRow() {
 
   return (
     <Row
-      title='解除本站复制限制'
+      title={t('popup.function.unlockTitle')}
       desc={
-        hostname
-          ? `${hostname}：放开复制、选择与右键${hosts.length > 1 ? `（共 ${hosts.length} 个站点已开启）` : ''}`
-          : '当前页面不支持'
+        !hostname
+          ? t('popup.common.pageUnsupported')
+          : hosts.length > 1
+            ? t('popup.function.unlockDescWithCount', { host: hostname, count: hosts.length })
+            : t('popup.function.unlockDesc', { host: hostname })
       }
     >
       <Switch checked={enabled} onChange={toggle} disabled={!hostname} />
@@ -234,7 +241,7 @@ export default function FunctionPage() {
         onClick={openEnhanceSettings}
         className='self-end text-xs text-neutral-500 transition-colors hover:text-accent-600'
       >
-        管理全部网站与更多功能
+        {t('popup.function.manageAll')}
         <ArrowUpRight className='ml-0.5 inline size-3 -translate-y-px' aria-hidden />
       </button>
     </div>

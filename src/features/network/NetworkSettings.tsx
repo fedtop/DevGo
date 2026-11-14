@@ -1,5 +1,6 @@
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
+import { t } from '@/utils/i18n'
 
 import { Card, Row, SectionHeader } from '@/features/options/layout'
 
@@ -29,20 +30,17 @@ export default function NetworkSettings() {
 
   return (
     <div className='flex flex-col gap-5'>
-      <SectionHeader
-        title='网络'
-        desc='网络模式、代理配置与真实 IP 防护。弹窗「网络」页可以快速切换模式、把当前网站设为直连或走代理。'
-      />
+      <SectionHeader title={t('network.settings.title')} desc={t('network.settings.desc')} />
 
       <Card
-        title='网络模式'
+        title={t('network.settings.modeTitle')}
         extra={
           <Button
             onClick={c.openCustomModeDialog}
             disabled={c.busy}
             className='!px-2.5 !py-1 text-xs'
           >
-            新增自定义模式
+            {t('network.settings.addCustomMode')}
           </Button>
         }
       >
@@ -60,14 +58,17 @@ export default function NetworkSettings() {
             {c.statusText}
           </p>
         )}
-        <Row label='切换代理后刷新页面' hint='在弹窗里切换网络模式后，自动刷新当前网页'>
+        <Row
+          label={t('network.settings.reloadOnSwitch')}
+          hint={t('network.settings.reloadOnSwitchHint')}
+        >
           <Switch checked={c.reloadOnSwitch} onChange={c.toggleReloadOnSwitch} />
         </Row>
       </Card>
 
       {c.showProxySettings ? (
         <Card
-          title='代理配置'
+          title={t('network.settings.proxyConfig')}
           desc={c.proxyConfigDescription}
           extra={
             c.activeCustomProxyMode && (
@@ -78,13 +79,15 @@ export default function NetworkSettings() {
                 }
                 className='!px-2.5 !py-1 text-xs !text-rose-600'
               >
-                删除该模式
+                {t('network.settings.deleteMode')}
               </Button>
             )
           }
         >
           <div>
-            <h3 className='mb-1.5 text-sm font-medium text-neutral-700'>代理服务器</h3>
+            <h3 className='mb-1.5 text-sm font-medium text-neutral-700'>
+              {t('network.settings.proxyServer')}
+            </h3>
             <ProxyServerFields profile={c.profile} onChange={c.setProfile} />
           </div>
 
@@ -102,7 +105,7 @@ export default function NetworkSettings() {
 
           <div className='border-t border-neutral-100 pt-3'>
             <h3 className='mb-1.5 text-sm font-medium text-neutral-700'>
-              绕过列表（不走当前代理的域名）
+              {t('network.settings.bypassTitle')}
             </h3>
             <textarea
               value={c.bypassText}
@@ -113,8 +116,7 @@ export default function NetworkSettings() {
               className='w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2 font-mono text-xs leading-5 text-neutral-700 placeholder:text-neutral-400 outline-none transition-colors focus:border-accent-500'
             />
             <p className='mt-1.5 text-xs leading-relaxed text-neutral-500'>
-              每行一个域名或 Chrome
-              代理绕过规则；代理模式、自动模式与每个自定义代理模式都会独立保存。
+              {t('network.settings.bypassHint')}
             </p>
           </div>
 
@@ -136,9 +138,8 @@ export default function NetworkSettings() {
               }`}
             >
               {c.profileDirty
-                ? '代理服务器或绕过列表有未保存的修改，保存后才会生效'
-                : c.customModeStatus ||
-                  '代理服务器与绕过列表修改后需保存；规则列表、代理域名与下方 WebRTC 设置即时生效'}
+                ? t('network.settings.unsaved')
+                : c.customModeStatus || t('network.settings.saveHint')}
             </p>
             {c.canSaveProxyProfile && (
               <Button variant='primary' onClick={c.saveProxyProfile} loading={c.busy}>
@@ -148,11 +149,8 @@ export default function NetworkSettings() {
           </div>
         </Card>
       ) : (
-        <Card
-          title='代理配置'
-          desc='直连与系统代理模式不需要配置。切换到「自动模式」「代理模式」或自定义模式后，可在这里配置代理服务器、规则列表与绕过列表。'
-        >
-          <span className='text-xs text-neutral-500'>当前模式无需配置</span>
+        <Card title={t('network.settings.proxyConfig')} desc={t('network.settings.noConfigDesc')}>
+          <span className='text-xs text-neutral-500'>{t('network.settings.noConfig')}</span>
         </Card>
       )}
 
