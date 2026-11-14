@@ -32,6 +32,7 @@
   clip-path: inset(0 0 0 0 round 10px);
   transition:
     clip-path var(--dg-open),
+    border-radius var(--dg-open),
     box-shadow 0.3s ease 0.22s,
     background 0.2s ease;
 }
@@ -103,11 +104,14 @@
 
 /* 收起：方块裁成细长胶囊，流光、高光和标志都藏起来 */
 .dg-dock[data-tucked] .dg-tile {
+  /* 方块自身 10px 的圆角比细条宽度的一半还大，会和裁剪的圆角叠出尖角；收起时改成细条的半宽，两端才是完整的半圆 */
+  border-radius: calc(var(--dg-visible) / 2);
   background: #1c1c1c;
   box-shadow: none;
   clip-path: inset(0 calc(100% - var(--dg-visible)) 0 0 round calc(var(--dg-visible) / 2));
   transition:
     clip-path var(--dg-fold),
+    border-radius var(--dg-fold),
     box-shadow 0.15s ease,
     background 0.2s ease;
 }
