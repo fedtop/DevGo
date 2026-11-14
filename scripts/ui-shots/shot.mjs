@@ -252,10 +252,20 @@ const audit = () =>
   })()`)
 
 const report = {}
-const shot = async (name, full = false) => {
+const shot = async (name, opts = {}) => {
   console.error('shot', name)
   const params = { format: 'png' }
-  if (full) {
+  if (opts.rect) {
+    // 按面板元素实际边界裁切（clip 用 CSS 像素，DPR 由 Emulation 自动放大）
+    params.clip = {
+      x: opts.rect.x,
+      y: opts.rect.y,
+      width: opts.rect.width,
+      height: opts.rect.height,
+      scale: 1,
+    }
+    params.captureBeyondViewport = true
+  } else if (opts.full) {
     const h = await ev('document.documentElement.scrollHeight')
     const w = await ev('document.documentElement.clientWidth')
     params.clip = { x: 0, y: 0, width: w, height: Math.min(h, 4000), scale: 1 }
@@ -287,12 +297,15 @@ await ev(
   `chrome.storage.local.set({ uiLanguage: '${LANG}', themeMode: '${THEME}', newtabShaderMode: 'fixed' })`,
 )
 
-// 弹窗 4 个 Tab（复用「记住上次 Tab」的存储键）
+// 弹窗 4 个 Tab（复用「记住上次 Tab」的存储键）：按 .popup-shell 实际高度裁切，去掉底部空白
 for (const tab of ['translate', 'network', 'tools', 'function']) {
   await go('/options.html', 1280, 900)
   await ev(`chrome.storage.local.set({ popupLastActiveTab: '${tab}', popupInitialTab: '' })`)
   await go('/popup.html', 500, 640)
-  await shot(`popup-${tab}`)
+  const rect = await ev(
+    "(() => { const s = document.querySelector('.popup-shell'); const r = s.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } })()",
+  )
+  await shot(`popup-${tab}`, rect ? { rect } : {})
 }
 
 // 设置页各分区（整页长图）
