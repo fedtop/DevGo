@@ -93,7 +93,7 @@ export const DEFAULT_QUICK_NAV: QuickNavItem[] = [
   { id: 'browser-downloads', title: '下载管理', url: 'chrome://downloads/', category: 'common' },
   { id: 'browser-extensions', title: '扩展管理', url: 'chrome://extensions/', category: 'common' },
   { id: 'zwork', title: 'Zwork', url: 'https://zwork.zhipuai.cn/web/', category: 'common' },
-  { id: 'aihot', title: 'AIHot', url: 'https://aihot.virxact.com', category: 'common' },
+  { id: 'aihot', title: 'AIHot', url: 'https://aihot.news', category: 'common' },
   { id: 'yixi', title: '一席', url: 'https://yixi.tv', category: 'common' },
   { id: 'notion', title: 'Notion', url: 'https://www.notion.so', category: 'common' },
   { id: 'weread', title: '微信读书', url: 'https://weread.qq.com', category: 'common' },
