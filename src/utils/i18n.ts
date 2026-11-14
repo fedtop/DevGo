@@ -16,6 +16,7 @@ import enAi from '@/locales/en/ai.json'
 import enAssistant from '@/locales/en/assistant.json'
 import enBackground from '@/locales/en/background.json'
 import enCommon from '@/locales/en/common.json'
+import enDock from '@/locales/en/dock.json'
 import enGithub from '@/locales/en/github.json'
 import enNetwork from '@/locales/en/network.json'
 import enNewtab from '@/locales/en/newtab.json'
@@ -27,6 +28,7 @@ import zhAi from '@/locales/zh_CN/ai.json'
 import zhAssistant from '@/locales/zh_CN/assistant.json'
 import zhBackground from '@/locales/zh_CN/background.json'
 import zhCommon from '@/locales/zh_CN/common.json'
+import zhDock from '@/locales/zh_CN/dock.json'
 import zhGithub from '@/locales/zh_CN/github.json'
 import zhNetwork from '@/locales/zh_CN/network.json'
 import zhNewtab from '@/locales/zh_CN/newtab.json'
@@ -47,6 +49,7 @@ const zhCN = {
   ai: zhAi,
   background: zhBackground,
   github: zhGithub,
+  dock: zhDock,
 }
 
 const en = {
@@ -61,6 +64,7 @@ const en = {
   ai: enAi,
   background: enBackground,
   github: enGithub,
+  dock: enDock,
 }
 
 type Leaves<T, Prefix extends string = ''> = {

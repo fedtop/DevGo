@@ -135,7 +135,14 @@
   },
   "enhance": {
     "title": "网页增强",
-    "desc": "GitHub 增强与按站点解除复制限制",
+    "desc": "悬浮快捷栏、GitHub 增强与按站点解除复制限制",
+    "dock": {
+      "title": "悬浮快捷栏",
+      "desc": "网页右侧的 DevGo 小圆球：悬停展开翻译本页、AI 总结、AI 助手等快捷操作，可上下拖动调整位置。",
+      "label": "显示悬浮快捷栏",
+      "hint": "也可以在圆球的关闭菜单里选择本次不显示、本站不显示",
+      "disabledHosts": "不显示的网站"
+    },
     "github": {
       "label": "GitHub 增强",
       "hint": "代码页悬浮按钮（在线编辑、DeepWiki、回到顶部），快捷键 , 打开 github1s"

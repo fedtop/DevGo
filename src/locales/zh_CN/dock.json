@@ -1,0 +1,29 @@
+{
+  "actions": {
+    "translatePage": "翻译本页",
+    "showOriginal": "显示原文",
+    "summarize": "AI 总结本页",
+    "assistant": "AI 助手",
+    "backToTop": "回到顶部",
+    "settings": "设置"
+  },
+  "ball": {
+    "title": "DevGo（拖动可调整位置）",
+    "ariaLabel": "DevGo 快捷操作"
+  },
+  "close": {
+    "button": "关闭悬浮快捷栏",
+    "session": {
+      "title": "本次不显示",
+      "desc": "关闭这个标签页前不再显示"
+    },
+    "site": {
+      "title": "在 {host} 不显示",
+      "desc": "可在弹窗「功能」页重新开启"
+    },
+    "all": {
+      "title": "全部网站都不显示",
+      "desc": "可在设置页「网页增强」重新开启"
+    }
+  }
+}

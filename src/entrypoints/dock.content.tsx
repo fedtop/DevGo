@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import DockApp from '@/features/dock/DockApp'
 import { DOCK_SESSION_HIDDEN_KEY } from '@/features/dock/model'
 import { hasExtensionRuntime } from '@/utils/content-settings'
+import { initI18n } from '@/utils/i18n'
 import { dockDisabledHosts, dockEnabled } from '@/utils/settings'
 import '@/features/dock/style.css'
 
@@ -13,6 +14,7 @@ export default defineContentScript({
   runAt: 'document_idle',
   async main(ctx) {
     if (!hasExtensionRuntime() || window.top !== window) return
+    await initI18n()
 
     const ui = await createShadowRootUi(ctx, {
       name: 'devgo-dock-ui',

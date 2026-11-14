@@ -11,10 +11,9 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
+import { t, useLocale } from '@/utils/i18n'
 import { sendRuntimeMessage, type OpenAssistantMessage } from '@/utils/messaging'
 import { dockDisabledHosts, dockEnabled, dockPositionY } from '@/utils/settings'
-
-import { DOCK_SUMMARY_PROMPT } from './model'
 
 const Z_DOCK = 2147483646
 const BALL_SIZE = 40
@@ -48,6 +47,7 @@ function openAssistant(prompt?: string) {
 
 /** 页面右侧悬浮快捷栏：悬停展开常用操作，可拖动调整高度，可按本次 / 本站 / 永久关闭 */
 export default function DockApp({ onHideSession }: { onHideSession: () => void }) {
+  useLocale()
   const [expanded, setExpanded] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [ratio, setRatio] = useState<number | null>(null)
@@ -142,23 +142,28 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
   }> = [
     {
       key: 'translate',
-      label: translating ? '显示原文' : '翻译本页',
+      label: translating ? t('dock.actions.showOriginal') : t('dock.actions.translatePage'),
       icon: Languages,
       active: translating,
       run: toggleTranslate,
     },
     {
       key: 'summary',
-      label: 'AI 总结本页',
+      label: t('dock.actions.summarize'),
       icon: Sparkles,
-      run: () => openAssistant(DOCK_SUMMARY_PROMPT),
+      run: () => openAssistant(t('assistant.quickActions.summarize.prompt')),
     },
-    { key: 'assistant', label: 'AI 助手', icon: MessageSquareText, run: () => openAssistant() },
+    {
+      key: 'assistant',
+      label: t('dock.actions.assistant'),
+      icon: MessageSquareText,
+      run: () => openAssistant(),
+    },
     ...(scrolled
       ? [
           {
             key: 'top',
-            label: '回到顶部',
+            label: t('dock.actions.backToTop'),
             icon: ArrowUp,
             run: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
           },
@@ -166,7 +171,7 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
       : []),
     {
       key: 'settings',
-      label: '设置',
+      label: t('dock.actions.settings'),
       icon: Settings,
       run: () => void sendRuntimeMessage({ type: 'open-options-page' }).catch(() => undefined),
     },
@@ -190,8 +195,8 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
         {expanded && dragY === null && (
           <button
             type='button'
-            title='关闭悬浮快捷栏'
-            aria-label='关闭悬浮快捷栏'
+            title={t('dock.close.button')}
+            aria-label={t('dock.close.button')}
             onClick={() => setMenuOpen((value) => !value)}
             className='absolute -top-1.5 -left-1.5 z-10 flex size-[18px] cursor-pointer items-center justify-center rounded-full border-0 bg-neutral-500/80 p-0 text-white transition-colors hover:bg-neutral-700'
           >
@@ -200,8 +205,8 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
         )}
         <button
           type='button'
-          title='DevGo（拖动可调整位置）'
-          aria-label='DevGo 快捷操作'
+          title={t('dock.ball.title')}
+          aria-label={t('dock.ball.ariaLabel')}
           aria-expanded={expanded}
           onPointerDown={startDrag}
           onClick={() => {
@@ -224,20 +229,20 @@ export default function DockApp({ onHideSession }: { onHideSession: () => void }
           >
             <MenuItem
               icon={EyeOff}
-              title='本次不显示'
-              desc='关闭这个标签页前不再显示'
+              title={t('dock.close.session.title')}
+              desc={t('dock.close.session.desc')}
               onClick={onHideSession}
             />
             <MenuItem
               icon={X}
-              title={`在 ${location.hostname} 不显示`}
-              desc='可在弹窗「功能」页重新开启'
+              title={t('dock.close.site.title', { host: location.hostname })}
+              desc={t('dock.close.site.desc')}
               onClick={hideOnSite}
             />
             <MenuItem
               icon={Power}
-              title='全部网站都不显示'
-              desc='可在设置页「网页增强」重新开启'
+              title={t('dock.close.all.title')}
+              desc={t('dock.close.all.desc')}
               onClick={() => void dockEnabled.setValue(false)}
             />
           </div>

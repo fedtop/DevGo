@@ -160,14 +160,18 @@ function SiteSwitchRow({
   }
 
   const desc = !enabled
-    ? t('popup.function.selectionGloballyOff')
+    ? t('popup.function.siteSwitch.globallyOff')
     : !hostname
       ? t('popup.common.pageUnsupported')
       : siteDisabled
-        ? `已在 ${hostname} 停用`
-        : `${hostname}：${feature}${
-            disabledHosts.length ? `（${disabledHosts.length} 个网站已停用）` : ''
-          }`
+        ? t('popup.function.siteSwitch.siteDisabled', { host: hostname })
+        : disabledHosts.length
+          ? t('popup.function.siteSwitch.siteOnWithDisabled', {
+              host: hostname,
+              feature,
+              count: disabledHosts.length,
+            })
+          : t('popup.function.siteSwitch.siteOn', { host: hostname, feature })
 
   return (
     <Row title={title} desc={desc}>
@@ -224,16 +228,16 @@ export default function FunctionPage() {
         </>
       )}
       <SiteSwitchRow
-        title='悬浮快捷栏'
+        title={t('popup.function.dockTitle')}
         enabledItem={dockEnabled}
         hostsItem={dockDisabledHosts}
-        feature='网页右侧的快捷按钮（翻译、AI 总结等）'
+        feature={t('popup.function.dockFeature')}
       />
       <SiteSwitchRow
-        title='划词工具条'
+        title={t('popup.function.selectionTitle')}
         enabledItem={enableSelectionTranslate}
         hostsItem={selectionDisabledHosts}
-        feature='选中文字后显示翻译与 AI 工具条'
+        feature={t('popup.function.selectionFeature')}
       />
       <UnlockSiteRow />
       <button
