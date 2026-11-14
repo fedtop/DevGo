@@ -16,7 +16,10 @@ export type EditableTarget =
 
 export interface SelectionSnapshot {
   text: string
+  /** 读取选区时的位置 */
   rect: Rect
+  /** 选区当前在视口里的位置：页面或滚动容器滚动后重新计算，工具条和面板据此跟着选区走 */
+  measure: () => Rect
   editable: EditableTarget | null
   /** 选区所在段落（已截断），给 AI 提供上下文 */
   paragraph: string
@@ -67,9 +70,23 @@ export function readSelection(pointer: { x: number; y: number }): SelectionSnaps
     const end = active.selectionEnd ?? 0
     const text = active.value.slice(start, end)
     if (!text.trim() || active.readOnly || active.disabled) return null
+    // 输入框里拿不到文字矩形：以鼠标抬起点为锚，随输入框本身的位移平移
+    const rect = { left: pointer.x, right: pointer.x, top: pointer.y - 8, bottom: pointer.y + 8 }
+    const origin = active.getBoundingClientRect()
     return {
       text,
-      rect: { left: pointer.x, right: pointer.x, top: pointer.y - 8, bottom: pointer.y + 8 },
+      rect,
+      measure: () => {
+        const now = active.getBoundingClientRect()
+        const dx = now.left - origin.left
+        const dy = now.top - origin.top
+        return {
+          left: rect.left + dx,
+          right: rect.right + dx,
+          top: rect.top + dy,
+          bottom: rect.bottom + dy,
+        }
+      },
       editable: { kind: 'input', element: active, start, end },
       paragraph: '',
     }
@@ -87,9 +104,11 @@ export function readSelection(pointer: { x: number; y: number }): SelectionSnaps
   const anchor = selection.anchorNode
   const anchorElement = anchor instanceof Element ? anchor : anchor?.parentElement
   const root = anchorElement?.closest<HTMLElement>('[contenteditable=""],[contenteditable="true"]')
+  const live = range.cloneRange()
   return {
     text,
     rect: toRect(rect),
+    measure: () => toRect(live.getBoundingClientRect()),
     editable: root?.isContentEditable ? { kind: 'rich', root, range: range.cloneRange() } : null,
     paragraph: root ? '' : paragraphAround(range, text.trim()),
   }

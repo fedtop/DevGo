@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from 'react'
 
 import {
   isWriteAction,
@@ -21,16 +29,49 @@ import {
 
 import { readSelection, replaceSelection, type Rect, type SelectionSnapshot } from './selection-dom'
 import { useSelectionAi } from './useSelectionAi'
-import { Volume2 } from 'lucide-react'
+import {
+  BookOpen,
+  Briefcase,
+  Check,
+  Copy,
+  GripHorizontal,
+  Languages,
+  ListChecks,
+  MessageSquareText,
+  Pin,
+  PinOff,
+  RefreshCw,
+  Replace,
+  SpellCheck,
+  Volume2,
+  WandSparkles,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 
 const MAX_SELECTION_LEN = 5000
-const BUBBLE_WIDTH = 380
+const BUBBLE_WIDTH = 400
+/** 面板最大高度：固定值，滚动跟随时不随剩余空间伸缩 */
+const BUBBLE_MAX_HEIGHT = 420
+const TOOLBAR_HEIGHT = 36
 const VIEWPORT_MARGIN = 10
-/** 选区下方空间不足这个高度时，气泡改放到选区上方 */
-const MIN_SPACE_BELOW = 220
+/** 选区下方空间不足这个高度时，面板改放到选区上方 */
+const MIN_SPACE_BELOW = 260
 const Z_TOP = 2147483647
 
 type Mode = 'translate' | SelectionAiAction
+
+const MODE_META: Record<Mode, { label: string; title: string; icon: LucideIcon }> = {
+  translate: { label: '翻译', title: '翻译选中文本', icon: Languages },
+  explain: { ...SELECTION_AI_ACTIONS.explain, icon: BookOpen },
+  summarize: { ...SELECTION_AI_ACTIONS.summarize, icon: ListChecks },
+  polish: { ...SELECTION_AI_ACTIONS.polish, icon: WandSparkles },
+  fix: { ...SELECTION_AI_ACTIONS.fix, icon: SpellCheck },
+  formal: { ...SELECTION_AI_ACTIONS.formal, icon: Briefcase },
+}
+
+/** 面板相对选区的位置；pinned 时固定在屏幕上（拖动或点了固定），不再跟随选区 */
+type BubblePlacement = { kind: 'below' | 'above' } | { kind: 'pinned'; left: number; top: number }
 
 interface TranslateState {
   status: 'loading' | 'done' | 'error'
@@ -84,40 +125,79 @@ function useAiAvailable(): boolean {
   return available
 }
 
-/** 气泡位置：默认在选区下方，下方空间不足时放到上方；水平方向不超出视口 */
-function bubbleStyle(rect: Rect): CSSProperties {
-  const left = Math.max(
-    VIEWPORT_MARGIN,
-    Math.min(rect.left, window.innerWidth - BUBBLE_WIDTH - VIEWPORT_MARGIN),
-  )
+function clampLeft(left: number, width: number): number {
+  return Math.max(VIEWPORT_MARGIN, Math.min(left, window.innerWidth - width - VIEWPORT_MARGIN))
+}
+
+/** 打开面板时决定放在选区下方还是上方，之后滚动只平移不翻转 */
+function choosePlacement(rect: Rect): BubblePlacement {
   const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN
-  if (spaceBelow >= MIN_SPACE_BELOW || spaceBelow >= rect.top) {
-    return { left, top: rect.bottom + 8, maxHeight: Math.max(160, spaceBelow - 8) }
-  }
-  return {
-    left,
-    bottom: window.innerHeight - rect.top + 8,
-    maxHeight: Math.max(160, rect.top - VIEWPORT_MARGIN - 8),
-  }
+  return spaceBelow >= MIN_SPACE_BELOW || spaceBelow >= rect.top
+    ? { kind: 'below' }
+    : { kind: 'above' }
 }
 
-function toolbarStyle(rect: Rect): CSSProperties {
-  return {
-    left: Math.max(VIEWPORT_MARGIN, Math.min(rect.right + 4, window.innerWidth - 260)),
-    top: Math.min(rect.bottom + 6, window.innerHeight - 40),
-  }
+function bubbleStyle(rect: Rect, placement: BubblePlacement): CSSProperties {
+  if (placement.kind === 'pinned') return { left: placement.left, top: placement.top }
+  const left = clampLeft(rect.left, BUBBLE_WIDTH)
+  return placement.kind === 'below'
+    ? { left, top: rect.bottom + 8 }
+    : { left, bottom: window.innerHeight - rect.top + 8 }
 }
 
-/** 划词工具条与结果气泡：翻译（引擎同翻译设置）+ AI 解释 / 总结 / 问 AI + 输入框内的润色改写 */
+/** 工具条默认在选区上方（像豆包一样不挡住下文），上方放不下时放到下方 */
+function toolbarStyle(rect: Rect, width: number): CSSProperties {
+  const left = clampLeft(rect.left, width)
+  const above = rect.top - TOOLBAR_HEIGHT - 8
+  return { left, top: above >= VIEWPORT_MARGIN ? above : rect.bottom + 8 }
+}
+
+function isInViewport(rect: Rect): boolean {
+  return rect.bottom > 0 && rect.top < window.innerHeight
+}
+
+/** 跟踪选区在视口里的位置：任意滚动（含内部滚动容器）或窗口缩放时重新测量 */
+function useAnchorRect(snapshot: SelectionSnapshot | null): Rect | null {
+  const [rect, setRect] = useState<Rect | null>(snapshot?.rect ?? null)
+
+  useEffect(() => {
+    if (!snapshot) {
+      setRect(null)
+      return undefined
+    }
+    setRect(snapshot.measure())
+    let frame = 0
+    const update = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => setRect(snapshot.measure()))
+    }
+    window.addEventListener('scroll', update, { passive: true, capture: true })
+    window.addEventListener('resize', update)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', update, { capture: true })
+      window.removeEventListener('resize', update)
+    }
+  }, [snapshot])
+
+  return rect
+}
+
+/** 划词工具条与结果面板：翻译（引擎同翻译设置）+ AI 解释 / 总结 / 问 AI + 输入框内的润色改写 */
 export default function SelectionApp() {
   const aiAvailable = useAiAvailable()
   const [toolbar, setToolbar] = useState<SelectionSnapshot | null>(null)
   const [bubble, setBubble] = useState<{ snapshot: SelectionSnapshot; mode: Mode } | null>(null)
+  const [placement, setPlacement] = useState<BubblePlacement>({ kind: 'below' })
   const [translation, setTranslation] = useState<TranslateState | null>(null)
   const { result: aiResult, run: runAi, reset: resetAi } = useSelectionAi()
   const [copied, setCopied] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const bubbleRef = useRef<HTMLDivElement>(null)
   const translateSeqRef = useRef(0)
+  const toolbarRect = useAnchorRect(toolbar)
+  const bubbleRect = useAnchorRect(bubble?.snapshot ?? null)
+  const pinned = placement.kind === 'pinned'
 
   // 事件是否发生在本扩展 UI 内部（避免点击自身按钮时清空选区）
   const isInsideUi = useCallback((e: Event) => {
@@ -158,29 +238,29 @@ export default function SelectionApp() {
     return () => document.removeEventListener('mouseup', onMouseUp)
   }, [isInsideUi, aiAvailable])
 
-  // 点击外部 / ESC -> 关闭；页面滚动只收起工具条（气泡里的结果可能还在阅读）
+  // 点击外部 / ESC -> 关闭；固定住的面板只响应 ESC 和关闭按钮
   useEffect(() => {
     if (!toolbar && !bubble) return undefined
 
     const onMouseDown = (e: MouseEvent) => {
-      if (!isInsideUi(e)) close()
+      if (isInsideUi(e)) return
+      if (pinned && bubble) {
+        setToolbar(null)
+        return
+      }
+      close()
     }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
-    const onScroll = (e: Event) => {
-      if (!isInsideUi(e)) setToolbar(null)
-    }
 
     document.addEventListener('mousedown', onMouseDown)
     document.addEventListener('keydown', onKeyDown)
-    window.addEventListener('scroll', onScroll, { passive: true, capture: true })
     return () => {
       document.removeEventListener('mousedown', onMouseDown)
       document.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('scroll', onScroll, { capture: true })
     }
-  }, [toolbar, bubble, close, isInsideUi])
+  }, [toolbar, bubble, pinned, close, isInsideUi])
 
   const translate = async (snapshot: SelectionSnapshot) => {
     const text = snapshot.text.trim()
@@ -209,6 +289,8 @@ export default function SelectionApp() {
   const start = (snapshot: SelectionSnapshot, mode: Mode) => {
     setToolbar(null)
     setCopied(false)
+    // 从工具条打开时按选区位置决定上下；面板里切换模式保持当前位置
+    if (bubble?.snapshot !== snapshot) setPlacement(choosePlacement(snapshot.measure()))
     setBubble({ snapshot, mode })
     if (mode === 'translate') {
       resetAi()
@@ -248,35 +330,120 @@ export default function SelectionApp() {
     void navigator.clipboard.writeText(text).then(() => setCopied(true))
   }
 
+  /** 固定 / 取消固定：固定时把面板钉在当前屏幕位置，不再跟随滚动 */
+  const togglePin = () => {
+    if (pinned) {
+      if (bubble) setPlacement(choosePlacement(bubble.snapshot.measure()))
+      return
+    }
+    const box = bubbleRef.current?.getBoundingClientRect()
+    if (box) setPlacement({ kind: 'pinned', left: box.left, top: box.top })
+  }
+
+  /** 拖动面板标题栏：拖过之后面板固定在放下的位置 */
+  const startDrag = (event: ReactPointerEvent) => {
+    if (event.button !== 0 || (event.target as HTMLElement).closest('button')) return
+    const box = bubbleRef.current?.getBoundingClientRect()
+    if (!box) return
+    event.preventDefault()
+    const offsetX = event.clientX - box.left
+    const offsetY = event.clientY - box.top
+    const onMove = (e: PointerEvent) => {
+      setPlacement({
+        kind: 'pinned',
+        left: clampLeft(e.clientX - offsetX, box.width),
+        top: Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - 48)),
+      })
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
   const replace = (snapshot: SelectionSnapshot, text: string) => {
     if (snapshot.editable && replaceSelection(snapshot.editable, text)) close()
   }
 
+  const bubbleModes: Mode[] = bubble?.snapshot.editable
+    ? WRITE_ACTIONS
+    : ['translate', ...READ_ACTIONS]
+
   return (
-    <div ref={wrapperRef} className='text-sm leading-relaxed'>
-      {toolbar && (
+    <div
+      ref={wrapperRef}
+      className='text-sm leading-relaxed text-neutral-900 dark:text-neutral-100'
+    >
+      {toolbar && toolbarRect && isInViewport(toolbarRect) && (
         <Toolbar
           snapshot={toolbar}
+          rect={toolbarRect}
           aiAvailable={aiAvailable}
           onAction={(mode) => start(toolbar, mode)}
           onAsk={() => askInSidePanel(toolbar)}
         />
       )}
 
-      {bubble && (
+      {bubble && bubbleRect && (
         <div
-          className='fixed flex flex-col overflow-hidden rounded-xl bg-[#1f2937] text-[#f3f4f6] shadow-[0_8px_28px_rgba(0,0,0,0.35)]'
-          style={{ ...bubbleStyle(bubble.snapshot.rect), zIndex: Z_TOP, width: BUBBLE_WIDTH }}
+          ref={bubbleRef}
+          className='fixed flex flex-col overflow-hidden rounded-2xl border border-black/[0.08] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.14)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]'
+          style={{
+            ...bubbleStyle(bubbleRect, placement),
+            zIndex: Z_TOP,
+            width: BUBBLE_WIDTH,
+            maxHeight: BUBBLE_MAX_HEIGHT,
+          }}
         >
-          {aiAvailable && (
-            <ModeTabs
-              modes={bubble.snapshot.editable ? WRITE_ACTIONS : ['translate', ...READ_ACTIONS]}
-              current={bubble.mode}
-              onSelect={(mode) => start(bubble.snapshot, mode)}
+          <div
+            onPointerDown={startDrag}
+            className='flex shrink-0 cursor-grab items-center gap-1 px-2.5 pt-2 pb-1.5 select-none active:cursor-grabbing'
+          >
+            <GripHorizontal
+              className='size-3.5 shrink-0 text-neutral-300 dark:text-neutral-600'
+              aria-hidden
             />
-          )}
+            <div className='flex min-w-0 flex-1 gap-0.5'>
+              {(aiAvailable ? bubbleModes : [bubble.mode]).map((mode) => {
+                const { label, icon: Icon } = MODE_META[mode]
+                const active = mode === bubble.mode
+                return (
+                  <button
+                    key={mode}
+                    type='button'
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => !active && start(bubble.snapshot, mode)}
+                    className={`flex cursor-pointer items-center gap-1 rounded-lg border-0 px-2 py-1 text-[13px] transition-colors ${
+                      active
+                        ? 'bg-black/[0.06] font-medium text-neutral-900 dark:bg-white/10 dark:text-white'
+                        : 'bg-transparent text-neutral-500 hover:bg-black/[0.04] hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-neutral-100'
+                    }`}
+                  >
+                    <Icon className='size-3.5' aria-hidden />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <IconButton
+              label={pinned ? '取消固定' : '固定面板（不随页面滚动、点击外部不关闭）'}
+              active={pinned}
+              onClick={togglePin}
+            >
+              {pinned ? <PinOff /> : <Pin />}
+            </IconButton>
+            <IconButton label='关闭' onClick={close}>
+              <X />
+            </IconButton>
+          </div>
 
-          <div className='min-h-0 flex-1 overflow-y-auto px-3 py-2.5'>
+          <div className='mx-3 line-clamp-2 shrink-0 border-l-2 border-black/10 pl-2 text-xs text-neutral-500 dark:border-white/15 dark:text-neutral-400'>
+            {bubble.snapshot.text.trim()}
+          </div>
+
+          <div className='min-h-0 flex-1 overflow-y-auto px-3 pt-2 pb-2.5'>
             {bubble.mode === 'translate' ? (
               <TranslateView state={translation} source={bubble.snapshot.text.trim()} />
             ) : (
@@ -286,22 +453,15 @@ export default function SelectionApp() {
 
           <BubbleFooter>
             {bubble.mode === 'translate' && translation?.status === 'done' && (
-              <FooterButton onClick={() => copy(translation.text)}>
+              <FooterButton icon={copied ? Check : Copy} onClick={() => copy(translation.text)}>
                 {copied ? '已复制' : '复制'}
               </FooterButton>
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'done' && (
               <>
-                {isWriteAction(bubble.mode) && bubble.snapshot.editable && (
-                  <FooterButton primary onClick={() => replace(bubble.snapshot, aiResult.text)}>
-                    替换原文
-                  </FooterButton>
-                )}
-                <FooterButton onClick={() => copy(aiResult.text)}>
-                  {copied ? '已复制' : '复制'}
-                </FooterButton>
                 {!isWriteAction(bubble.mode) && (
                   <FooterButton
+                    icon={MessageSquareText}
                     onClick={() =>
                       askInSidePanel(bubble.snapshot, {
                         question: `${SELECTION_AI_ACTIONS[bubble.mode as SelectionAiAction].label}这段内容`,
@@ -312,10 +472,24 @@ export default function SelectionApp() {
                     继续追问
                   </FooterButton>
                 )}
+                <FooterButton icon={copied ? Check : Copy} onClick={() => copy(aiResult.text)}>
+                  {copied ? '已复制' : '复制'}
+                </FooterButton>
+                {isWriteAction(bubble.mode) && bubble.snapshot.editable && (
+                  <FooterButton
+                    primary
+                    icon={Replace}
+                    onClick={() => replace(bubble.snapshot, aiResult.text)}
+                  >
+                    替换原文
+                  </FooterButton>
+                )}
               </>
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'error' && (
-              <FooterButton onClick={() => start(bubble.snapshot, bubble.mode)}>重试</FooterButton>
+              <FooterButton icon={RefreshCw} onClick={() => start(bubble.snapshot, bubble.mode)}>
+                重试
+              </FooterButton>
             )}
           </BubbleFooter>
         </div>
@@ -324,123 +498,130 @@ export default function SelectionApp() {
   )
 }
 
+const TOOL_BUTTON =
+  'flex h-7 cursor-pointer items-center gap-1 rounded-full border-0 bg-transparent px-2.5 text-[13px] whitespace-nowrap text-neutral-700 transition-colors hover:bg-black/[0.06] hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-white/10 dark:hover:text-white'
+
 function Toolbar({
   snapshot,
+  rect,
   aiAvailable,
   onAction,
   onAsk,
 }: {
   snapshot: SelectionSnapshot
+  rect: Rect
   aiAvailable: boolean
   onAction: (mode: Mode) => void
   onAsk: () => void
 }) {
-  const button =
-    'h-7 cursor-pointer rounded-md border-0 bg-transparent px-2 text-[13px] text-white transition-colors hover:bg-white/15'
+  const modes: Mode[] = !aiAvailable
+    ? ['translate']
+    : snapshot.editable
+      ? WRITE_ACTIONS
+      : ['translate', ...READ_ACTIONS]
+  const showAsk = aiAvailable && !snapshot.editable
+  // 按钮数量估算宽度，用于贴边时不超出视口
+  const width = modes.length * 68 + (showAsk ? 78 : 0) + 8
 
-  // 只有翻译按钮时保持原来的圆形「译」按钮，不增加视觉负担
-  if (!aiAvailable) {
-    return (
-      <button
-        type='button'
-        title='翻译选中文本'
-        onClick={() => onAction('translate')}
-        className='fixed flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-0 bg-[#347d39] p-0 text-[15px] leading-none text-white shadow-[0_2px_8px_rgba(0,0,0,0.25)]'
-        style={{ ...toolbarStyle(snapshot.rect), zIndex: Z_TOP }}
-      >
-        译
-      </button>
-    )
-  }
-
-  const modes: Mode[] = snapshot.editable ? WRITE_ACTIONS : ['translate', ...READ_ACTIONS]
   return (
     <div
       // 阻止 mousedown 的默认行为：点击工具条不让输入框失焦、不清掉选区
       onMouseDown={(event) => event.preventDefault()}
-      className='fixed flex items-center gap-0.5 rounded-lg bg-[#1f2937] p-0.5 shadow-[0_4px_14px_rgba(0,0,0,0.3)]'
-      style={{ ...toolbarStyle(snapshot.rect), zIndex: Z_TOP }}
+      className='fixed flex items-center gap-0.5 rounded-full border border-black/[0.08] bg-white p-1 shadow-[0_6px_20px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]'
+      style={{ ...toolbarStyle(rect, width), zIndex: Z_TOP, height: TOOLBAR_HEIGHT }}
     >
-      {modes.map((mode) => (
-        <button
-          key={mode}
-          type='button'
-          title={mode === 'translate' ? '翻译选中文本' : SELECTION_AI_ACTIONS[mode].title}
-          onClick={() => onAction(mode)}
-          className={button}
-        >
-          {mode === 'translate' ? '翻译' : SELECTION_AI_ACTIONS[mode].label}
-        </button>
-      ))}
-      {!snapshot.editable && (
-        <button
-          type='button'
-          title='在侧边栏里就选中内容提问'
-          onClick={onAsk}
-          className={`${button} text-[#a5b4fc]`}
-        >
-          问 AI
-        </button>
+      {modes.map((mode) => {
+        const { label, title, icon: Icon } = MODE_META[mode]
+        return (
+          <button
+            key={mode}
+            type='button'
+            title={title}
+            onClick={() => onAction(mode)}
+            className={TOOL_BUTTON}
+          >
+            <Icon className='size-3.5' aria-hidden />
+            {label}
+          </button>
+        )
+      })}
+      {showAsk && (
+        <>
+          <span className='mx-0.5 h-4 w-px bg-black/10 dark:bg-white/15' aria-hidden />
+          <button
+            type='button'
+            title='在侧边栏里就选中内容提问'
+            onClick={onAsk}
+            className={TOOL_BUTTON}
+          >
+            <MessageSquareText className='size-3.5' aria-hidden />问 AI
+          </button>
+        </>
       )}
     </div>
   )
 }
 
-function ModeTabs({
-  modes,
-  current,
-  onSelect,
+function IconButton({
+  label,
+  active = false,
+  onClick,
+  children,
 }: {
-  modes: Mode[]
-  current: Mode
-  onSelect: (mode: Mode) => void
+  label: string
+  active?: boolean
+  onClick: () => void
+  children: ReactNode
 }) {
   return (
-    <div className='flex shrink-0 gap-1 border-b border-white/10 px-2 pt-2 pb-1.5'>
-      {modes.map((mode) => (
-        <button
-          key={mode}
-          type='button'
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => mode !== current && onSelect(mode)}
-          className={`cursor-pointer rounded-md border-0 px-2 py-0.5 text-xs transition-colors ${
-            mode === current
-              ? 'bg-white/15 text-white'
-              : 'bg-transparent text-white/55 hover:text-white'
-          }`}
-        >
-          {mode === 'translate' ? '翻译' : SELECTION_AI_ACTIONS[mode].label}
-        </button>
-      ))}
-    </div>
+    <button
+      type='button'
+      title={label}
+      aria-label={label}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={onClick}
+      className={`flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 transition-colors [&_svg]:size-3.5 ${
+        active
+          ? 'bg-black/[0.06] text-neutral-900 dark:bg-white/10 dark:text-white'
+          : 'bg-transparent text-neutral-400 hover:bg-black/[0.05] hover:text-neutral-800 dark:text-neutral-500 dark:hover:bg-white/10 dark:hover:text-neutral-100'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
 
 function TranslateView({ state, source }: { state: TranslateState | null; source: string }) {
-  if (!state || state.status === 'loading') return <p className='opacity-80'>翻译中…</p>
+  if (!state || state.status === 'loading') {
+    return <p className='animate-pulse text-neutral-500 dark:text-neutral-400'>翻译中…</p>
+  }
 
   return (
     <div className='flex flex-col gap-1.5'>
       {state.status === 'done' && state.dict && (
-        <div className='flex items-center gap-1.5 border-b border-white/10 pb-1.5'>
+        <div className='flex items-center gap-1.5'>
           <span className='font-semibold'>{state.dict.word}</span>
           <button
             type='button'
             title='朗读'
             onClick={() => speak(source, 'en-US')}
-            className='cursor-pointer border-0 bg-transparent p-0 text-[13px] opacity-85'
+            className='flex cursor-pointer border-0 bg-transparent p-0 text-neutral-400 hover:text-neutral-800 dark:hover:text-white'
           >
             <Volume2 className='size-3.5' aria-hidden />
           </button>
         </div>
       )}
-      <p className={state.status === 'error' ? 'text-[#fca5a5]' : ''}>{state.text}</p>
+      <p
+        className={`text-[14px] ${state.status === 'error' ? 'text-rose-600 dark:text-rose-400' : ''}`}
+      >
+        {state.text}
+      </p>
       {state.status === 'done' && state.dict && state.dict.entries.length > 0 && (
-        <div className='text-[13px] leading-relaxed'>
+        <div className='text-[13px] leading-relaxed text-neutral-600 dark:text-neutral-300'>
           {state.dict.entries.map((entry) => (
             <div key={entry.pos || 'misc'} className='flex gap-1.5'>
-              {entry.pos && <span className='shrink-0 italic opacity-60'>{entry.pos}.</span>}
-              <span className='opacity-90'>{entry.terms.join('；')}</span>
+              {entry.pos && <span className='shrink-0 text-neutral-400 italic'>{entry.pos}.</span>}
+              <span>{entry.terms.join('；')}</span>
             </div>
           ))}
         </div>
@@ -451,13 +632,17 @@ function TranslateView({ state, source }: { state: TranslateState | null; source
 
 function AiView({ result }: { result: ReturnType<typeof useSelectionAi>['result'] }) {
   if (!result) return null
-  if (result.status === 'error') return <p className='text-[#fca5a5]'>{result.error}</p>
+  if (result.status === 'error') {
+    return <p className='text-rose-600 dark:text-rose-400'>{result.error}</p>
+  }
   if (result.status === 'loading') {
     return (
       <div className='flex flex-col gap-1'>
-        <p className='animate-pulse opacity-80'>{result.reasoning ? '思考中…' : '生成中…'}</p>
+        <p className='animate-pulse text-neutral-500 dark:text-neutral-400'>
+          {result.reasoning ? '思考中…' : '生成中…'}
+        </p>
         {result.reasoning && (
-          <p className='line-clamp-3 text-xs opacity-45'>{result.reasoning.slice(-240)}</p>
+          <p className='line-clamp-3 text-xs text-neutral-400'>{result.reasoning.slice(-240)}</p>
         )}
       </div>
     )
@@ -467,16 +652,20 @@ function AiView({ result }: { result: ReturnType<typeof useSelectionAi>['result'
 
 function BubbleFooter({ children }: { children: ReactNode }) {
   return (
-    <div className='flex shrink-0 justify-end gap-1.5 px-3 pb-2.5 empty:hidden'>{children}</div>
+    <div className='flex shrink-0 justify-end gap-1.5 border-t border-black/[0.06] px-3 py-2 empty:hidden dark:border-white/10'>
+      {children}
+    </div>
   )
 }
 
 function FooterButton({
   primary = false,
+  icon: Icon,
   onClick,
   children,
 }: {
   primary?: boolean
+  icon: LucideIcon
   onClick: () => void
   children: ReactNode
 }) {
@@ -485,12 +674,13 @@ function FooterButton({
       type='button'
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
-      className={`cursor-pointer rounded-md border-0 px-2.5 py-1 text-xs transition-colors ${
+      className={`flex cursor-pointer items-center gap-1 rounded-full border-0 px-3 py-1 text-xs transition-colors ${
         primary
-          ? 'bg-indigo-500 text-white hover:bg-indigo-400'
-          : 'bg-white/10 text-white/85 hover:bg-white/20'
+          ? 'bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white'
+          : 'bg-black/[0.05] text-neutral-700 hover:bg-black/[0.09] dark:bg-white/10 dark:text-neutral-200 dark:hover:bg-white/15'
       }`}
     >
+      <Icon className='size-3.5' aria-hidden />
       {children}
     </button>
   )
