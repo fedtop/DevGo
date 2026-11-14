@@ -1,1 +1,34 @@
-{}
+{
+  "unknownError": "Unknown error",
+  "notSet": "Not set",
+  "language": {
+    "auto": "Follow browser"
+  },
+  "confirmDialog": {
+    "confirm": "Turn on",
+    "cancel": "Cancel"
+  },
+  "combobox": {
+    "expand": "Show options"
+  },
+  "backup": {
+    "invalidJson": "The file isn't valid JSON",
+    "notBackupFile": "Not a DevGo backup file"
+  },
+  "sync": {
+    "itemTooLarge": "An item exceeds the sync size limit",
+    "quotaExceeded": "Sync storage is full (Chrome sync limit is 100KB)",
+    "tooFrequent": "Syncing too often; it will retry automatically soon",
+    "tooManyItems": "Too many sync items",
+    "failed": "Sync failed: {message}"
+  },
+  "media": {
+    "blockReason": {
+      "notHttp": "Only http/https resources can be downloaded",
+      "streamManifest": "This is a streaming manifest; saving it directly won't give you the full video",
+      "streamSegment": "This is a stream segment, which usually can't play on its own",
+      "twitterAudioTrack": "This is a separate X audio track; it must be merged with the video track to make a full video",
+      "twitterVideoTrack": "This is a separate X video track; it must be merged with the audio track to make a full video"
+    }
+  }
+}

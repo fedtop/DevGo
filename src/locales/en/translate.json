@@ -1,1 +1,137 @@
-{}
+{
+  "languages": {
+    "auto": "Auto (Chinese ⇄ English)",
+    "zhCN": "Simplified Chinese",
+    "zhTW": "Traditional Chinese",
+    "en": "English",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "ru": "Russian",
+    "pt": "Portuguese",
+    "it": "Italian",
+    "vi": "Vietnamese",
+    "th": "Thai",
+    "ar": "Arabic",
+    "id": "Indonesian",
+    "tr": "Turkish"
+  },
+  "provider": {
+    "microsoft": "Microsoft · no VPN needed",
+    "google": "Google · VPN needed",
+    "llm": "AI model"
+  },
+  "displayMode": {
+    "bilingual": "Bilingual",
+    "translation": "Translation only"
+  },
+  "hoverMode": {
+    "off": "Off",
+    "pressKey": "Press {key}",
+    "dwell": "Auto after hovering",
+    "hint": {
+      "pressKey": "Point at a paragraph and press {key} to translate; press again to restore",
+      "dwell": "Hover over a paragraph briefly to translate it automatically",
+      "off": "Off"
+    }
+  },
+  "services": {
+    "microsoft": "Microsoft Translate",
+    "google": "Google Translate"
+  },
+  "errors": {
+    "aborted": "Translation canceled",
+    "network": "Network request failed: {message}",
+    "unknown": "Unknown error",
+    "detailSuffix": ": {detail}",
+    "auth": "Authentication failed ({status}){detail}",
+    "rateLimit": "Too many requests (429){detail}",
+    "notFound": "Base URL or model not found (404){detail}",
+    "badRequest": "Invalid request ({status}){detail}",
+    "server": "Server error ({status}){detail}",
+    "microsoftAuth": "Microsoft Translate authentication failed ({status})",
+    "microsoftNoToken": "Microsoft Translate authentication failed: no token received",
+    "resultCountMismatch": "{service} returned a different number of results than requested",
+    "emptyResult": "The service returned an empty result",
+    "timeout": "Request timed out",
+    "aiSegmentMissing": "The AI didn't return a translation for this paragraph",
+    "noResult": "The translation service returned nothing",
+    "segmentMissing": "The translation service returned no result for this paragraph",
+    "portDisconnected": "Lost connection to the extension background. Please retry; if the extension just updated, refresh the page",
+    "extensionUpdated": "The extension was updated. Refresh the page and try again"
+  },
+  "serviceError": {
+    "auth": "The API key is invalid, or doesn't belong to the service at this base URL",
+    "config": "Incorrect base URL or model",
+    "network": "Couldn't reach the base URL. Check your network or the address",
+    "timeout": "Request timed out. Try again shortly",
+    "rateLimit": "Too many requests or quota exceeded. Try again shortly",
+    "server": "Server error. Try again shortly",
+    "parse": "The service returned an unrecognized response",
+    "default": "Request failed"
+  },
+  "page": {
+    "unavailable": "Translation service unavailable: {message}",
+    "openSettings": "Open settings",
+    "partialFailed": "Some paragraphs failed to translate: {message}. Click ↻ after a paragraph to retry, or switch engines in the DevGo popup.",
+    "retryTitle": "Translation failed: {message} (click to retry)",
+    "close": "Close"
+  },
+  "presets": {
+    "custom": "Custom",
+    "zhipu": "Zhipu GLM",
+    "zhipuCoding": "Zhipu GLM Coding Plan",
+    "zaiCoding": "Z.ai GLM Coding Plan (international)",
+    "bailianCoding": "Alibaba Cloud Bailian Coding Plan",
+    "arkCoding": "Volcano Ark Coding Plan",
+    "qwen": "Qwen (Alibaba Cloud Bailian)",
+    "doubao": "Doubao (Volcano Ark)",
+    "ollama": "Ollama (local)",
+    "hint": {
+      "zhipu": "GLM-4.5 and above think before answering by default, which slows full-page translation. For speed, pick glm-4-flash / glm-4-air",
+      "codingPlan": "Coding Plan keys only work with their dedicated base URLs; some plans restrict usage to coding tools — check your plan's terms",
+      "arkCoding": "Enter a model ID supported by your plan as the model name (open the model dropdown to fetch them). Coding Plan keys only work with their dedicated base URLs; some plans restrict usage to coding tools — check your plan's terms",
+      "doubao": "Enter the model ID or inference endpoint ID (ep-xxxx) from the Ark console as the model name",
+      "ollama": "Local services need no API key. Set the environment variable OLLAMA_ORIGINS=chrome-extension://* to allow the extension to connect"
+    }
+  },
+  "llmForm": {
+    "preset": "Provider preset",
+    "model": "Model",
+    "modelPlaceholder": "Pick or type a model name",
+    "commonModel": "Popular",
+    "models": {
+      "fallbackCommon": ", showing popular models below; you can also type your own",
+      "fallbackInput": ", or type a model name directly",
+      "needBaseUrl": "Enter the base URL to fetch the model list automatically",
+      "needApiKey": "Enter the API key to see the full model list{fallback}",
+      "loading": "Fetching model list…",
+      "unsupported": "This service doesn't support fetching the model list{fallback}",
+      "failed": "Couldn't fetch the model list: {reason}{fallback}",
+      "count": "{count} models available; type to filter",
+      "count_one": "{count} model available; type to filter"
+    },
+    "baseUrl": "Base URL",
+    "baseUrlHint": "Up to /v1 is enough; /chat/completions is appended automatically",
+    "apiKey": "API key (stored locally only, never in backups)",
+    "apiKeyPlaceholder": "sk-... (leave empty for local services)",
+    "hideKey": "Hide",
+    "showKey": "Show",
+    "assistantPrefilled": "Prefilled from the AI translation config. The assistant needs a model with tool calling — switch to a stronger model such as a Coding Plan; takes effect after saving.",
+    "prompt": "Custom instructions (optional)",
+    "promptHintAssistant": "Appended to the end of the assistant's system prompt, e.g. \"keep answers short\" or \"list the steps before acting\"",
+    "promptHintTranslate": "Appended to the end of the system prompt, e.g. a glossary or tone: \"technical-doc style; never translate Token\"",
+    "addPromptAssistant": "+ Custom instructions",
+    "addPromptTranslate": "+ Custom instructions (glossary, tone)",
+    "test": "Test connection",
+    "save": "Save",
+    "saveAndUse": "Save and set as translation engine",
+    "saved": "Saved",
+    "savedAndUsed": "Saved and set as the current translation engine",
+    "testSuccess": "Connected: Hello, world! → {sample}",
+    "testFailed": "Connection failed: {reason}",
+    "testFailedAuth": "Connection failed: {reason}. If you just switched provider presets, make sure the key belongs to that service"
+  }
+}

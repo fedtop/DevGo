@@ -1,1 +1,70 @@
-{}
+{
+  "toolbar": {
+    "translate": "Translate",
+    "translateTitle": "Translate the selected text",
+    "more": "More",
+    "moreActions": "More actions",
+    "ask": "Ask AI",
+    "askTitle": "Ask about the selection in the side panel"
+  },
+  "bubble": {
+    "customAction": "Custom action",
+    "pin": "Pin panel (won't scroll with the page or close on outside click)",
+    "unpin": "Unpin",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "followUp": "Follow up",
+    "followUpCustom": "Process this text with \"{name}\"",
+    "followUpBuiltin": "{action} this text",
+    "replace": "Replace original",
+    "retry": "Retry"
+  },
+  "translate": {
+    "loading": "Translating…",
+    "speak": "Read aloud",
+    "failed": "Translation failed. Check your network or switch engines",
+    "failedWithDetail": "Translation failed: {detail}"
+  },
+  "ai": {
+    "thinking": "Thinking…",
+    "generating": "Generating…",
+    "extensionUpdated": "The extension was updated. Refresh the page and try again",
+    "emptyResult": "The model returned nothing",
+    "disconnected": "Connection lost. Please retry",
+    "errorWithDetail": "{error}: {detail}"
+  },
+  "scope": {
+    "page": "Page text",
+    "input": "Input fields",
+    "both": "Both"
+  },
+  "icons": {
+    "sparkles": "General",
+    "languages": "Translate",
+    "bug": "Errors",
+    "braces": "JSON",
+    "code": "Code",
+    "lightbulb": "Ideas",
+    "penLine": "Writing",
+    "listChecks": "Key points",
+    "fileText": "Docs",
+    "search": "Search",
+    "messageCircleQuestion": "Ask",
+    "wandSparkles": "Rewrite"
+  },
+  "templates": {
+    "translateToEnglish": {
+      "name": "Translate to English",
+      "prompt": "Translate the selection into natural, idiomatic English. Keep code, proper nouns, and formatting as is. Output only the translation, no explanations."
+    },
+    "explainError": {
+      "name": "Explain the error",
+      "prompt": "The selection is an error message or log. Start with one sentence on what went wrong, then list troubleshooting and fix steps from most to least likely, with example code where it helps."
+    },
+    "toJson": {
+      "name": "Convert to JSON",
+      "prompt": "Organize the selection into clean, well-structured JSON: infer suitable field names (lower camelCase, in English) and types from the content. Output only the JSON itself — no code fences, no explanations."
+    }
+  }
+}

@@ -1,1 +1,6 @@
-{}
+{
+  "floatButton": {
+    "editOnline": "Edit online",
+    "backToTop": "Back to top"
+  }
+}

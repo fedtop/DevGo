@@ -1,1 +1,266 @@
-{}
+{
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  },
+  "settings": {
+    "title": "Network",
+    "desc": "Network mode, proxy configuration, and real IP protection. The popup's Network page switches modes quickly and can set the current site to direct or proxy.",
+    "modeTitle": "Network mode",
+    "addCustomMode": "Add custom mode",
+    "reloadOnSwitch": "Refresh the page after switching proxies",
+    "reloadOnSwitchHint": "After switching network mode in the popup, automatically refresh the current page",
+    "proxyConfig": "Proxy configuration",
+    "deleteMode": "Delete this mode",
+    "proxyServer": "Proxy server",
+    "bypassTitle": "Bypass list (domains that skip this proxy)",
+    "bypassHint": "One domain or Chrome proxy bypass rule per line. Proxy, Auto, and every custom proxy mode each save their own list.",
+    "unsaved": "Unsaved changes to the proxy server or bypass list. Save to apply them",
+    "saveHint": "Proxy server and bypass list changes need saving; the rule list, proxy domains, and the WebRTC settings below take effect immediately",
+    "noConfigDesc": "Direct and System proxy need no configuration. Switch to Auto, Global proxy, or a custom mode to configure the proxy server, rule list, and bypass list here.",
+    "noConfig": "Nothing to configure for this mode"
+  },
+  "mode": {
+    "direct": {
+      "label": "Direct",
+      "desc": "No proxy"
+    },
+    "system": {
+      "label": "System proxy",
+      "desc": "Follow system settings"
+    },
+    "scenario": {
+      "label": "Auto",
+      "desc": "Switches by rules"
+    },
+    "global": {
+      "label": "Global proxy",
+      "desc": "All traffic through the proxy"
+    },
+    "customBadge": "Custom proxy"
+  },
+  "proxyControl": {
+    "notControllable": "The browser doesn't allow extensions to control the proxy",
+    "byOther": "The proxy is controlled by another extension",
+    "controllable": "Can be controlled by DevGo",
+    "byThis": "Controlled by DevGo"
+  },
+  "status": {
+    "applyFailed": "Failed to apply proxy settings",
+    "synced": "Proxy settings synced"
+  },
+  "server": {
+    "scheme": "Protocol",
+    "host": "Host",
+    "port": "Port"
+  },
+  "customMode": {
+    "dialogLabel": "Add a custom proxy mode",
+    "title": "Add custom proxy",
+    "name": "Name",
+    "namePlaceholder": "Proxy name"
+  },
+  "deleteMode": {
+    "dialogLabel": "Delete a custom proxy mode",
+    "title": "Delete custom proxy",
+    "name": "\"{name}\"",
+    "desc": "After deleting, it falls back to the built-in proxy configuration. Auto, Global proxy, and other custom modes are not affected.",
+    "confirm": "Delete"
+  },
+  "controller": {
+    "invalidProxy": "Enter a valid proxy host and port",
+    "invalidCustomProxy": "Invalid proxy host or port in a custom mode",
+    "nameRequired": "Enter a name for the custom mode",
+    "updatedCustom": "Updated \"{name}\" and applied it",
+    "savedApplied": "Saved and applied to the current mode",
+    "savedSynced": "Saved and synced to the current proxy",
+    "saved": "Saved",
+    "hostBypassRemoved": "This site no longer goes direct",
+    "hostBypassAdded": "This site now goes direct",
+    "switched": "Switched to \"{name}\"",
+    "added": "Added \"{name}\"",
+    "deleted": "Deleted \"{name}\"",
+    "deletedFallback": "Custom mode deleted",
+    "saveLabel": {
+      "update": "Update and apply",
+      "apply": "Save and apply",
+      "enable": "Save and enable"
+    },
+    "configDesc": {
+      "custom": "{name} · Custom proxy",
+      "scenario": "Auto · Own proxy and rules",
+      "global": "Global proxy · All traffic through the proxy"
+    }
+  },
+  "ruleList": {
+    "title": "Rule list",
+    "summary": "{time} · {count} proxy rules",
+    "summary_one": "{time} · {count} proxy rule",
+    "update": "Update",
+    "download": "Download",
+    "hint": "When enabled, sites matching a rule go through the proxy; the list updates automatically every 6 hours. With no rule list enabled and no custom proxy domains, Auto connects everything directly.",
+    "recommended": "Rule {index} · {source}",
+    "downloadFirst": "Download the rule list first",
+    "enabled": "Rule list enabled",
+    "disabled": "Rule list disabled",
+    "downloadFailed": "Failed to download the rule list",
+    "updated": "Updated {proxy} proxy rules and {direct} direct exceptions",
+    "directSummary": "Includes {count} direct exceptions. Last updated {time}",
+    "directSummary_one": "Includes {count} direct exception. Last updated {time}"
+  },
+  "scenario": {
+    "title": "Custom proxy domains",
+    "desc": "Sites that need the proxy but aren't covered by the rule list",
+    "unproxy": "Remove",
+    "proxyHost": "Proxy this site",
+    "hint": "One domain per line, subdomains included automatically. Takes priority over the rule list and saves on blur.",
+    "removed": "Removed {hosts}",
+    "listSeparator": ", ",
+    "hostProxied": "{host} and its subdomains will go through the proxy",
+    "saved": "Saved {count} proxy domains",
+    "saved_one": "Saved {count} proxy domain",
+    "defaultAction": {
+      "title": "When no rule matches",
+      "direct": "Direct",
+      "proxy": "Proxy",
+      "proxyHint": "Everything goes through the proxy except the bypass list, LAN, and .cn domains. Best when your proxy app handles its own routing",
+      "directHint": "Only sites matching a rule go through the proxy; everything else connects directly",
+      "proxyStatus": "Requests matching no rule will go through the proxy",
+      "directStatus": "Requests matching no rule will connect directly"
+    }
+  },
+  "cors": {
+    "title": "Disable CORS restrictions (turn off the browser's cross-origin blocking)",
+    "desc": "Adds cross-origin response headers to the page's XHR/fetch responses",
+    "note": "For local development and debugging only. Can't fix servers that reject OPTIONS, credentialed requests, CSP, or mixed-content restrictions. Refresh the page after toggling.",
+    "enabled": "CORS headers are being added to the page's XHR/fetch responses",
+    "notActive": "Rules not active",
+    "disabled": "Off",
+    "failed": "Failed to enable. Check the extension's permissions or reload the extension"
+  },
+  "webrtc": {
+    "title": "Real IP protection",
+    "intro": "With a proxy on, sites can still use the browser's WebRTC (the tech behind in-page audio/video calls) to bypass the proxy and quietly get your real IP — and from it guess your city and carrier. With protection on, sites only see the proxy's IP.",
+    "scope": "Applies only to web pages in this browser, not to other apps on your computer. Pages asking for location permission (precise location) prompt separately through the browser and aren't controlled here. Settings on this page save immediately — no need to click \"Save and apply\" above.",
+    "unknown": "Unknown",
+    "permissionRequired": "The \"Change privacy settings\" permission is required to enable protection",
+    "policy": {
+      "default": {
+        "label": "Off (browser default)",
+        "hint": "Pages can quietly get your real IP and LAN addresses, even with a proxy on"
+      },
+      "hideVpn": {
+        "label": "Hide VPN / virtual adapters",
+        "hint": "Stops exposing extra adapters like VPNs and virtual machines; your real IP and LAN addresses remain visible"
+      },
+      "hideLan": {
+        "label": "Hide LAN addresses",
+        "hint": "Pages can't see your home or office network addresses. Your real IP is still visible, and in-page video calls keep working"
+      },
+      "hideRealIp": {
+        "label": "Hide real IP (recommended)",
+        "hint": "With a proxy on, pages only see the proxy's IP and can't infer your real location or carrier. A few in-page video calls may slow down or fail to connect"
+      }
+    },
+    "control": {
+      "byThis": "Controlled by DevGo",
+      "controllable": "Not controlled (browser default)",
+      "byOther": "Controlled by another extension (e.g. WebRTC Control). DevGo's settings won't take effect — disable that extension first",
+      "byOtherShort": "Controlled by another extension; protection not active",
+      "locked": "Locked by browser policy; the extension can't change it",
+      "lockedShort": "Locked by browser policy; protection not active"
+    },
+    "impact": {
+      "whatWeDo": "What DevGo does",
+      "affects": "Features that may be affected",
+      "unaffectedDownload": "Regular browsing, watching videos, downloads, and client apps on your computer are unaffected.",
+      "undoPolicy": "If in-page calls misbehave, set the level back to \"Off\" to restore.",
+      "undoToggle": "Turn this toggle off and refresh the page to restore.",
+      "hideVpn": {
+        "title": "Turn on \"Hide VPN / virtual adapters\"",
+        "action": "Changes the browser's WebRTC settings so pages can only use the default network adapter; addresses of extra adapters like VPNs and VMs are no longer exposed to pages. Applies to all pages.",
+        "affect1": "In-page calls that only connect through a VPN or virtual adapter may fail to connect"
+      },
+      "hideLan": {
+        "title": "Turn on \"Hide LAN addresses\"",
+        "action": "Changes the browser's WebRTC settings so pages get only your public address, not your home or office LAN address. Applies to all pages.",
+        "affect1": "Calls and P2P file transfer within the same Wi-Fi / LAN can't connect directly and reroute through the internet, possibly a bit slower",
+        "affect2": "In-page meeting systems that only work on an intranet may fail to connect"
+      },
+      "hideRealIp": {
+        "title": "Turn on \"Hide real IP\"",
+        "action": "Changes the browser's WebRTC settings (disallowing UDP connections that bypass the proxy), so pages' audio/video connections must go through the proxy and sites can't get your real IP. Applies to all pages.",
+        "affect1": "In-browser video meetings and voice calls (Tencent Meeting / Feishu / Google Meet web, etc.) may slow down, stutter, or fail — more so if the proxy doesn't support UDP",
+        "affect2": "In-page P2P file transfer, live-stream chat, and real-time connections in some web games",
+        "affect3": "With no proxy on, some in-page calls may also fail to connect",
+        "unaffected": "Regular browsing, watching videos, downloads, and client apps on your computer (like meeting clients) are unaffected.",
+        "undo": "If a web meeting won't connect, try setting the level back to \"Off\" first. The popup's Network page shows whether protection is on."
+      },
+      "blockApis": {
+        "title": "Disable in-page audio/video calls",
+        "action": "Removes WebRTC interfaces (RTCPeerConnection etc.) before each page loads, so sites can't establish audio/video connections at all — and can't get any of your IPs. Applies to all pages; takes effect after a refresh.",
+        "affect1": "All in-browser video meetings, voice calls, and screen sharing stop working; sites may say \"browser not supported\"",
+        "affect2": "In-page P2P file transfer, live-stream chat, and voice/video calls in online support chats"
+      },
+      "hideDevices": {
+        "title": "Hide camera and microphone",
+        "action": "Blocks the media-device interfaces before each page loads, so sites can't see which cameras and microphones you have or use them. Applies to all pages; takes effect after a refresh.",
+        "affect1": "Cameras and microphones won't open in web meetings",
+        "affect2": "In-page recording, filming, photo upload, voice input, and identity verification",
+        "unaffected": "Regular browsing, watching videos, and client apps on your computer are unaffected."
+      }
+    },
+    "level": {
+      "title": "Protection level",
+      "label": "Level",
+      "hint": "Applies to all pages. The first time you enable it, the browser asks for the \"Change privacy settings\" permission",
+      "enabledTip": "On: if web meetings or voice calls won't connect, try setting the level back to \"Off\" first.",
+      "notGranted": "Not granted yet, so protection isn't active. Pick the level again to grant it",
+      "unsupported": "This browser doesn't support this setting",
+      "effective": "Browser is using: {policy} · {control}"
+    },
+    "strict": {
+      "title": "Stricter blocking",
+      "desc": "Turns the relevant features off in pages outright — no site can get around it, but those features stop working. Refresh pages after changing.",
+      "blockApis": "Disable in-page audio/video calls (WebRTC)",
+      "blockApisHint": "Sites can't get any of your IP; in-browser meetings, voice calls, and P2P file transfer stop working",
+      "hideDevices": "Hide camera and microphone",
+      "hideDevicesHint": "Sites can't see which devices you have (often used to identify and track your computer), so camera and microphone won't work"
+    },
+    "leakTest": {
+      "title": "Run a check",
+      "desc": "Try it once on a page you have open to see which addresses sites can actually get. With a proxy on, a real IP in the list means protection isn't working. Re-run after changing settings to compare.",
+      "online": "Online check",
+      "start": "Start check",
+      "idle": "Click \"Start check\". Results are what a site would see",
+      "host": "Test page: {host}",
+      "blocked": "In-page audio/video calls are disabled; sites can't get any address",
+      "none": "The site got no addresses",
+      "candidate": {
+        "mdns": "Local address (anonymized by the browser; safe)",
+        "public": "Public IP (with a proxy on, this should be the proxy's IP)",
+        "relay": "Relay server address",
+        "lan": "LAN address"
+      }
+    },
+    "status": {
+      "notGranted": "Not granted yet; protection isn't active",
+      "apisBlocked": "In-page audio/video calls disabled",
+      "offWithProxy": "Off: with a proxy on, sites may still see your real IP",
+      "off": "Off: stop sites from bypassing your proxy to see your real IP",
+      "tooltip": "Sites can use WebRTC to bypass the proxy and get your real IP. Click to enable protection in settings",
+      "settings": "Settings"
+    }
+  },
+  "background": {
+    "proxyApiUnavailable": "This browser doesn't support the chrome.proxy API, or the extension wasn't granted the proxy permission",
+    "ruleListHttpOnly": "The rule list URL only supports http/https",
+    "ruleListInvalidUrl": "Enter a valid rule list URL",
+    "downloadFailed": "Download failed: HTTP {status}",
+    "noRules": "No valid AutoProxy rules found",
+    "leakTestNoTab": "Open any web page (http/https) first, then come back to run the check",
+    "leakTestFailedOnHost": "Couldn't run the check on {host}: {message}",
+    "leakTestFailed": "Couldn't run the check on this page: {message}"
+  }
+}

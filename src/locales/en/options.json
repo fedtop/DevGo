@@ -1,1 +1,199 @@
-{}
+{
+  "general": {
+    "title": "General",
+    "desc": "Appearance, language, popup, shortcuts, sync, and backup",
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "themeHint": "Auto: dark from 18:00 to 6:00. Applies to the popup, settings, side panel, and new tab",
+      "themeAuto": "Auto",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "language": "UI language",
+      "languageHint": "Applies to the popup, settings, side panel, new tab, and the selection toolbar on pages. The extension name and shortcut descriptions follow the browser's own language"
+    },
+    "popup": {
+      "title": "Popup",
+      "defaultTab": "Default page",
+      "defaultTabHint": "The page the popup opens on when you click the toolbar icon or press its shortcut"
+    },
+    "shortcuts": {
+      "title": "Shortcuts",
+      "descFirefox": "Browsers don't let extensions change their own shortcuts. Customize them in about:addons via the gear icon at the top right → \"Manage Extension Shortcuts\".",
+      "desc": "Browsers don't let extensions change their own shortcuts; set them on the extension shortcuts page. This page refreshes automatically once you change them.",
+      "customize": "Customize",
+      "openDefault": "Open popup (default page)",
+      "openAssistant": "Open AI assistant (side panel)",
+      "openNetwork": "Open popup Network page",
+      "openTools": "Open popup Resources page",
+      "inlineTranslate": "Toggle page translation"
+    },
+    "sync": {
+      "title": "Sync across devices",
+      "desc": "Quick links and proxy configuration sync to your other devices with the browser account.",
+      "syncNow": "Sync now",
+      "usage": "{used}KB of {total}KB used",
+      "never": "Never synced",
+      "syncing": "Syncing…",
+      "failed": "Sync failed",
+      "lastSynced": "Last synced {time}"
+    },
+    "backup": {
+      "title": "Backup",
+      "desc": "Export / import all configuration (quick links, network, translation, AI models, etc.). API keys are never written to backup files.",
+      "export": "Export",
+      "import": "Import",
+      "exported": "Exported",
+      "exportFailed": "Export failed",
+      "importedWithSkipped": "Imported {imported} items (skipped {skipped} invalid)",
+      "imported": "Imported {imported} items; effective immediately",
+      "importFailed": "Import failed: {reason}"
+    }
+  },
+  "app": {
+    "title": "{name} settings",
+    "nav": {
+      "translate": "Translation",
+      "models": "AI models",
+      "selection": "Selection",
+      "assistant": "AI assistant",
+      "network": "Network",
+      "enhance": "Page enhancements",
+      "general": "General"
+    }
+  },
+  "hostList": {
+    "add": "Add",
+    "remove": "Remove {host}",
+    "empty": "None"
+  },
+  "translate": {
+    "title": "Translation",
+    "desc": "Side-by-side page translation, hover translation, and always-translated sites",
+    "page": {
+      "title": "Page translation",
+      "desc": "Full-page side-by-side translation: translations follow each original paragraph and load as you scroll.",
+      "provider": "Translation engine",
+      "usingModel": "Using translation model {model}",
+      "modelMissing": "No translation model configured yet; AI translation is unavailable for now",
+      "editModel": "Change",
+      "configureModel": "Configure",
+      "freeHint": "Google and Microsoft are free to use. To translate with an LLM, configure your own model",
+      "configureAiModel": "Configure AI models",
+      "target": "Target language",
+      "targetHint": "Auto: Chinese pages are translated to English; other pages to Simplified Chinese",
+      "displayMode": "Display",
+      "displayModeHint": "Translation only: hide the original text and keep just the translation",
+      "underline": "Underline translations",
+      "underlineHint": "Mark translations with a dotted underline to tell them apart from the original",
+      "hover": "Hover translation"
+    },
+    "autoHosts": {
+      "title": "Always translate these sites",
+      "desc": "Translate these sites fully when opened. You can also toggle the current site in the popup.",
+      "placeholder": "e.g. developer.mozilla.org"
+    }
+  },
+  "models": {
+    "title": "AI models",
+    "desc": "Works with any OpenAI-compatible API (including Coding Plans). Translation and chat are configured separately: fast for translation, strong for chat.",
+    "notConfigured": "Not configured yet",
+    "missingKey": "Missing API key",
+    "collapse": "Collapse",
+    "configure": "Configure",
+    "translateModel": {
+      "title": "Translation model",
+      "badge": "Built for speed",
+      "desc": "Used for full-page / hover / selection translation when the engine is set to \"AI model\". Pick a fast model without deep thinking, e.g. glm-4-flash, qwen-turbo, deepseek-chat."
+    },
+    "chatModel": {
+      "title": "Chat model",
+      "badge": "Built for capability",
+      "desc": "Used for selection explain / summarize / polish and the side panel AI assistant. Pick a strong model with tool calling, e.g. GLM-4.6, Kimi K2, qwen3-max, or a Coding Plan.",
+      "inherited": "(following the translation model)",
+      "resetHint": "If you'd rather not maintain a separate config, switch back to following the translation model",
+      "reset": "Follow the translation model again"
+    }
+  },
+  "assistant": {
+    "title": "AI assistant",
+    "desc": "The AI assistant in the browser side panel, using the chat model from \"AI models\"",
+    "sidepanel": {
+      "title": "Side panel assistant",
+      "desc": "Summarize pages, extract key points, and ask about page content (including Shadow DOM pages). \"Ask AI\" in the selection toolbar opens here with the selection.",
+      "open": "Open side panel",
+      "shortcutHint": "Shortcut {shortcut}; can also open from the popup's Features page",
+      "noShortcutHint": "No shortcut set. Set one under General → Shortcuts",
+      "openButton": "Open"
+    },
+    "webmcp": {
+      "title": "Page tools (WebMCP)",
+      "desc": "Pages can expose runnable tools to the AI via WebMCP (queries, orders, form filling, etc.); the assistant discovers and calls them automatically. Needs Chrome 150 or later, with \"WebMCP for testing\" enabled in chrome://flags.",
+      "confirm": "Confirm before running",
+      "confirmHint": "Page tools not declared read-only (they may modify data) ask for your confirmation before running"
+    }
+  },
+  "enhance": {
+    "title": "Page enhancements",
+    "desc": "GitHub enhancements and per-site copy unlocking",
+    "github": {
+      "label": "GitHub enhancements",
+      "hint": "Floating buttons on code pages (edit online, DeepWiki, back to top); press , to open github1s"
+    },
+    "unlock": {
+      "title": "Sites with copy unlocked",
+      "desc": "Unlock copy, selection, and right-click on these sites. Applies only to listed sites (unlocking everywhere breaks online editors and the like); you can also toggle the current site in the popup's Features page.",
+      "placeholder": "e.g. www.example.com"
+    }
+  },
+  "selection": {
+    "title": "Selection",
+    "desc": "The toolbar that appears when you select text on a page",
+    "toolbar": {
+      "title": "Selection toolbar",
+      "enable": "Enable selection",
+      "enableHint": "Show the toolbar next to selected text on pages; single English words also show dictionary definitions",
+      "ai": "AI actions",
+      "aiHint": "Needs a working chat model (follows the translation model if not set separately). When off, only translation remains"
+    },
+    "disabledHosts": {
+      "title": "Sites where selection is off",
+      "desc": "Don't show the selection toolbar on these sites. Toggle the current site from the popup's Features page.",
+      "remove": "Remove {host}",
+      "empty": "None"
+    },
+    "actions": {
+      "title": "Toolbar actions",
+      "desc": "The toolbar shows up to {count} actions directly and folds the rest into \"More\". Built-in actions come first, custom actions follow in the order below. On page text there's also \"Ask AI\", which opens the side panel with the selection.",
+      "add": "Add action",
+      "editTitle": "Edit action",
+      "aiUnavailable": "AI actions are off or no chat model is configured, so the toolbar shows only \"Translate\".",
+      "builtin": "Built-in actions",
+      "custom": "Custom actions",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No custom actions yet. Add a name and a prompt, and the toolbar can run AI on your selection exactly the way you want.",
+      "fromTemplates": "Add from examples:",
+      "templateAdded": "Added",
+      "deleteTitle": "Delete action \"{name}\"?",
+      "deleteDesc": "The action disappears from the toolbar and its prompt is deleted too."
+    },
+    "dialog": {
+      "close": "Close",
+      "cancel": "Cancel",
+      "save": "Save",
+      "name": "Name",
+      "namePlaceholder": "Shown on the toolbar, e.g. \"Translate to English\"",
+      "nameRequired": "Enter a name",
+      "icon": "Icon",
+      "scope": "Applies to",
+      "scopeHint": "When text is selected in an input, the result can replace it in one click; the model then outputs only the processed text.",
+      "prompt": "Prompt",
+      "promptPlaceholder": "Tell the AI how to handle the selection, e.g.: translate the selection into natural English and output only the translation.",
+      "promptRequired": "Enter a prompt",
+      "promptHint": "Like built-in actions, the surrounding paragraph and page title are attached automatically — no need to include them in the prompt."
+    }
+  }
+}

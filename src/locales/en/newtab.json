@@ -1,1 +1,91 @@
-{}
+{
+  "app": {
+    "tagline": "A new tab page built for developers",
+    "renameCategory": "Rename this category",
+    "export": "Export",
+    "import": "Import",
+    "saveFailedQuota": "Save failed: sync storage is full. Remove some quick links first",
+    "pinFull": "The pinned row is full ({limit} max). Unpin some links first",
+    "imported": "Imported {count} links",
+    "imported_one": "Imported {count} link",
+    "importedNone": "No new links (existing ones were skipped)",
+    "importFailed": "Import failed"
+  },
+  "theme": {
+    "label": "Color theme",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark",
+    "current": "Current: {mode}",
+    "currentAuto": "Current: Auto (now {effective})"
+  },
+  "shader": {
+    "switch": "Change background effect",
+    "mode": {
+      "random": "Random",
+      "fixed": "Fixed"
+    },
+    "effect": {
+      "mesh": "Fluid",
+      "neuro": "Neuro",
+      "simplex": "Soft waves",
+      "smoke": "Smoke rings",
+      "metaballs": "Metaballs",
+      "voronoi": "Voronoi",
+      "warp": "Warp",
+      "heatmap": "Heat flow",
+      "grain": "Grain",
+      "panels": "Panels",
+      "water": "Ripple",
+      "gem": "Gem"
+    }
+  },
+  "category": {
+    "common": "Favorites",
+    "dev": "Dev",
+    "ai": "AI",
+    "community": "Community",
+    "tools": "Tools",
+    "tablist": "Quick link categories",
+    "renameInput": "Rename category",
+    "doubleClickRename": "Double-click to rename"
+  },
+  "builtinPage": {
+    "history": "History",
+    "downloads": "Downloads",
+    "extensions": "Extensions"
+  },
+  "engine": {
+    "baidu": "Baidu"
+  },
+  "search": {
+    "placeholder": "Search with {engine}, or type !{bang} to switch engines…",
+    "submit": "Search",
+    "sourceNav": "Quick links",
+    "sourceBookmark": "Bookmarks"
+  },
+  "pinned": {
+    "title": "Pinned",
+    "unpin": "Unpin (keeps the link)"
+  },
+  "quickNav": {
+    "pin": "Pin below the search bar",
+    "unpin": "Unpin",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "editTitle": "Edit link",
+    "addTitle": "Add link",
+    "name": "Name",
+    "url": "URL",
+    "category": "Category",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "config": {
+    "invalidJson": "The file isn't valid JSON",
+    "invalidFormat": "The config format is incorrect",
+    "notDevgoFile": "Not a DevGo new tab config file",
+    "noItems": "No quick links to import in this file"
+  }
+}

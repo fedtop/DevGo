@@ -1,1 +1,32 @@
-{}
+{
+  "actions": {
+    "explain": {
+      "label": "Explain",
+      "title": "Explain the selected text in context"
+    },
+    "summarize": {
+      "label": "Summarize",
+      "title": "Pull out the key points of the selection"
+    },
+    "polish": {
+      "label": "Polish",
+      "title": "Make the wording smoother and more natural"
+    },
+    "fix": {
+      "label": "Fix",
+      "title": "Correct typos, grammar, and punctuation"
+    },
+    "formal": {
+      "label": "Formal",
+      "title": "Rewrite in a more formal, written style"
+    }
+  },
+  "errors": {
+    "customActionMissing": "This custom action was deleted or has no prompt"
+  },
+  "test": {
+    "success": "Connected. The model supports tool calling",
+    "noToolCall": "Connected, but the model did not call the test tool, so it may not support tool calling. Consider a stronger model",
+    "timeout": "Request timed out"
+  }
+}

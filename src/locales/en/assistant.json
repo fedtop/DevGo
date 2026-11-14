@@ -1,1 +1,130 @@
-{}
+{
+  "pageTitle": "DevGo Assistant",
+  "header": {
+    "currentPage": "Current page",
+    "webToolCount": "{count} page tools",
+    "webToolCount_one": "{count} page tool",
+    "newChat": "New chat",
+    "backToChat": "Back to chat",
+    "settings": "Settings"
+  },
+  "nav": {
+    "label": "Side panel pages",
+    "chat": "Chat",
+    "tools": "Page tools"
+  },
+  "quickActions": {
+    "summarize": {
+      "label": "Summarize this page",
+      "prompt": "Summarize this page: start with a one- or two-sentence overview, then list the key points."
+    },
+    "keyPoints": {
+      "label": "Key points",
+      "prompt": "Extract the key information from this page (conclusions, data, steps, caveats, etc.) as a list. Don't leave out important details."
+    },
+    "explain": {
+      "label": "Explain in Chinese",
+      "prompt": "In Simplified Chinese, explain what this page is about, who it's for, and the parts most worth attention."
+    }
+  },
+  "chat": {
+    "placeholder": {
+      "notConfigured": "Configure a chat model in settings first",
+      "quote": "Ask about the selected text…",
+      "withTools": "Ask about this page, or let the AI use page tools to do something for you…",
+      "default": "Ask about this page, e.g. \"What's the conclusion of this article?\""
+    },
+    "thinking": "Thinking…",
+    "removeQuote": "Remove quote",
+    "stop": "Stop",
+    "send": "Send",
+    "inputHint": "Enter to send, Shift + Enter for a new line",
+    "stopped": "Stopped",
+    "noTab": "No tab available",
+    "errorDetail": "{reason}: {detail}",
+    "withPage": "Page content attached",
+    "reasoning": "Reasoning"
+  },
+  "empty": {
+    "title": "How can I help?",
+    "description": "Summarize pages or ask questions about them. Select text on a page and click \"Ask AI\" — it opens here with the selection attached.",
+    "descriptionWithTools": "Summarize pages or ask questions about them. Select text on a page and click \"Ask AI\" — it opens here with the selection attached. This page also provides {count} tools, which the AI can use to act on it for you.",
+    "descriptionWithTools_one": "Summarize pages or ask questions about them. Select text on a page and click \"Ask AI\" — it opens here with the selection attached. This page also provides {count} tool, which the AI can use to act on it for you."
+  },
+  "tool": {
+    "status": {
+      "running": "Running",
+      "awaiting": "Awaiting confirmation",
+      "done": "Done",
+      "error": "Failed",
+      "rejected": "Rejected"
+    },
+    "readPage": "Read page content",
+    "argsAndResult": "Arguments and result",
+    "mayModify": "This tool may modify page data",
+    "reject": "Reject",
+    "allow": "Allow"
+  },
+  "settings": {
+    "modelTitle": "Chat model",
+    "modelHint": "Used by the side panel assistant and selection actions like explain, summarize, and polish. Pick a capable model that supports tool calling. The translation model is configured separately in settings and can be a faster one.",
+    "modelHintInherited": "Used by the side panel assistant and selection actions like explain, summarize, and polish. Pick a capable model that supports tool calling. The translation model is configured separately in settings and can be a faster one. Currently following the translation model; saving makes it separate.",
+    "confirmTools": "Confirm before running page tools",
+    "confirmToolsHint": "Tools provided via WebMCP that aren't declared read-only (they may submit forms, place orders, etc.) ask for your confirmation before running",
+    "confirmToolsHintUnsupported": "Tools provided via WebMCP that aren't declared read-only (they may submit forms, place orders, etc.) ask for your confirmation before running. WebMCP isn't enabled in this browser yet: enable \"WebMCP for testing\" in chrome://flags to use it",
+    "openOptions": "Open full settings"
+  },
+  "agent": {
+    "toolNotFound": "Tool \"{name}\" does not exist. Please use only the provided tools",
+    "invalidArgs": "Arguments are not valid JSON: {raw}",
+    "rejectedByUser": "The user rejected this tool call",
+    "noResult": "(Tool ran successfully with no return value)",
+    "failed": "Tool call failed",
+    "maxSteps": "The model has called tools {count} times in a row without finishing, so it stopped here.",
+    "maxSteps_one": "The model has called a tool {count} time in a row without finishing, so it stopped here.",
+    "maxStepsHistory": "The model has called tools {count} times in a row without finishing, so it stopped here. You can add details and continue.",
+    "maxStepsHistory_one": "The model has called a tool {count} time in a row without finishing, so it stopped here. You can add details and continue."
+  },
+  "errors": {
+    "readPageFailed": "Couldn't read the current page: browser built-in pages aren't supported. If the page was open before DevGo was installed, refresh it and try again",
+    "noResponse": "The page didn't respond. Refresh the page and try again",
+    "scriptNotReady": "DevGo's script on this page isn't ready. Refresh the page and try again",
+    "navigatedNoResult": "The tool ran, but the page navigated and no result was found on the new page",
+    "toolMissing": "Tool \"{name}\" wasn't found on this page",
+    "webmcpDisabled": "WebMCP is not enabled in this browser",
+    "llmNotConfigured": "AI translation isn't configured: enter the base URL and model in settings",
+    "chatNotConfigured": "AI isn't configured: enter the base URL and model",
+    "baseUrlRequired": "Enter the base URL first"
+  },
+  "webmcp": {
+    "unsupported": {
+      "title": "WebMCP isn't enabled yet",
+      "description": "WebMCP is currently an experimental Chrome feature. It needs Chrome 150 or later: search for \"WebMCP for testing\" in chrome://flags, enable it, restart the browser, then come back and refresh."
+    },
+    "unavailable": {
+      "title": "This page can't be read",
+      "description": "Browser built-in pages, the extension store, and similar pages don't allow extension access. If this is a normal web page, refresh it and try again."
+    },
+    "loading": {
+      "title": "Checking this page…",
+      "description": "Reading tools registered by the page and its iframes."
+    },
+    "empty": {
+      "title": "This page doesn't provide any tools",
+      "description": "A page must register tools via WebMCP (document.modelContext) before the AI can act on it directly."
+    },
+    "summary": "This page provides {count} tools. Describe what you need in Chat and the AI will call them",
+    "summary_one": "This page provides {count} tool. Describe what you need in Chat and the AI will call it",
+    "refresh": "Check again",
+    "readOnly": "Read-only",
+    "mayModify": "May modify data",
+    "argsLabel": "Arguments (JSON, templated from the schema)",
+    "readOnlyHint": "Read-only tool; won't modify page data",
+    "writeHint": "Runs directly on the page",
+    "execute": "Run",
+    "invalidJson": "Arguments are not valid JSON",
+    "noResult": "(Ran successfully with no return value)",
+    "failed": "Run failed",
+    "result": "Result"
+  }
+}

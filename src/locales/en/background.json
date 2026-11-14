@@ -1,1 +1,8 @@
-{}
+{
+  "contextMenu": {
+    "inlineTranslate": "Translate this page (click again to restore the original)"
+  },
+  "media": {
+    "noActiveTab": "Couldn't get the current tab"
+  }
+}

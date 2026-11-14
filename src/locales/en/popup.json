@@ -1,1 +1,132 @@
-{}
+{
+  "pages": {
+    "translate": "Translate",
+    "network": "Network",
+    "tools": "Resources",
+    "function": "Features"
+  },
+  "app": {
+    "openSettings": "Open settings",
+    "editShortcut": "Change shortcut",
+    "shortcut": "Shortcut",
+    "setShortcut": "Set up"
+  },
+  "common": {
+    "pageUnsupported": "This page isn't supported"
+  },
+  "lookup": {
+    "engineYoudao": "Youdao",
+    "engineMicrosoft": "Microsoft",
+    "engineGoogle": "Google",
+    "placeholder": "Enter a word or phrase",
+    "submit": "Look up",
+    "aiFailed": "AI lookup failed: {message}",
+    "copyTranslation": "Copy translation",
+    "copy": "Copy",
+    "speak": "Read aloud"
+  },
+  "pageTranslate": {
+    "title": "Page translation",
+    "moreSettings": "More settings",
+    "engine": "Translation engine",
+    "targetLang": "Target language",
+    "llmMissing": "No translation model configured yet; AI translation is unavailable for now",
+    "llmModel": "Translation model: {model}",
+    "configure": "Configure",
+    "change": "Change",
+    "alwaysTranslate": "Always translate this site",
+    "showOriginal": "Show original",
+    "translatePage": "Translate this page",
+    "unsupported": "This page can't be translated (browser built-in / extension store pages). For normal pages, refresh and try again",
+    "hintWithShortcut": "Translations load as you scroll · Toggle via the context menu or {shortcut}",
+    "hintNoShortcut": "Translations load as you scroll · Toggle via the context menu ·",
+    "setShortcut": "Set shortcut"
+  },
+  "network": {
+    "modeTitle": "Network mode",
+    "currentPage": "Current page: {host}",
+    "pageNotConfigurable": "The current page can't have per-site proxy settings",
+    "proxySettings": "Proxy settings",
+    "editProxyTitle": "Edit proxy server and rules in settings",
+    "bypassCount": "{count} bypass entries",
+    "bypassCount_one": "{count} bypass entry",
+    "edit": "Edit",
+    "cancelHostDirect": "Cancel direct on this site",
+    "hostDirect": "Direct on this site",
+    "cancelHostProxy": "Cancel proxy on this site",
+    "hostProxy": "Proxy on this site"
+  },
+  "tools": {
+    "title": "Media sniffer",
+    "currentTab": "Current tab",
+    "refresh": "Refresh",
+    "clear": "Clear",
+    "searchPlaceholder": "Search by name, domain, or type",
+    "downloadAll": "Download all",
+    "count": "{count} resources",
+    "count_one": "{count} resource",
+    "scanning": "Scanning…",
+    "empty": "No images or videos found yet",
+    "filter": {
+      "all": "All",
+      "image": "Images",
+      "video": "Videos"
+    },
+    "kind": {
+      "image": "Image",
+      "video": "Video"
+    },
+    "source": {
+      "network": "Request",
+      "dom": "Page",
+      "networkDom": "Request + page"
+    },
+    "delivery": {
+      "streamManifest": "Stream manifest",
+      "streamSegment": "Stream segment",
+      "twitterAudioTrack": "X audio track",
+      "twitterVideoTrack": "X video track"
+    },
+    "previewUnsupported": "This format can't be previewed in the popup",
+    "collapsePreview": "Collapse preview",
+    "previewVideo": "Preview video",
+    "download": "Download",
+    "copyLink": "Copy link",
+    "openLink": "Open link",
+    "readTabFailed": "Couldn't read the current tab",
+    "cleared": "Cleared {count} resources",
+    "cleared_one": "Cleared {count} resource",
+    "linkCopied": "Link copied",
+    "copyFailed": "Copy failed",
+    "downloadFailed": "Couldn't create the download",
+    "downloadCreated": "Download created",
+    "noDirectDownloadable": "No resources can be downloaded directly as complete files",
+    "noDownloadable": "Nothing to download",
+    "bulkResultSkipped": "Created {ok}/{total} downloads; skipped {skipped} stream segments",
+    "bulkResult": "Created {ok}/{total} downloads"
+  },
+  "function": {
+    "open": "Open",
+    "assistantTitle": "AI assistant",
+    "assistantDesc": "Summarize pages and ask about them in the side panel",
+    "assistantDescShortcut": "Summarize pages and ask about them in the side panel · {shortcut}",
+    "webmcpTitle": "Page tools (WebMCP)",
+    "webmcpLoading": "Checking this page…",
+    "webmcpUnsupported": "WebMCP is off in this browser (enable \"WebMCP for testing\" in chrome://flags)",
+    "webmcpTools": "This page provides {count} tools for the AI to call or for you to run",
+    "webmcpTools_one": "This page provides {count} tool for the AI to call or for you to run",
+    "webmcpNoTools": "This page doesn't provide any tools",
+    "viewTools": "View tools",
+    "selectionTitle": "Selection toolbar",
+    "selectionGloballyOff": "Off on all sites; turn on to restore",
+    "selectionSiteDisabled": "Off on {host}",
+    "selectionSiteOn": "{host}: show the translation and AI toolbar when you select text",
+    "selectionSiteOnWithDisabled": "{host}: show the translation and AI toolbar when you select text ({count} sites disabled)",
+    "selectionSiteOnWithDisabled_one": "{host}: show the translation and AI toolbar when you select text ({count} site disabled)",
+    "unlockTitle": "Unlock copy on this site",
+    "unlockDesc": "{host}: unlock copy, selection, and right-click",
+    "unlockDescWithCount": "{host}: unlock copy, selection, and right-click ({count} sites enabled)",
+    "unlockDescWithCount_one": "{host}: unlock copy, selection, and right-click ({count} site enabled)",
+    "manageAll": "Manage all sites and more features"
+  }
+}
