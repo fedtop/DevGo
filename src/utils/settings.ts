@@ -660,7 +660,7 @@ export interface SelectionCustomAction {
   id: string
   name: string
   prompt: string
-  /** 图标 key，见 features/selection/action-icons.ts */
+  /** 图标 key，见 features/selection/toolbar-actions.ts 的 ACTION_ICONS */
   icon: string
   scope: SelectionActionScope
 }
