@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/fedtop/dev-go/compare/v0.2.0...v0.2.1) (2026-11-14)
+
+### Bug Fixes
+
+- **newtab:** 默认导航修订同步到老用户，去掉失效的 Zwork 链接并补上 Muse ([c50d9a0](https://github.com/fedtop/dev-go/commit/c50d9a085b870b1065182c3a3965134c20b55d94))
+
 ## [0.2.0](https://github.com/fedtop/dev-go/compare/v0.1.0...v0.2.0) (2026-11-14)
 
 ### Features
