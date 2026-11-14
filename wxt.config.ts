@@ -46,7 +46,10 @@ export default defineConfig({
 
   manifest: ({ browser, mode }) => ({
     ...(mode === 'development' ? { key: DEV_EXTENSION_KEY } : {}),
-    name: 'DevGo',
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    // 扩展名称、描述与快捷键说明走 public/_locales，按浏览器语言显示
+    default_locale: 'en',
     homepage_url: 'https://github.com/wangrongding',
     permissions: [
       'contextMenus',
@@ -78,27 +81,27 @@ export default defineConfig({
       // 打开 popup，并定位到用户配置的默认 Tab
       'open-default': {
         suggested_key: { default: 'Alt+1' },
-        description: '打开默认面板',
+        description: '__MSG_cmdOpenDefault__',
       },
       // 在侧边栏打开 AI 助手（Chrome 专有；Firefox 侧边栏由浏览器自身控制）
       'open-assistant': {
         suggested_key: { default: 'Alt+2' },
-        description: '打开 AI 助手（侧边栏）',
+        description: '__MSG_cmdOpenAssistant__',
       },
       // 打开 popup 并定位到「网络」Tab
       'open-network': {
         suggested_key: { default: 'Alt+3' },
-        description: '打开网络面板',
+        description: '__MSG_cmdOpenNetwork__',
       },
       // 打开 popup 并定位到「资源」Tab
       'open-tools': {
         suggested_key: { default: 'Alt+4' },
-        description: '打开资源面板',
+        description: '__MSG_cmdOpenTools__',
       },
       // 对当前页面进行行间对比翻译（Chrome 最多预设 4 个快捷键，此命令默认不带键，
       // 仍可通过右键菜单触发或在 chrome://extensions/shortcuts 手动绑定 Alt+X）
       'inline-translate': {
-        description: '对当前页面进行行间对比翻译',
+        description: '__MSG_cmdInlineTranslate__',
       },
     },
   }),

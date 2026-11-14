@@ -48,6 +48,7 @@ import {
 import { handleTranslatePort } from '@/features/translate/port-server'
 import { updateNetworkActionIconSafely } from '@/utils/actionIcon'
 import { restoreDevBackupIfNeeded } from '@/utils/dev-backup'
+import { initI18n } from '@/utils/i18n'
 import {
   SELECTION_AI_PORT_NAME,
   TRANSLATE_PORT_NAME,
@@ -58,6 +59,9 @@ import { enableCorsBypass, networkMode, networkProxyManaged } from '@/utils/sett
 import { startSyncMirror, syncNow } from '@/utils/sync-mirror'
 
 export default defineBackground(() => {
+  // 界面语言：后台的右键菜单、通知与错误信息按设置的语言输出
+  void initI18n()
+
   // 跨设备同步：监听需同步执行注册；首次对账等存储迁移完成后再进行
   const syncMirror = startSyncMirror()
   ensureStorageMigrated()

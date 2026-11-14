@@ -3,6 +3,9 @@ import '@/assets/global.css'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
+import LocaleRoot from '@/ui/LocaleRoot'
+import { initI18n } from '@/utils/i18n'
+
 import AssistantApp from '@/features/assistant/AssistantApp'
 import { OPEN_ASSISTANT_COMMAND } from '@/utils/shortcut'
 import { initDocumentTheme } from '@/utils/theme'
@@ -22,12 +25,14 @@ if (!import.meta.env.FIREFOX) {
   })
 }
 
-void initDocumentTheme()
+void Promise.all([initDocumentTheme(), initI18n()])
   .catch(() => undefined)
   .finally(() =>
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
-        <AssistantApp />
+        <LocaleRoot>
+          <AssistantApp />
+        </LocaleRoot>
       </React.StrictMode>,
     ),
   )

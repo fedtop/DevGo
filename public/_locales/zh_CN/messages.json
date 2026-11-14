@@ -1,0 +1,11 @@
+{
+  "extName": { "message": "DevGo" },
+  "extDescription": {
+    "message": "面向开发者的浏览器扩展：翻译、AI 助手、网络代理、CORS 调试、资源嗅探与 GitHub 增强。"
+  },
+  "cmdOpenDefault": { "message": "打开默认面板" },
+  "cmdOpenAssistant": { "message": "打开 AI 助手（侧边栏）" },
+  "cmdOpenNetwork": { "message": "打开网络面板" },
+  "cmdOpenTools": { "message": "打开资源面板" },
+  "cmdInlineTranslate": { "message": "对当前页面进行行间对比翻译" }
+}

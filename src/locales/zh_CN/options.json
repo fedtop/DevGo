@@ -1,0 +1,53 @@
+{
+  "general": {
+    "title": "通用",
+    "desc": "外观、语言、弹窗、快捷键、同步与备份",
+    "appearance": {
+      "title": "外观",
+      "theme": "主题",
+      "themeHint": "自动：18:00 – 6:00 使用深色。弹窗、设置页、侧边栏与新标签页统一生效",
+      "themeAuto": "自动",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "language": "界面语言",
+      "languageHint": "弹窗、设置页、侧边栏、新标签页与网页上的划词工具条统一生效；扩展名称与快捷键说明由浏览器按自身语言显示"
+    },
+    "popup": {
+      "title": "弹窗",
+      "defaultTab": "默认打开的页",
+      "defaultTabHint": "点击工具栏图标或按快捷键打开弹窗时定位的页面"
+    },
+    "shortcuts": {
+      "title": "快捷键",
+      "descFirefox": "浏览器不允许扩展自行修改快捷键：在 about:addons 右上角齿轮 →「管理扩展快捷键」里自定义。",
+      "desc": "浏览器不允许扩展自行修改快捷键，需要在扩展快捷键设置页里自定义；改完回到这里会自动刷新。",
+      "customize": "自定义",
+      "openDefault": "打开弹窗（默认页）",
+      "openAssistant": "打开 AI 助手（侧边栏）",
+      "openNetwork": "打开弹窗「网络」页",
+      "openTools": "打开弹窗「资源」页",
+      "inlineTranslate": "整页行间翻译"
+    },
+    "sync": {
+      "title": "跨设备同步",
+      "desc": "快捷导航、代理配置随浏览器账号自动同步到其他设备。",
+      "syncNow": "立即同步",
+      "usage": "已用 {used}KB / {total}KB",
+      "never": "尚未同步",
+      "syncing": "同步中…",
+      "failed": "同步失败",
+      "lastSynced": "上次同步 {time}"
+    },
+    "backup": {
+      "title": "数据备份",
+      "desc": "导出 / 导入全部配置（快捷导航、网络、翻译、AI 模型等）。API Key 不会写入备份文件。",
+      "export": "导出配置",
+      "import": "导入配置",
+      "exported": "已导出",
+      "exportFailed": "导出失败",
+      "importedWithSkipped": "已导入 {imported} 项（跳过 {skipped} 项无效数据）",
+      "imported": "已导入 {imported} 项，立即生效",
+      "importFailed": "导入失败：{reason}"
+    }
+  }
+}

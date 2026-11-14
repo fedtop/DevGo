@@ -5,6 +5,7 @@ import Button from '@/ui/Button'
 import Tabs from '@/ui/Tabs'
 import Select from '@/ui/Select'
 import { buildBackup, restoreBackup } from '@/utils/backup'
+import { getLocale, t, uiLanguage, type MessageKey, type UiLanguage } from '@/utils/i18n'
 import { sendRuntimeMessage } from '@/utils/messaging'
 import { defaultPopupTab, syncStatus, themeMode, type ThemeMode } from '@/utils/settings'
 import { formatShortcut, openShortcutSettings } from '@/utils/shortcut'
@@ -15,13 +16,13 @@ import { useStorageItem } from '@/utils/useStorageItem'
 import { Card, Row, SectionHeader } from './layout'
 import { ArrowUpRight } from 'lucide-react'
 
-/** 命令 name -> 展示名（按声明顺序展示） */
-const COMMAND_LABELS: Record<string, string> = {
-  'open-default': '打开弹窗（默认页）',
-  'open-assistant': '打开 AI 助手（侧边栏）',
-  'open-network': '打开弹窗「网络」页',
-  'open-tools': '打开弹窗「资源」页',
-  'inline-translate': '整页行间翻译',
+/** 命令 name -> 展示名 key（按声明顺序展示） */
+const COMMAND_LABELS: Record<string, MessageKey> = {
+  'open-default': 'options.general.shortcuts.openDefault',
+  'open-assistant': 'options.general.shortcuts.openAssistant',
+  'open-network': 'options.general.shortcuts.openNetwork',
+  'open-tools': 'options.general.shortcuts.openTools',
+  'inline-translate': 'options.general.shortcuts.inlineTranslate',
 }
 
 /** chrome.storage.sync 总配额 */
@@ -31,8 +32,8 @@ function formatSyncTime(timestamp: number): string {
   const date = new Date(timestamp)
   const sameDay = date.toDateString() === new Date().toDateString()
   return sameDay
-    ? date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    : date.toLocaleString('zh-CN', {
+    ? date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })
+    : date.toLocaleString(getLocale(), {
         month: 'numeric',
         day: 'numeric',
         hour: '2-digit',
@@ -40,23 +41,43 @@ function formatSyncTime(timestamp: number): string {
       })
 }
 
-const THEME_OPTIONS: Array<{ value: ThemeMode; label: string }> = [
-  { value: 'auto', label: '自动' },
-  { value: 'light', label: '浅色' },
-  { value: 'dark', label: '深色' },
-]
-
-/** 外观：与新标签页共用同一个主题设置 */
+/** 外观：主题与新标签页共用同一个设置；界面语言对所有页面和划词工具条生效 */
 function AppearanceCard() {
   const [mode, setMode] = useStorageItem(themeMode)
+  const [language, setLanguage] = useStorageItem(uiLanguage)
+
+  const themeOptions: Array<{ value: ThemeMode; label: string }> = [
+    { value: 'auto', label: t('options.general.appearance.themeAuto') },
+    { value: 'light', label: t('options.general.appearance.themeLight') },
+    { value: 'dark', label: t('options.general.appearance.themeDark') },
+  ]
+  // 语言名称用各自的语言写，方便看不懂当前界面语言的人也能找到
+  const languageOptions: Array<{ value: UiLanguage; label: string }> = [
+    { value: 'auto', label: t('common.language.auto') },
+    { value: 'zh-CN', label: '中文' },
+    { value: 'en', label: 'English' },
+  ]
 
   return (
-    <Card title='外观'>
-      <Row label='主题' hint='自动：18:00 – 6:00 使用深色。弹窗、设置页、侧边栏与新标签页统一生效'>
+    <Card title={t('options.general.appearance.title')}>
+      <Row
+        label={t('options.general.appearance.theme')}
+        hint={t('options.general.appearance.themeHint')}
+      >
         <Tabs
           value={normalizeThemeMode(mode)}
-          tabs={THEME_OPTIONS}
+          tabs={themeOptions}
           onChange={(value) => setMode(value as ThemeMode)}
+        />
+      </Row>
+      <Row
+        label={t('options.general.appearance.language')}
+        hint={t('options.general.appearance.languageHint')}
+      >
+        <Tabs
+          value={language}
+          tabs={languageOptions}
+          onChange={(value) => setLanguage(value as UiLanguage)}
         />
       </Row>
     </Card>
@@ -72,17 +93,17 @@ function ShortcutsCard() {
 
   return (
     <Card
-      title='快捷键'
+      title={t('options.general.shortcuts.title')}
       desc={
         import.meta.env.FIREFOX
-          ? '浏览器不允许扩展自行修改快捷键：在 about:addons 右上角齿轮 →「管理扩展快捷键」里自定义。'
-          : '浏览器不允许扩展自行修改快捷键，需要在扩展快捷键设置页里自定义；改完回到这里会自动刷新。'
+          ? t('options.general.shortcuts.descFirefox')
+          : t('options.general.shortcuts.desc')
       }
       extra={
         // Chrome 命令快捷键只能在系统设置页修改；Firefox 的 about:addons 扩展无权打开
         !import.meta.env.FIREFOX && (
           <Button onClick={() => void openShortcutSettings()} className='!px-2.5 !py-1 text-xs'>
-            自定义
+            {t('options.general.shortcuts.customize')}
             <ArrowUpRight className='size-3' aria-hidden />
           </Button>
         )
@@ -91,13 +112,13 @@ function ShortcutsCard() {
       <div className='flex flex-col gap-2'>
         {shortcuts.map((item) => (
           <div key={item.name} className='flex items-center justify-between text-sm'>
-            <span className='text-neutral-600'>{COMMAND_LABELS[item.name]}</span>
+            <span className='text-neutral-600'>{t(COMMAND_LABELS[item.name])}</span>
             {item.shortcut ? (
               <kbd className='rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600'>
                 {formatShortcut(item.shortcut)}
               </kbd>
             ) : (
-              <span className='text-xs text-neutral-500'>未设置</span>
+              <span className='text-xs text-neutral-500'>{t('common.notSet')}</span>
             )}
           </div>
         ))}
@@ -114,13 +135,18 @@ function SyncCard() {
   const syncing = running || status.state === 'syncing'
   const usage =
     status.bytesInUse !== undefined
-      ? `已用 ${(status.bytesInUse / 1024).toFixed(1)}KB / ${SYNC_QUOTA_BYTES / 1024}KB`
+      ? t('options.general.sync.usage', {
+          used: (status.bytesInUse / 1024).toFixed(1),
+          total: SYNC_QUOTA_BYTES / 1024,
+        })
       : ''
 
-  let summary = '尚未同步'
-  if (syncing) summary = '同步中…'
-  else if (status.state === 'error') summary = status.message || '同步失败'
-  else if (status.lastSyncedAt) summary = `上次同步 ${formatSyncTime(status.lastSyncedAt)}`
+  let summary = t('options.general.sync.never')
+  if (syncing) summary = t('options.general.sync.syncing')
+  else if (status.state === 'error') summary = status.message || t('options.general.sync.failed')
+  else if (status.lastSyncedAt) {
+    summary = t('options.general.sync.lastSynced', { time: formatSyncTime(status.lastSyncedAt) })
+  }
 
   const syncNow = async () => {
     setRunning(true)
@@ -133,11 +159,11 @@ function SyncCard() {
 
   return (
     <Card
-      title='跨设备同步'
-      desc='快捷导航、代理配置随浏览器账号自动同步到其他设备。'
+      title={t('options.general.sync.title')}
+      desc={t('options.general.sync.desc')}
       extra={
         <Button onClick={() => void syncNow()} disabled={syncing} className='!px-2.5 !py-1 text-xs'>
-          立即同步
+          {t('options.general.sync.syncNow')}
         </Button>
       }
     >
@@ -170,9 +196,9 @@ function BackupCard() {
       link.download = `devgo-backup-${backup.exportedAt.slice(0, 10)}.json`
       link.click()
       URL.revokeObjectURL(url)
-      setMessage('已导出')
+      setMessage(t('options.general.backup.exported'))
     } catch {
-      setMessage('导出失败')
+      setMessage(t('options.general.backup.exportFailed'))
     }
   }
 
@@ -181,22 +207,25 @@ function BackupCard() {
       const { imported, skipped } = await restoreBackup(await file.text())
       setMessage(
         skipped.length > 0
-          ? `已导入 ${imported} 项（跳过 ${skipped.length} 项无效数据）`
-          : `已导入 ${imported} 项，立即生效`,
+          ? t('options.general.backup.importedWithSkipped', { imported, skipped: skipped.length })
+          : t('options.general.backup.imported', { imported }),
       )
     } catch (error) {
-      setMessage(`导入失败：${error instanceof Error ? error.message : '未知错误'}`)
+      setMessage(
+        t('options.general.backup.importFailed', {
+          reason: error instanceof Error ? error.message : t('common.unknownError'),
+        }),
+      )
     }
   }
 
   return (
-    <Card
-      title='数据备份'
-      desc='导出 / 导入全部配置（快捷导航、网络、翻译、AI 模型等）。API Key 不会写入备份文件。'
-    >
+    <Card title={t('options.general.backup.title')} desc={t('options.general.backup.desc')}>
       <div className='flex items-center gap-2'>
-        <Button onClick={() => void exportBackup()}>导出配置</Button>
-        <Button onClick={() => fileInputRef.current?.click()}>导入配置</Button>
+        <Button onClick={() => void exportBackup()}>{t('options.general.backup.export')}</Button>
+        <Button onClick={() => fileInputRef.current?.click()}>
+          {t('options.general.backup.import')}
+        </Button>
         {message && <span className='ml-2 text-xs text-neutral-500'>{message}</span>}
       </div>
       <input
@@ -221,12 +250,15 @@ export default function GeneralSettings() {
 
   return (
     <div className='flex flex-col gap-5'>
-      <SectionHeader title='通用' desc='外观、弹窗、快捷键、同步与备份' />
+      <SectionHeader title={t('options.general.title')} desc={t('options.general.desc')} />
 
       <AppearanceCard />
 
-      <Card title='弹窗'>
-        <Row label='默认打开的页' hint='点击工具栏图标或按快捷键打开弹窗时定位的页面'>
+      <Card title={t('options.general.popup.title')}>
+        <Row
+          label={t('options.general.popup.defaultTab')}
+          hint={t('options.general.popup.defaultTabHint')}
+        >
           <Select
             value={defaultTab}
             options={POPUP_PAGES}
