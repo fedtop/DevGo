@@ -1,1 +1,32 @@
-{}
+{
+  "actions": {
+    "explain": {
+      "label": "解释",
+      "title": "结合上下文解释选中内容"
+    },
+    "summarize": {
+      "label": "总结",
+      "title": "提炼选中内容的要点"
+    },
+    "polish": {
+      "label": "润色",
+      "title": "让表达更通顺自然"
+    },
+    "fix": {
+      "label": "纠错",
+      "title": "修正错别字、语法和标点"
+    },
+    "formal": {
+      "label": "正式",
+      "title": "改写成更正式的书面语"
+    }
+  },
+  "errors": {
+    "customActionMissing": "这个自定义动作已被删除或没有填写提示词"
+  },
+  "test": {
+    "success": "连接成功，模型支持工具调用",
+    "noToolCall": "连接成功，但模型没有调用测试工具，可能不支持工具调用，建议换用更强的模型",
+    "timeout": "请求超时"
+  }
+}

@@ -5,6 +5,7 @@
  * 模型能结合上下文给出它在这篇文章里的含义。
  */
 import type { ChatMessage } from '@/api/llm'
+import { isZhLocale, type MessageKey } from '@/utils/i18n'
 import type { SelectionCustomAction } from '@/utils/settings'
 
 /** 阅读类动作：结果展示在气泡里 */
@@ -25,12 +26,16 @@ export function isCustomActionKey(action: string): action is CustomActionKey {
   return action.startsWith('custom:')
 }
 
-export const SELECTION_AI_ACTIONS: Record<SelectionAiAction, { label: string; title: string }> = {
-  explain: { label: '解释', title: '结合上下文解释选中内容' },
-  summarize: { label: '总结', title: '提炼选中内容的要点' },
-  polish: { label: '润色', title: '让表达更通顺自然' },
-  fix: { label: '纠错', title: '修正错别字、语法和标点' },
-  formal: { label: '正式', title: '改写成更正式的书面语' },
+/** 内置动作的名称与说明（文案 key，渲染时再 t()） */
+export const SELECTION_AI_ACTIONS: Record<
+  SelectionAiAction,
+  { labelKey: MessageKey; titleKey: MessageKey }
+> = {
+  explain: { labelKey: 'ai.actions.explain.label', titleKey: 'ai.actions.explain.title' },
+  summarize: { labelKey: 'ai.actions.summarize.label', titleKey: 'ai.actions.summarize.title' },
+  polish: { labelKey: 'ai.actions.polish.label', titleKey: 'ai.actions.polish.title' },
+  fix: { labelKey: 'ai.actions.fix.label', titleKey: 'ai.actions.fix.title' },
+  formal: { labelKey: 'ai.actions.formal.label', titleKey: 'ai.actions.formal.title' },
 }
 
 export const READ_ACTIONS: ReadAction[] = ['explain', 'summarize']
@@ -88,7 +93,8 @@ export function buildSelectionMessages(
       role: 'system',
       content:
         `你是浏览器划词助手。${task}\n` +
-        '回答使用简体中文（选中内容本身是中文且用户另有要求时除外），可以使用 Markdown，篇幅尽量精炼。',
+        // 回答语言跟随界面语言
+        `回答使用${isZhLocale() ? '简体中文' : 'English'}（用户另有要求时除外），可以使用 Markdown，篇幅尽量精炼。`,
     },
     {
       role: 'user',

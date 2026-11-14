@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 
-import { ACTION_ICONS, SCOPE_LABELS } from '@/features/selection/toolbar-actions'
+import {
+  ACTION_ICONS,
+  scopeLabel,
+  SELECTION_ACTION_SCOPES,
+} from '@/features/selection/toolbar-actions'
 import Button from '@/ui/Button'
 import IconButton from '@/ui/IconButton'
 import Tabs from '@/ui/Tabs'
+import { t } from '@/utils/i18n'
 import type { SelectionActionScope, SelectionCustomAction } from '@/utils/settings'
 
 import { INPUT_CLASS } from './layout'
@@ -44,8 +49,8 @@ export default function SelectionActionDialog({
   const save = () => {
     const name = draft.name.trim()
     const prompt = draft.prompt.trim()
-    if (!name) return setError('请填写名称')
-    if (!prompt) return setError('请填写提示词')
+    if (!name) return setError(t('options.selection.dialog.nameRequired'))
+    if (!prompt) return setError(t('options.selection.dialog.promptRequired'))
     onSave({ ...draft, name, prompt })
   }
 
@@ -63,28 +68,33 @@ export default function SelectionActionDialog({
       >
         <div className='flex items-center justify-between gap-3'>
           <h3 className='text-[15px] font-semibold text-neutral-900'>{title}</h3>
-          <IconButton label='关闭' onClick={onClose}>
+          <IconButton label={t('options.selection.dialog.close')} onClick={onClose}>
             <X />
           </IconButton>
         </div>
 
         <label className='flex flex-col gap-1.5'>
-          <span className='text-xs font-medium text-neutral-600'>名称</span>
+          <span className='text-xs font-medium text-neutral-600'>
+            {t('options.selection.dialog.name')}
+          </span>
           <input
             autoFocus
             value={draft.name}
             maxLength={ACTION_NAME_MAX}
-            placeholder='显示在工具条上，如「译成英文」'
+            placeholder={t('options.selection.dialog.namePlaceholder')}
             onChange={(event) => update({ name: event.target.value })}
             className={INPUT_CLASS}
           />
         </label>
 
         <div className='flex flex-col gap-1.5'>
-          <span className='text-xs font-medium text-neutral-600'>图标</span>
+          <span className='text-xs font-medium text-neutral-600'>
+            {t('options.selection.dialog.icon')}
+          </span>
           <div className='flex flex-wrap gap-1.5'>
-            {Object.entries(ACTION_ICONS).map(([key, { icon: Icon, label }]) => {
+            {Object.entries(ACTION_ICONS).map(([key, { icon: Icon, labelKey }]) => {
               const active = draft.icon === key
+              const label = t(labelKey)
               return (
                 <button
                   key={key}
@@ -107,42 +117,46 @@ export default function SelectionActionDialog({
         </div>
 
         <div className='flex flex-col gap-1.5'>
-          <span className='text-xs font-medium text-neutral-600'>适用范围</span>
+          <span className='text-xs font-medium text-neutral-600'>
+            {t('options.selection.dialog.scope')}
+          </span>
           <div>
             <Tabs
               value={draft.scope}
-              tabs={(Object.keys(SCOPE_LABELS) as SelectionActionScope[]).map((scope) => ({
+              tabs={SELECTION_ACTION_SCOPES.map((scope) => ({
                 value: scope,
-                label: SCOPE_LABELS[scope],
+                label: scopeLabel(scope),
               }))}
               onChange={(value) => update({ scope: value as SelectionActionScope })}
             />
           </div>
           <span className='text-xs leading-relaxed text-neutral-500'>
-            在输入框里选中文字时，结果可以一键「替换原文」，此时模型只输出处理后的文字。
+            {t('options.selection.dialog.scopeHint')}
           </span>
         </div>
 
         <label className='flex flex-col gap-1.5'>
-          <span className='text-xs font-medium text-neutral-600'>提示词</span>
+          <span className='text-xs font-medium text-neutral-600'>
+            {t('options.selection.dialog.prompt')}
+          </span>
           <textarea
             value={draft.prompt}
             rows={5}
             maxLength={PROMPT_MAX}
-            placeholder='告诉 AI 怎么处理选中的内容，如：把选中的内容翻译成地道的英文，只输出译文。'
+            placeholder={t('options.selection.dialog.promptPlaceholder')}
             onChange={(event) => update({ prompt: event.target.value })}
             className={`${INPUT_CLASS} resize-y leading-relaxed`}
           />
           <span className='text-xs leading-relaxed text-neutral-500'>
-            和内置动作一样，会自动附带选中内容所在的段落和网页标题，不用在提示词里写。
+            {t('options.selection.dialog.promptHint')}
           </span>
         </label>
 
         <div className='flex items-center justify-end gap-2'>
           {error && <span className='mr-auto text-xs text-rose-500'>{error}</span>}
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={onClose}>{t('options.selection.dialog.cancel')}</Button>
           <Button variant='primary' onClick={save}>
-            保存
+            {t('options.selection.dialog.save')}
           </Button>
         </div>
       </div>

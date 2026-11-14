@@ -7,6 +7,7 @@ import {
   hasExtensionRuntime,
   watchLocalSetting,
 } from '@/utils/content-settings'
+import { initI18n } from '@/utils/i18n'
 import '@/features/selection/style.css'
 
 const ENABLE_SELECTION_TRANSLATE_KEY = 'enableSelectionTranslate'
@@ -18,6 +19,8 @@ export default defineContentScript({
   runAt: 'document_idle',
   async main(ctx) {
     if (!hasExtensionRuntime()) return
+    // 先读取界面语言，再挂载工具条
+    await initI18n()
 
     const ui = await createShadowRootUi(ctx, {
       name: 'devgo-selection-ui',

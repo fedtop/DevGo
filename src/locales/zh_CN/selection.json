@@ -1,1 +1,70 @@
-{}
+{
+  "toolbar": {
+    "translate": "翻译",
+    "translateTitle": "翻译选中文本",
+    "more": "更多",
+    "moreActions": "更多动作",
+    "ask": "问 AI",
+    "askTitle": "在侧边栏里就选中内容提问"
+  },
+  "bubble": {
+    "customAction": "自定义动作",
+    "pin": "固定面板（不随页面滚动、点击外部不关闭）",
+    "unpin": "取消固定",
+    "close": "关闭",
+    "copy": "复制",
+    "copied": "已复制",
+    "followUp": "继续追问",
+    "followUpCustom": "用「{name}」处理这段内容",
+    "followUpBuiltin": "{action}这段内容",
+    "replace": "替换原文",
+    "retry": "重试"
+  },
+  "translate": {
+    "loading": "翻译中…",
+    "speak": "朗读",
+    "failed": "翻译失败，请检查网络或切换翻译引擎",
+    "failedWithDetail": "翻译失败：{detail}"
+  },
+  "ai": {
+    "thinking": "思考中…",
+    "generating": "生成中…",
+    "extensionUpdated": "扩展已更新，请刷新页面后重试",
+    "emptyResult": "模型没有返回内容",
+    "disconnected": "连接中断，请重试",
+    "errorWithDetail": "{error}：{detail}"
+  },
+  "scope": {
+    "page": "网页文字",
+    "input": "输入框",
+    "both": "两者都适用"
+  },
+  "icons": {
+    "sparkles": "通用",
+    "languages": "翻译",
+    "bug": "报错",
+    "braces": "JSON",
+    "code": "代码",
+    "lightbulb": "灵感",
+    "penLine": "写作",
+    "listChecks": "要点",
+    "fileText": "文档",
+    "search": "查找",
+    "messageCircleQuestion": "提问",
+    "wandSparkles": "改写"
+  },
+  "templates": {
+    "translateToEnglish": {
+      "name": "译成英文",
+      "prompt": "把选中的内容翻译成地道、自然的英文。保留代码、专有名词和格式；只输出译文，不要解释。"
+    },
+    "explainError": {
+      "name": "解释报错",
+      "prompt": "选中的是一段程序报错或日志。先用一句话说明出错的原因，再按可能性从高到低列出排查和修复步骤，必要时给出示例代码。"
+    },
+    "toJson": {
+      "name": "转 JSON",
+      "prompt": "把选中的内容整理成结构清晰的 JSON：根据内容推断合适的字段名（英文小驼峰）和类型。只输出 JSON 本身，不要用代码块包裹，不要解释。"
+    }
+  }
+}

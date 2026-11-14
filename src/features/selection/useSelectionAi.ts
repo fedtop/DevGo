@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { SelectionActionId, SelectionContext } from '@/features/ai/actions'
 import { describeServiceError } from '@/features/translate/errors'
+import { t } from '@/utils/i18n'
 import {
   SELECTION_AI_PORT_NAME,
   type SelectionAiEvent,
@@ -44,7 +45,7 @@ export function useSelectionAi() {
       try {
         port = browser.runtime.connect({ name: SELECTION_AI_PORT_NAME })
       } catch {
-        setResult({ ...EMPTY, status: 'error', error: '扩展已更新，请刷新页面后重试' })
+        setResult({ ...EMPTY, status: 'error', error: t('selection.ai.extensionUpdated') })
         return
       }
       portRef.current = port
@@ -61,7 +62,7 @@ export function useSelectionAi() {
             case 'done':
               return base.text.trim()
                 ? { ...base, status: 'done' }
-                : { ...base, status: 'error', error: '模型没有返回内容' }
+                : { ...base, status: 'error', error: t('selection.ai.emptyResult') }
             case 'error': {
               const friendly = describeServiceError(event.error.code)
               return {
@@ -69,7 +70,10 @@ export function useSelectionAi() {
                 status: 'error',
                 error:
                   event.error.message && event.error.message !== friendly
-                    ? `${friendly}：${event.error.message}`
+                    ? t('selection.ai.errorWithDetail', {
+                        error: friendly,
+                        detail: event.error.message,
+                      })
                     : friendly,
               }
             }
@@ -82,7 +86,7 @@ export function useSelectionAi() {
         portRef.current = null
         setResult((current) =>
           current && (current.status === 'loading' || current.status === 'streaming')
-            ? { ...current, status: 'error', error: '连接中断，请重试' }
+            ? { ...current, status: 'error', error: t('selection.ai.disconnected') }
             : current,
         )
       })

@@ -15,6 +15,7 @@ import {
 import { readChatModel } from '@/features/ai/model'
 import { isAbortError, toTranslateError, TranslateError } from '@/features/translate/errors'
 import type { LlmConfig } from '@/features/translate/llm-config'
+import { t } from '@/utils/i18n'
 import {
   isOpenAssistantMessage,
   type SelectionAiEvent,
@@ -38,7 +39,7 @@ async function buildMessages(
   const id = action.slice('custom:'.length)
   const custom = (await selectionCustomActions.getValue()).find((item) => item.id === id)
   if (!custom?.prompt?.trim())
-    throw new TranslateError('config', '这个自定义动作已被删除或没有填写提示词')
+    throw new TranslateError('config', t('ai.errors.customActionMissing'))
   return buildCustomActionMessages(custom, text, context, target)
 }
 
@@ -131,15 +132,15 @@ export async function testAssistant(
     })
 
     return toolCalls.some((call) => call.function.name === TEST_TOOL_NAME)
-      ? { ok: true, sample: '连接成功，模型支持工具调用' }
+      ? { ok: true, sample: t('ai.test.success') }
       : {
           ok: true,
           warning: true,
-          sample: '连接成功，但模型没有调用测试工具，可能不支持工具调用，建议换用更强的模型',
+          sample: t('ai.test.noToolCall'),
         }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
-      return { ok: false, error: { code: 'network', message: '请求超时' } }
+      return { ok: false, error: { code: 'network', message: t('ai.test.timeout') } }
     }
     return { ok: false, error: toTranslateError(error).toJSON() }
   }

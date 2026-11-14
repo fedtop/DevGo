@@ -11,6 +11,7 @@ import {
 import { isChatModelReady } from '@/features/ai/model'
 import type { DictResult } from '@/types/dict'
 import Markdown from '@/ui/Markdown'
+import { t, useLocale } from '@/utils/i18n'
 import { sendRuntimeMessage, type OpenAssistantMessage } from '@/utils/messaging'
 import {
   assistantLlmApiKey,
@@ -140,7 +141,7 @@ function useActionLister(aiAvailable: boolean) {
 function fallbackAction(mode: Mode): ToolbarAction {
   return {
     id: mode,
-    label: isCustomActionKey(mode) ? '自定义动作' : mode,
+    label: isCustomActionKey(mode) ? t('selection.bubble.customAction') : mode,
     title: '',
     icon: Sparkles,
     write: false,
@@ -207,6 +208,8 @@ function useAnchorRect(snapshot: SelectionSnapshot | null): Rect | null {
 
 /** 划词工具条与结果面板：翻译（引擎同翻译设置）+ AI 解释 / 总结 / 问 AI + 输入框内的润色改写 */
 export default function SelectionApp() {
+  // 界面语言变化时整个工具条重新渲染
+  useLocale()
   const aiAvailable = useAiAvailable()
   const listActions = useActionLister(aiAvailable)
   const [toolbar, setToolbar] = useState<SelectionSnapshot | null>(null)
@@ -303,8 +306,8 @@ export default function SelectionApp() {
       text:
         result?.text ||
         (result?.error
-          ? `翻译失败：${result.error.message}`
-          : '翻译失败，请检查网络或切换翻译引擎'),
+          ? t('selection.translate.failedWithDetail', { detail: result.error.message })
+          : t('selection.translate.failed')),
       dict,
     })
   }
@@ -479,13 +482,13 @@ export default function SelectionApp() {
               />
             )}
             <IconButton
-              label={pinned ? '取消固定' : '固定面板（不随页面滚动、点击外部不关闭）'}
+              label={pinned ? t('selection.bubble.unpin') : t('selection.bubble.pin')}
               active={pinned}
               onClick={togglePin}
             >
               {pinned ? <PinOff /> : <Pin />}
             </IconButton>
-            <IconButton label='关闭' onClick={close}>
+            <IconButton label={t('selection.bubble.close')} onClick={close}>
               <X />
             </IconButton>
           </div>
@@ -505,7 +508,7 @@ export default function SelectionApp() {
           <BubbleFooter>
             {bubble.mode === 'translate' && translation?.status === 'done' && (
               <FooterButton icon={copied ? Check : Copy} onClick={() => copy(translation.text)}>
-                {copied ? '已复制' : '复制'}
+                {copied ? t('selection.bubble.copied') : t('selection.bubble.copy')}
               </FooterButton>
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'done' && (
@@ -516,17 +519,21 @@ export default function SelectionApp() {
                     onClick={() =>
                       askInSidePanel(bubble.snapshot, {
                         question: isCustomActionKey(bubble.mode)
-                          ? `用「${currentAction?.label ?? '自定义动作'}」处理这段内容`
-                          : `${currentAction?.label ?? '解释'}这段内容`,
+                          ? t('selection.bubble.followUpCustom', {
+                              name: currentAction?.label ?? t('selection.bubble.customAction'),
+                            })
+                          : t('selection.bubble.followUpBuiltin', {
+                              action: currentAction?.label ?? t('ai.actions.explain.label'),
+                            }),
                         answer: aiResult.text,
                       })
                     }
                   >
-                    继续追问
+                    {t('selection.bubble.followUp')}
                   </FooterButton>
                 )}
                 <FooterButton icon={copied ? Check : Copy} onClick={() => copy(aiResult.text)}>
-                  {copied ? '已复制' : '复制'}
+                  {copied ? t('selection.bubble.copied') : t('selection.bubble.copy')}
                 </FooterButton>
                 {writeMode && bubble.snapshot.editable && (
                   <FooterButton
@@ -534,14 +541,14 @@ export default function SelectionApp() {
                     icon={Replace}
                     onClick={() => replace(bubble.snapshot, aiResult.text)}
                   >
-                    替换原文
+                    {t('selection.bubble.replace')}
                   </FooterButton>
                 )}
               </>
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'error' && (
               <FooterButton icon={RefreshCw} onClick={() => start(bubble.snapshot, bubble.mode)}>
-                重试
+                {t('selection.bubble.retry')}
               </FooterButton>
             )}
           </BubbleFooter>
@@ -601,7 +608,7 @@ function Toolbar({
           onSelect={onAction}
           trigger={(open) => (
             <span className={`${TOOL_BUTTON} ${open ? '!bg-black/[0.06] dark:!bg-white/10' : ''}`}>
-              更多
+              {t('selection.toolbar.more')}
               <ChevronDown
                 className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
                 aria-hidden
@@ -617,11 +624,12 @@ function Toolbar({
           )}
           <button
             type='button'
-            title='在侧边栏里就选中内容提问'
+            title={t('selection.toolbar.askTitle')}
             onClick={onAsk}
             className={TOOL_BUTTON}
           >
-            <MessageSquareText className='size-3.5' aria-hidden />问 AI
+            <MessageSquareText className='size-3.5' aria-hidden />
+            {t('selection.toolbar.ask')}
           </button>
         </>
       )}
@@ -634,7 +642,7 @@ function MoreMenu({
   actions,
   onSelect,
   trigger,
-  title = '更多动作',
+  title,
   align = 'left',
 }: {
   align?: 'left' | 'right'
@@ -644,12 +652,13 @@ function MoreMenu({
   title?: string
 }) {
   const [open, setOpen] = useState(false)
+  const menuLabel = title ?? t('selection.toolbar.moreActions')
   return (
     <div className='relative shrink-0'>
       <button
         type='button'
-        title={title}
-        aria-label={title}
+        title={menuLabel}
+        aria-label={menuLabel}
         aria-haspopup='menu'
         aria-expanded={open}
         onMouseDown={(event) => event.preventDefault()}
@@ -717,7 +726,11 @@ function IconButton({
 
 function TranslateView({ state, source }: { state: TranslateState | null; source: string }) {
   if (!state || state.status === 'loading') {
-    return <p className='animate-pulse text-neutral-500 dark:text-neutral-400'>翻译中…</p>
+    return (
+      <p className='animate-pulse text-neutral-500 dark:text-neutral-400'>
+        {t('selection.translate.loading')}
+      </p>
+    )
   }
 
   return (
@@ -727,7 +740,7 @@ function TranslateView({ state, source }: { state: TranslateState | null; source
           <span className='font-semibold'>{state.dict.word}</span>
           <button
             type='button'
-            title='朗读'
+            title={t('selection.translate.speak')}
             onClick={() => speak(source, 'en-US')}
             className='flex cursor-pointer border-0 bg-transparent p-0 text-neutral-400 hover:text-neutral-800 dark:hover:text-white'
           >
@@ -763,7 +776,7 @@ function AiView({ result }: { result: ReturnType<typeof useSelectionAi>['result'
     return (
       <div className='flex flex-col gap-1'>
         <p className='animate-pulse text-neutral-500 dark:text-neutral-400'>
-          {result.reasoning ? '思考中…' : '生成中…'}
+          {result.reasoning ? t('selection.ai.thinking') : t('selection.ai.generating')}
         </p>
         {result.reasoning && (
           <p className='line-clamp-3 text-xs text-neutral-400'>{result.reasoning.slice(-240)}</p>

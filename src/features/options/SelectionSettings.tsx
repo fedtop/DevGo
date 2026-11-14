@@ -3,17 +3,18 @@ import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from 'lucide-react
 
 import {
   actionIcon,
-  BUILTIN_ACTIONS,
   DEFAULT_ACTION_ICON,
+  getBuiltinActions,
+  getSelectionActionTemplates,
   MAX_TOOLBAR_ACTIONS,
   normalizeCustomActions,
-  SCOPE_LABELS,
-  SELECTION_ACTION_TEMPLATES,
+  scopeLabel,
 } from '@/features/selection/toolbar-actions'
 import Button from '@/ui/Button'
 import ConfirmDialog from '@/ui/ConfirmDialog'
 import IconButton from '@/ui/IconButton'
 import Switch from '@/ui/Switch'
+import { t } from '@/utils/i18n'
 import {
   enableSelectionTranslate,
   selectionAiEnabled,
@@ -66,32 +67,34 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
 
   return (
     <Card
-      title='工具条动作'
-      desc={`工具条最多直接显示 ${MAX_TOOLBAR_ACTIONS} 个动作，其余收进「更多」；内置动作排在前面，自定义动作按下面的顺序排在后面。网页文字上另有「问 AI」，打开侧边栏带着选中内容提问。`}
+      title={t('options.selection.actions.title')}
+      desc={t('options.selection.actions.desc', { count: MAX_TOOLBAR_ACTIONS })}
       extra={
         <Button
           onClick={() => setEditing({ draft: EMPTY_DRAFT })}
           className='!px-2.5 !py-1 text-xs'
         >
           <Plus className='size-3.5' aria-hidden />
-          新增动作
+          {t('options.selection.actions.add')}
         </Button>
       }
     >
       {!aiEnabled && (
         <p className='rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700'>
-          AI 动作已关闭或未配置对话模型，工具条上只会显示「翻译」。
+          {t('options.selection.actions.aiUnavailable')}
         </p>
       )}
 
       <div className='flex flex-col gap-2'>
-        <h3 className='text-xs font-medium text-neutral-500'>内置动作</h3>
+        <h3 className='text-xs font-medium text-neutral-500'>
+          {t('options.selection.actions.builtin')}
+        </h3>
         <ul className='flex flex-col divide-y divide-neutral-100'>
-          {BUILTIN_ACTIONS.map(({ id, label, title, icon: Icon, scope }) => (
+          {getBuiltinActions().map(({ id, label, title, icon: Icon, scope }) => (
             <li key={id} className='flex items-center gap-3 py-2'>
               <Icon className='size-4 shrink-0 text-neutral-500' strokeWidth={1.8} aria-hidden />
               <span className='text-sm text-neutral-900'>{label}</span>
-              <ScopeTag>{SCOPE_LABELS[scope]}</ScopeTag>
+              <ScopeTag>{scopeLabel(scope)}</ScopeTag>
               <span className='min-w-0 flex-1 truncate text-xs text-neutral-500'>{title}</span>
               <Switch
                 checked={!hidden.includes(id)}
@@ -103,7 +106,9 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
       </div>
 
       <div className='flex flex-col gap-2 border-t border-neutral-100 pt-3'>
-        <h3 className='text-xs font-medium text-neutral-500'>自定义动作</h3>
+        <h3 className='text-xs font-medium text-neutral-500'>
+          {t('options.selection.actions.custom')}
+        </h3>
         {custom.length > 0 ? (
           <ul className='flex flex-col divide-y divide-neutral-100'>
             {custom.map((action, index) => {
@@ -116,7 +121,7 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
                     aria-hidden
                   />
                   <span className='shrink-0 text-sm text-neutral-900'>{action.name}</span>
-                  <ScopeTag>{SCOPE_LABELS[action.scope]}</ScopeTag>
+                  <ScopeTag>{scopeLabel(action.scope)}</ScopeTag>
                   <span
                     className='min-w-0 flex-1 truncate text-xs text-neutral-500'
                     title={action.prompt}
@@ -125,7 +130,7 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
                   </span>
                   <div className='flex shrink-0 items-center'>
                     <IconButton
-                      label='上移'
+                      label={t('options.selection.actions.moveUp')}
                       disabled={index === 0}
                       onClick={() => move(index, -1)}
                       className='!size-7 [&_svg]:!size-4'
@@ -133,7 +138,7 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
                       <ArrowUp />
                     </IconButton>
                     <IconButton
-                      label='下移'
+                      label={t('options.selection.actions.moveDown')}
                       disabled={index === custom.length - 1}
                       onClick={() => move(index, 1)}
                       className='!size-7 [&_svg]:!size-4'
@@ -141,14 +146,14 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
                       <ArrowDown />
                     </IconButton>
                     <IconButton
-                      label='编辑'
+                      label={t('options.selection.actions.edit')}
                       onClick={() => setEditing({ id: action.id, draft: action })}
                       className='!size-7 [&_svg]:!size-4'
                     >
                       <Pencil />
                     </IconButton>
                     <IconButton
-                      label='删除'
+                      label={t('options.selection.actions.delete')}
                       onClick={() => setDeleting(action)}
                       className='!size-7 hover:!text-rose-600 [&_svg]:!size-4'
                     >
@@ -160,15 +165,14 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
             })}
           </ul>
         ) : (
-          <p className='text-xs text-neutral-500'>
-            还没有自定义动作。填一个名称和一段提示词，就能在工具条上一键让 AI
-            按你的要求处理选中内容。
-          </p>
+          <p className='text-xs text-neutral-500'>{t('options.selection.actions.empty')}</p>
         )}
 
         <div className='flex flex-wrap items-center gap-2 pt-1'>
-          <span className='text-xs text-neutral-500'>从示例添加：</span>
-          {SELECTION_ACTION_TEMPLATES.map((template) => {
+          <span className='text-xs text-neutral-500'>
+            {t('options.selection.actions.fromTemplates')}
+          </span>
+          {getSelectionActionTemplates().map((template) => {
             const Icon = actionIcon(template.icon)
             const added = custom.some((item) => item.name === template.name)
             return (
@@ -176,7 +180,7 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
                 key={template.name}
                 type='button'
                 disabled={added}
-                title={added ? '已添加' : template.prompt}
+                title={added ? t('options.selection.actions.templateAdded') : template.prompt}
                 onClick={() => setStored([...custom, { id: crypto.randomUUID(), ...template }])}
                 className='flex items-center gap-1 rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50'
               >
@@ -195,7 +199,11 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
 
       {editing && (
         <SelectionActionDialog
-          title={editing.id ? '编辑动作' : '新增动作'}
+          title={
+            editing.id
+              ? t('options.selection.actions.editTitle')
+              : t('options.selection.actions.add')
+          }
           initial={editing.draft}
           onSave={save}
           onClose={() => setEditing(null)}
@@ -203,15 +211,15 @@ function ActionsCard({ aiEnabled }: { aiEnabled: boolean }) {
       )}
       {deleting && (
         <ConfirmDialog
-          title={`删除动作「${deleting.name}」？`}
-          confirmLabel='删除'
+          title={t('options.selection.actions.deleteTitle', { name: deleting.name })}
+          confirmLabel={t('options.selection.actions.delete')}
           onConfirm={() => {
             setStored(custom.filter((item) => item.id !== deleting.id))
             setDeleting(null)
           }}
           onClose={() => setDeleting(null)}
         >
-          <p>删除后工具条上不再显示这个动作，提示词也会一起删除。</p>
+          <p>{t('options.selection.actions.deleteDesc')}</p>
         </ConfirmDialog>
       )}
     </Card>
@@ -226,23 +234,23 @@ export default function SelectionSettings() {
 
   return (
     <div className='flex flex-col gap-5'>
-      <SectionHeader title='划词' desc='在网页上选中文字后弹出的工具条' />
+      <SectionHeader title={t('options.selection.title')} desc={t('options.selection.desc')} />
 
-      <Card title='划词工具条'>
-        <Row label='启用划词' hint='选中网页文字后在旁边显示工具条；单个英文单词同时显示词典释义'>
+      <Card title={t('options.selection.toolbar.title')}>
+        <Row
+          label={t('options.selection.toolbar.enable')}
+          hint={t('options.selection.toolbar.enableHint')}
+        >
           <Switch checked={enabled} onChange={setEnabled} />
         </Row>
-        <Row
-          label='AI 动作'
-          hint='需要配置可用的对话模型（未单独配置时沿用翻译模型）；关闭后只保留翻译'
-        >
+        <Row label={t('options.selection.toolbar.ai')} hint={t('options.selection.toolbar.aiHint')}>
           <Switch checked={aiEnabled} onChange={setAiEnabled} disabled={!enabled} />
         </Row>
       </Card>
 
       <Card
-        title='停用划词的网站'
-        desc='在这些网站上不显示划词工具条。在弹窗「功能」页可以一键开关当前网站。'
+        title={t('options.selection.disabledHosts.title')}
+        desc={t('options.selection.disabledHosts.desc')}
       >
         {disabledHosts.length > 0 ? (
           <ul className='flex flex-wrap gap-2'>
@@ -254,7 +262,7 @@ export default function SelectionSettings() {
                 {host}
                 <button
                   type='button'
-                  aria-label={`移除 ${host}`}
+                  aria-label={t('options.selection.disabledHosts.remove', { host })}
                   onClick={() => setDisabledHosts(disabledHosts.filter((item) => item !== host))}
                   className='flex h-4 w-4 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-600'
                 >
@@ -264,7 +272,7 @@ export default function SelectionSettings() {
             ))}
           </ul>
         ) : (
-          <p className='text-xs text-neutral-500'>暂无</p>
+          <p className='text-xs text-neutral-500'>{t('options.selection.disabledHosts.empty')}</p>
         )}
       </Card>
 
