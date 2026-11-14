@@ -106,6 +106,13 @@ pnpm lint
 pnpm format:check
 ```
 
+文档截图（按语言 × 明暗主题批量生成，详见 `scripts/ui-shots/README.md`）：
+
+```bash
+pnpm shots -- --all
+pnpm shots:sync
+```
+
 ## 构建与打包
 
 构建产物：
