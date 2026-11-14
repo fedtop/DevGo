@@ -94,23 +94,59 @@ function findChromeForTesting() {
   return ''
 }
 
-/** 起一个静态服务托管 fixture 演示页，返回 { origin, close } */
+/** 起一个静态服务托管 fixture 演示页（支持探活与重启），返回 { origin, close, alive, restart } */
 async function serveFixture() {
   const root = join(here, 'fixture')
-  const server = createServer((req, res) => {
-    const path = req.url === '/' || req.url === '/index.html' ? '/index.html' : req.url
-    const file = join(root, path)
-    if (!file.startsWith(root) || !existsSync(file)) {
-      res.writeHead(404).end('not found')
-      return
+  let server
+  const handler = (req, res) => {
+    try {
+      const path = req.url === '/' || req.url === '/index.html' ? '/index.html' : req.url
+      const file = join(root, path)
+      if (!file.startsWith(root) || !existsSync(file)) {
+        res.writeHead(404).end('not found')
+        return
+      }
+      const types = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.css': 'text/css' }
+      const data = readFileSync(file)
+      res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' })
+      res.end(data)
+    } catch {
+      try {
+        res.writeHead(404).end()
+      } catch {
+        // socket 可能已被浏览器断开
+      }
     }
-    const types = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.css': 'text/css' }
-    res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' })
-    res.end(readFileSync(file))
-  })
-  await new Promise((r) => server.listen(0, '127.0.0.1', r))
-  const { port } = server.address()
-  return { origin: `http://127.0.0.1:${port}`, close: () => server.close() }
+  }
+  server = createServer(handler)
+  server.on('clientError', (_err, socket) => socket?.destroy?.())
+  const listen = (srv) =>
+    new Promise((r) => {
+      srv.listen(0, '127.0.0.1', r)
+    })
+  const originNow = () => `http://127.0.0.1:${server.address().port}`
+  await listen(server)
+  return {
+    get origin() {
+      return `http://127.0.0.1:${server.address().port}`
+    },
+    close: () => server.close(),
+    alive: async () => {
+      try {
+        const res = await fetch(`${originNow()}/index.html`)
+        return res.ok
+      } catch (error) {
+        console.error('fixture probe error:', String(error).slice(0, 120))
+        return false
+      }
+    },
+    restart: async () => {
+      server.close()
+      server = createServer(handler)
+      server.on('clientError', (_err, socket) => socket?.destroy?.())
+      await listen(server)
+    },
+  }
 }
 
 // ---------- 启动浏览器 ----------
@@ -121,6 +157,41 @@ const outDir = join(OUT, LANG, THEME)
 mkdirSync(outDir, { recursive: true })
 
 const fixture = await serveFixture()
+// 本地 OpenAI 兼容 mock：润色 / 整页翻译场景用（确定性文本，不依赖外网）
+const startMock = () =>
+  new Promise((done) => {
+    const REPLY =
+      LANG === 'en'
+        ? 'This paragraph explains how browser extensions work: built with standard web technologies, able to read and modify pages, and talk to external services.'
+        : '这段文字介绍的是浏览器扩展的工作方式：扩展用标准 Web 技术构建，可以读取并修改页面、调用外部服务。'
+    const server = createServer((req, res) => {
+      if (req.method === 'POST' && req.url?.includes('/chat/completions')) {
+        let body = ''
+        req.on('data', (c) => (body += c))
+        req.on('end', () => {
+          res.writeHead(200, { 'content-type': 'text/event-stream' })
+          for (const chunk of REPLY.match(/.{1,6}/g) ?? []) {
+            res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: chunk } }] })}\n\n`)
+          }
+          res.write('data: [DONE]\n\n')
+          res.end()
+        })
+        return
+      }
+      if (req.url?.includes('/models')) {
+        res.writeHead(200, { 'content-type': 'application/json' })
+        res.end(JSON.stringify({ data: [{ id: 'devgo-mock' }] }))
+        return
+      }
+      try {
+        res.writeHead(404).end()
+      } catch {
+        // socket 可能已被断开
+      }
+    })
+    server.listen(0, '127.0.0.1', () => done(server.address().port))
+  })
+const mockPort = await startMock()
 const chrome = spawn(
   CHROME,
   [
@@ -183,9 +254,12 @@ if (!extId) {
 let ws
 let seq = 0
 const pending = new Map()
-const wirePage = async () => {
+const wirePage = async (preferUrl) => {
   const targets = await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`)).json()
-  const page = targets.find((t) => t.type === 'page')
+  const pages = targets.filter((t) => t.type === 'page')
+  const page = preferUrl
+    ? (pages.find((t) => t.url.startsWith(preferUrl)) ?? pages[pages.length - 1])
+    : pages[0]
   if (!page) throw new Error('no page target')
   ws = new WebSocket(page.webSocketDebuggerUrl)
   await new Promise((r) => (ws.onopen = r))
@@ -199,6 +273,24 @@ const wirePage = async () => {
     }
   }
 }
+const browserSend = (method, params = {}) =>
+  new Promise((r) => {
+    void (async () => {
+      const ver = await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/version`)).json()
+      const b = new WebSocket(ver.webSocketDebuggerUrl)
+      await new Promise((rr) => (b.onopen = rr))
+      const res = await new Promise((rr) => {
+        b.onmessage = (e) => {
+          const m = JSON.parse(e.data)
+          if (m.id === 777) rr(m)
+        }
+        b.send(JSON.stringify({ id: 777, method, params }))
+        setTimeout(() => rr({}), 8000)
+      })
+      b.close()
+      r(res)
+    })()
+  })
 await wirePage()
 const send = (method, params = {}, timeoutMs = 25000 * SCALE) =>
   new Promise((r) => {
@@ -229,8 +321,18 @@ const go = async (path, w, h) => {
     deviceScaleFactor: 2,
     mobile: false,
   })
-  await send('Page.navigate', { url: base + path })
+  const url = path.startsWith('http') ? path : base + path
+  await send('Page.navigate', { url })
   await sleep(1600)
+  // 偶发导航落在错误页（网络服务抽风）：新开标签页重试一次
+  const href = await ev('location.href')
+  if (href && href.includes('chrome-error')) {
+    console.error('chrome-error, reopening tab for', url)
+    await browserSend('Target.createTarget', { url })
+    await sleep(1500)
+    await wirePage(url)
+    await sleep(800)
+  }
 }
 
 // i18n 审计：残留中文、被截断的文字、横向溢出的元素（英文界面才查残留中文）
@@ -364,6 +466,207 @@ try {
   }
 } catch (error) {
   console.error('page scenes failed:', error)
+}
+
+// ---------- 悬停翻译气泡（lookup 页配图，dwell 模式） ----------
+// fixture 服务可能因早前异常中断，探活并按需重启
+if (!(await fixture.alive())) await fixture.restart()
+try {
+  await go(`${fixture.origin}/index.html`, 1280, 800)
+  await sleep(2000)
+  let hover = null
+  for (let i = 0; i < 5 && !hover; i++) {
+    hover = await ev(
+      "(() => { const p = document.querySelector('#p1'); if (!p) return null; const r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })()",
+    )
+    if (!hover) await sleep(700)
+  }
+  if (!hover) throw new Error('fixture #p1 not found')
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: hover.x, y: hover.y })
+  await sleep(3000)
+  await shot('hover-translate')
+} catch (error) {
+  console.error('hover scene failed:', error)
+}
+
+// ---------- 输入框润色（selection-toolbar 页第二场景，本地 mock 模型） ----------
+if (!(await fixture.alive())) await fixture.restart()
+try {
+  await go('/options.html', 1280, 900)
+  await ev(
+    `chrome.storage.local.set({ assistantLlmConfig: { preset: 'custom', baseUrl: 'http://127.0.0.1:${mockPort}/v1', model: 'devgo-mock', prompt: '' }, assistantLlmApiKey: 'mock-key', uiLanguage: '${LANG}', themeMode: '${THEME}' })`,
+  )
+  await go(`${fixture.origin}/index.html`, 1280, 800)
+  await sleep(2000)
+  let boxInfo = null
+  for (let i = 0; i < 5 && !boxInfo; i++) {
+    boxInfo = await ev(
+      "(() => { const ta = document.querySelector('textarea'); if (!ta) return null; ta.focus(); const r = ta.getBoundingClientRect(); return { x: r.left + 12, y: r.top + 10 } })()",
+    )
+    if (!boxInfo) await sleep(700)
+  }
+  if (!boxInfo) throw new Error('fixture textarea not found')
+  await send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    x: boxInfo.x,
+    y: boxInfo.y,
+    button: 'left',
+    clickCount: 1,
+  })
+  await send('Input.dispatchMouseEvent', {
+    type: 'mouseMoved',
+    x: boxInfo.x + 300,
+    y: boxInfo.y + 4,
+    button: 'left',
+  })
+  await send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    x: boxInfo.x + 300,
+    y: boxInfo.y + 4,
+    button: 'left',
+    clickCount: 1,
+  })
+  await sleep(1200)
+  const clicked = await ev(`(() => {
+    const host = [...document.querySelectorAll('*')].find((e) => e.shadowRoot && e.tagName.toLowerCase().includes('selection'))
+    if (!host) return 'no-host'
+    const btn = [...host.shadowRoot.querySelectorAll('button')].find((b) => b.textContent.includes('润色'))
+    if (!btn) return 'no-btn'
+    btn.click(); return 'clicked'
+  })()`)
+  console.error('input polish:', clicked)
+  await sleep(3000)
+  await shot('input-polish-replace')
+} catch (error) {
+  console.error('input-polish scene failed:', error)
+}
+
+// ---------- 元素级卡片裁切（glm2 阶段二配图；hash 切换分区异步渲染，轮询等待） ----------
+const shotCard = async (name, text) => {
+  let rect = null
+  const find = () =>
+    ev(`(() => {
+      const hits = [...document.querySelectorAll('h2,h3,h4,strong,b,p,span,div')].filter(
+        (e) => e.children.length === 0 && e.textContent.trim().includes('${text}'),
+      )
+      const inCard = hits.map((e) => e.closest('section') ?? e.closest('[class*=rounded]')).filter(Boolean)
+      if (!inCard.length) return null
+      const r = inCard[0].getBoundingClientRect()
+      return { x: r.x, y: r.y + window.scrollY, width: r.width, height: r.height }
+    })()`)
+  // 先轮询等待分区渲染；仍未出现就强制重载一次再轮询（hash 直跳偶发不触发渲染）
+  for (let i = 0; i < 12 && !rect; i++) {
+    rect = await find()
+    if (!rect) await sleep(600)
+  }
+  if (!rect) {
+    console.error('card still missing, reloading:', name)
+    await send('Page.reload', {})
+    await sleep(2500)
+    for (let i = 0; i < 10 && !rect; i++) {
+      rect = await find()
+      if (!rect) await sleep(600)
+    }
+  }
+  if (!rect) {
+    console.error(`card not found: ${text} (${name})`)
+    return
+  }
+  await shot(name, { rect })
+}
+
+// CORS 卡片（popup 网络页里的一小块，供 cors.md 使用）
+await go('/options.html', 1280, 900)
+await ev(`chrome.storage.local.set({ popupLastActiveTab: 'network', popupInitialTab: '' })`)
+await go('/popup.html', 500, 640)
+await sleep(600)
+await shotCard('cors-card', 'CORS')
+
+if (!(await fixture.alive())) await fixture.restart()
+await go('/options.html?shot=sync#general', 1280, 900)
+await sleep(800)
+await shotCard('sync-backup-card', '数据备份')
+await go('/options.html?shot=proxy#network', 1280, 900)
+await sleep(800)
+await shotCard('proxy-mode-card', '网络模式')
+await shotCard('proxy-auto-rules-card', '自动模式')
+
+// ---------- 整页翻译（LLM mock） ----------
+if (!(await fixture.alive())) await fixture.restart()
+try {
+  await go('/options.html', 1280, 900)
+  await ev(
+    `chrome.storage.local.set({ translateProvider: 'llm', translateLlmConfig: { preset: 'custom', baseUrl: 'http://127.0.0.1:${mockPort}/v1', model: 'devgo-mock', prompt: '' }, translateLlmApiKey: 'mock-key', translateTargetLang: 'zh-CN', uiLanguage: '${LANG}', themeMode: '${THEME}' })`,
+  )
+  await go(`${fixture.origin}/index.html`, 1280, 800)
+  await sleep(1500)
+  await ev(`chrome.runtime.sendMessage({ type: 'translate-page' }).catch(() => {})`)
+  await sleep(4000)
+  await shot('page-translate')
+} catch (error) {
+  console.error('page-translate scene failed:', error)
+}
+
+// ---------- 拼接图：弹窗四 tab 与快速上手三件事（README 风横排） ----------
+let capServer
+try {
+  const capPort = await new Promise((done) => {
+    capServer = createServer((req, res) => {
+      const url = decodeURIComponent(req.url)
+      if (url.startsWith('/compose')) {
+        const params = new URLSearchParams(url.slice(url.indexOf('?') + 1))
+        const height = Number(params.get('h') ?? 420)
+        const imgs = (params.get('files') ?? '')
+          .split(',')
+          .filter(Boolean)
+          .map(
+            (f) =>
+              `<img src="http://127.0.0.1:${capPort}/cap/${f}" style="height:${height}px;width:auto;border-radius:10px;border:1px solid #d8dae0;display:block">`,
+          )
+          .join('')
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+        res.end(
+          `<!doctype html><html><body style="margin:0;background:#f7f8fa;padding:28px;display:flex;align-items:flex-start;justify-content:center;width:max-content"><div id="row" style="display:flex;gap:28px">${imgs}</div></body></html>`,
+        )
+        return
+      }
+      const file = join(outDir, url.replace('/cap/', ''))
+      try {
+        const data = readFileSync(file)
+        res.writeHead(200, { 'content-type': 'image/png' })
+        res.end(data)
+      } catch {
+        try {
+          res.writeHead(404).end()
+        } catch {
+          // socket 可能已被断开
+        }
+      }
+    })
+    capServer.listen(0, '127.0.0.1', () => done(capServer.address().port))
+  })
+  const composeShot = async (name, files, height) => {
+    await send('Page.navigate', {
+      url: `http://127.0.0.1:${capPort}/compose?files=${files.join(',')}&h=${height}`,
+    })
+    await sleep(1500)
+    const rect = await ev(
+      "(() => { const r = document.querySelector('#row').getBoundingClientRect(); return { x: r.x - 28, y: r.y - 28, width: r.width + 56, height: r.height + 56 } })()",
+    )
+    await shot(name, { rect })
+  }
+  await composeShot(
+    'composite-popup-tabs',
+    ['popup-translate.png', 'popup-network.png', 'popup-tools.png', 'popup-function.png'],
+    420,
+  )
+  await composeShot(
+    'composite-quickstart',
+    ['page-translate.png', 'page-selection.png', 'sidepanel.png'],
+    460,
+  )
+} catch (error) {
+  console.error('composite failed:', error)
 }
 
 // 新标签页放在最后：禁 WebGL 动态背景 + 减少动效；深色模式下偶发页面假死，失败只丢这一张
