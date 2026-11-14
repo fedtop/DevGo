@@ -5,9 +5,15 @@
  * - 测试对话模型（连通性 + 工具调用能力）。
  */
 import { chatWithTools } from '@/api/llm'
-import { buildSelectionMessages } from '@/features/ai/actions'
+import {
+  buildCustomActionMessages,
+  buildSelectionMessages,
+  isCustomActionKey,
+  type SelectionActionId,
+  type SelectionContext,
+} from '@/features/ai/actions'
 import { readChatModel } from '@/features/ai/model'
-import { isAbortError, toTranslateError } from '@/features/translate/errors'
+import { isAbortError, toTranslateError, TranslateError } from '@/features/translate/errors'
 import type { LlmConfig } from '@/features/translate/llm-config'
 import {
   isOpenAssistantMessage,
@@ -15,11 +21,26 @@ import {
   type SelectionAiRequest,
   type TranslateTestResult,
 } from '@/utils/messaging'
-import { assistantHandoff } from '@/utils/settings'
+import { assistantHandoff, selectionCustomActions } from '@/utils/settings'
 
 const MAX_SELECTION_CHARS = 8000
 const TEST_TIMEOUT_MS = 30_000
 const TEST_TOOL_NAME = 'get_current_time'
+
+/** 按动作拼装提示词；自定义动作从存储读取，内容脚本只传 id */
+async function buildMessages(
+  action: SelectionActionId,
+  text: string,
+  context: SelectionContext,
+  target: 'page' | 'input',
+) {
+  if (!isCustomActionKey(action)) return buildSelectionMessages(action, text, context)
+  const id = action.slice('custom:'.length)
+  const custom = (await selectionCustomActions.getValue()).find((item) => item.id === id)
+  if (!custom?.prompt?.trim())
+    throw new TranslateError('config', '这个自定义动作已被删除或没有填写提示词')
+  return buildCustomActionMessages(custom, text, context, target)
+}
 
 /** 一条连接执行一个动作；内容脚本关闭气泡即断开连接，请求随之取消 */
 export function handleSelectionAiPort(port: Browser.runtime.Port) {
@@ -38,17 +59,19 @@ export function handleSelectionAiPort(port: Browser.runtime.Port) {
     if (request?.type !== 'run') return
     void (async () => {
       try {
+        const messages = await buildMessages(
+          request.action,
+          request.text.slice(0, MAX_SELECTION_CHARS),
+          request.context,
+          request.target,
+        )
         const { config, apiKey } = await readChatModel()
         await chatWithTools({
           config,
           apiKey,
           signal: controller.signal,
           tools: [],
-          messages: buildSelectionMessages(
-            request.action,
-            request.text.slice(0, MAX_SELECTION_CHARS),
-            request.context,
-          ),
+          messages,
           onText: (delta) => post({ type: 'text', delta }),
           onReasoning: (delta) => post({ type: 'reasoning', delta }),
         })

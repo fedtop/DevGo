@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { SelectionAiAction, SelectionContext } from '@/features/ai/actions'
+import type { SelectionActionId, SelectionContext } from '@/features/ai/actions'
 import { describeServiceError } from '@/features/translate/errors'
 import {
   SELECTION_AI_PORT_NAME,
@@ -31,7 +31,12 @@ export function useSelectionAi() {
   }, [])
 
   const run = useCallback(
-    (action: SelectionAiAction, text: string, context: SelectionContext) => {
+    (
+      action: SelectionActionId,
+      text: string,
+      context: SelectionContext,
+      target: 'page' | 'input',
+    ) => {
       stop()
       setResult(EMPTY)
 
@@ -82,7 +87,7 @@ export function useSelectionAi() {
         )
       })
 
-      const request: SelectionAiRequest = { type: 'run', action, text, context }
+      const request: SelectionAiRequest = { type: 'run', action, text, context, target }
       port.postMessage(request)
     },
     [stop],

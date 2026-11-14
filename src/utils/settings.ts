@@ -651,3 +651,28 @@ export async function migrateStorage(): Promise<void> {
   await migrateNetworkProxyProfilesByMode()
   await migrateLegacySyncToLocal()
 }
+
+/** 划词自定义动作的适用范围：网页文字 / 输入框（结果可替换原文）/ 两者 */
+export type SelectionActionScope = 'page' | 'input' | 'both'
+
+/** 用户自定义的划词 AI 动作：名称 + 提示词，复用内置动作的上下文与调用链路 */
+export interface SelectionCustomAction {
+  id: string
+  name: string
+  prompt: string
+  /** 图标 key，见 features/selection/action-icons.ts */
+  icon: string
+  scope: SelectionActionScope
+}
+
+/** 划词自定义动作（按数组顺序排在内置动作之后） */
+export const selectionCustomActions = storage.defineItem<SelectionCustomAction[]>(
+  'local:selectionCustomActions',
+  { fallback: [] },
+)
+
+/** 在工具条上隐藏的内置划词动作（translate / explain / summarize / polish / fix / formal） */
+export const selectionHiddenBuiltinActions = storage.defineItem<string[]>(
+  'local:selectionHiddenBuiltinActions',
+  { fallback: [] },
+)

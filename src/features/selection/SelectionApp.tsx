@@ -8,13 +8,6 @@ import {
   type ReactNode,
 } from 'react'
 
-import {
-  isWriteAction,
-  READ_ACTIONS,
-  SELECTION_AI_ACTIONS,
-  WRITE_ACTIONS,
-  type SelectionAiAction,
-} from '@/features/ai/actions'
 import { isChatModelReady } from '@/features/ai/model'
 import type { DictResult } from '@/types/dict'
 import Markdown from '@/ui/Markdown'
@@ -23,28 +16,37 @@ import {
   assistantLlmApiKey,
   assistantLlmConfig,
   selectionAiEnabled,
+  selectionCustomActions,
+  selectionHiddenBuiltinActions,
   translateLlmApiKey,
   translateLlmConfig,
 } from '@/utils/settings'
 
+import { useStorageItem } from '@/utils/useStorageItem'
+import { isCustomActionKey } from '@/features/ai/actions'
+
 import { readSelection, replaceSelection, type Rect, type SelectionSnapshot } from './selection-dom'
+import {
+  listToolbarActions,
+  MAX_TOOLBAR_ACTIONS,
+  normalizeCustomActions,
+  type SelectionMode,
+  type ToolbarAction,
+} from './toolbar-actions'
 import { useSelectionAi } from './useSelectionAi'
 import {
-  BookOpen,
-  Briefcase,
   Check,
+  ChevronDown,
+  Ellipsis,
   Copy,
   GripHorizontal,
-  Languages,
-  ListChecks,
   MessageSquareText,
   Pin,
   PinOff,
   RefreshCw,
   Replace,
-  SpellCheck,
+  Sparkles,
   Volume2,
-  WandSparkles,
   X,
   type LucideIcon,
 } from 'lucide-react'
@@ -58,17 +60,10 @@ const VIEWPORT_MARGIN = 10
 /** 选区下方空间不足这个高度时，面板改放到选区上方 */
 const MIN_SPACE_BELOW = 260
 const Z_TOP = 2147483647
+/** 结果面板顶部直接显示的模式数（另加当前模式），其余收进「更多」 */
+const BUBBLE_TABS = 3
 
-type Mode = 'translate' | SelectionAiAction
-
-const MODE_META: Record<Mode, { label: string; title: string; icon: LucideIcon }> = {
-  translate: { label: '翻译', title: '翻译选中文本', icon: Languages },
-  explain: { ...SELECTION_AI_ACTIONS.explain, icon: BookOpen },
-  summarize: { ...SELECTION_AI_ACTIONS.summarize, icon: ListChecks },
-  polish: { ...SELECTION_AI_ACTIONS.polish, icon: WandSparkles },
-  fix: { ...SELECTION_AI_ACTIONS.fix, icon: SpellCheck },
-  formal: { ...SELECTION_AI_ACTIONS.formal, icon: Briefcase },
-}
+type Mode = SelectionMode
 
 /** 面板相对选区的位置；pinned 时固定在屏幕上（拖动或点了固定），不再跟随选区 */
 type BubblePlacement = { kind: 'below' | 'above' } | { kind: 'pinned'; left: number; top: number }
@@ -123,6 +118,33 @@ function useAiAvailable(): boolean {
   }, [])
 
   return available
+}
+
+/** 当前选区可用的动作：内置动作（可在设置页隐藏）+ 用户自定义动作 */
+function useActionLister(aiAvailable: boolean) {
+  const [hidden] = useStorageItem(selectionHiddenBuiltinActions)
+  const [custom] = useStorageItem(selectionCustomActions)
+  return useCallback(
+    (editable: boolean) =>
+      listToolbarActions({
+        editable,
+        aiAvailable,
+        hidden: Array.isArray(hidden) ? hidden : [],
+        custom: normalizeCustomActions(custom),
+      }),
+    [aiAvailable, hidden, custom],
+  )
+}
+
+/** 面板打开期间动作在设置页被删除或隐藏：仍显示当前这一项，直到面板关闭 */
+function fallbackAction(mode: Mode): ToolbarAction {
+  return {
+    id: mode,
+    label: isCustomActionKey(mode) ? '自定义动作' : mode,
+    title: '',
+    icon: Sparkles,
+    write: false,
+  }
 }
 
 function clampLeft(left: number, width: number): number {
@@ -186,6 +208,7 @@ function useAnchorRect(snapshot: SelectionSnapshot | null): Rect | null {
 /** 划词工具条与结果面板：翻译（引擎同翻译设置）+ AI 解释 / 总结 / 问 AI + 输入框内的润色改写 */
 export default function SelectionApp() {
   const aiAvailable = useAiAvailable()
+  const listActions = useActionLister(aiAvailable)
   const [toolbar, setToolbar] = useState<SelectionSnapshot | null>(null)
   const [bubble, setBubble] = useState<{ snapshot: SelectionSnapshot; mode: Mode } | null>(null)
   const [placement, setPlacement] = useState<BubblePlacement>({ kind: 'below' })
@@ -225,8 +248,8 @@ export default function SelectionApp() {
           setToolbar(null)
           return
         }
-        // 输入框内只提供 AI 改写；AI 不可用时不打扰输入
-        if (snapshot.editable && !aiAvailable) {
+        // 输入框内只提供 AI 改写；没有可用动作（AI 不可用或都被隐藏）时不打扰输入
+        if (snapshot.editable && listActions(true).length === 0) {
           setToolbar(null)
           return
         }
@@ -236,7 +259,7 @@ export default function SelectionApp() {
 
     document.addEventListener('mouseup', onMouseUp)
     return () => document.removeEventListener('mouseup', onMouseUp)
-  }, [isInsideUi, aiAvailable])
+  }, [isInsideUi, listActions])
 
   // 点击外部 / ESC -> 关闭；固定住的面板只响应 ESC 和关闭按钮
   useEffect(() => {
@@ -298,11 +321,12 @@ export default function SelectionApp() {
     } else {
       translateSeqRef.current += 1
       setTranslation(null)
-      runAi(mode, snapshot.text.trim(), {
-        paragraph: snapshot.paragraph || undefined,
-        title: document.title,
-        url: location.href,
-      })
+      runAi(
+        mode,
+        snapshot.text.trim(),
+        { paragraph: snapshot.paragraph || undefined, title: document.title, url: location.href },
+        snapshot.editable ? 'input' : 'page',
+      )
     }
   }
 
@@ -367,9 +391,17 @@ export default function SelectionApp() {
     if (snapshot.editable && replaceSelection(snapshot.editable, text)) close()
   }
 
-  const bubbleModes: Mode[] = bubble?.snapshot.editable
-    ? WRITE_ACTIONS
-    : ['translate', ...READ_ACTIONS]
+  const bubbleActions = bubble ? listActions(Boolean(bubble.snapshot.editable)) : []
+  // 当前模式对应的动作；设置页里刚删掉 / 隐藏的动作仍保留在面板上直到关闭
+  const currentAction = bubbleActions.find((action) => action.id === bubble?.mode)
+  const allTabs =
+    currentAction || !bubble ? bubbleActions : [...bubbleActions, fallbackAction(bubble.mode)]
+  // 面板宽度有限：直接显示前几个和当前这一项，其余收进「更多」
+  const bubbleTabs = allTabs.filter(
+    (action, index) => index < BUBBLE_TABS || action.id === bubble?.mode,
+  )
+  const bubbleMore = allTabs.filter((action) => !bubbleTabs.includes(action))
+  const writeMode = Boolean(bubble?.snapshot.editable && bubble.mode !== 'translate')
 
   return (
     <div
@@ -378,9 +410,10 @@ export default function SelectionApp() {
     >
       {toolbar && toolbarRect && isInViewport(toolbarRect) && (
         <Toolbar
-          snapshot={toolbar}
+          key={toolbar.text}
           rect={toolbarRect}
-          aiAvailable={aiAvailable}
+          actions={listActions(Boolean(toolbar.editable))}
+          showAsk={aiAvailable && !toolbar.editable}
           onAction={(mode) => start(toolbar, mode)}
           onAsk={() => askInSidePanel(toolbar)}
         />
@@ -405,17 +438,17 @@ export default function SelectionApp() {
               className='size-3.5 shrink-0 text-neutral-300 dark:text-neutral-600'
               aria-hidden
             />
-            <div className='flex min-w-0 flex-1 gap-0.5'>
-              {(aiAvailable ? bubbleModes : [bubble.mode]).map((mode) => {
-                const { label, icon: Icon } = MODE_META[mode]
-                const active = mode === bubble.mode
+            <div className='flex min-w-0 flex-1 gap-0.5 overflow-x-auto [scrollbar-width:none]'>
+              {bubbleTabs.map(({ id, label, title, icon: Icon }) => {
+                const active = id === bubble.mode
                 return (
                   <button
-                    key={mode}
+                    key={id}
                     type='button'
+                    title={title}
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => !active && start(bubble.snapshot, mode)}
-                    className={`flex cursor-pointer items-center gap-1 rounded-lg border-0 px-2 py-1 text-[13px] transition-colors ${
+                    onClick={() => !active && start(bubble.snapshot, id)}
+                    className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border-0 px-2 py-1 text-[13px] whitespace-nowrap transition-colors ${
                       active
                         ? 'bg-black/[0.06] font-medium text-neutral-900 dark:bg-white/10 dark:text-white'
                         : 'bg-transparent text-neutral-500 hover:bg-black/[0.04] hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-neutral-100'
@@ -427,6 +460,24 @@ export default function SelectionApp() {
                 )
               })}
             </div>
+            {bubbleMore.length > 0 && (
+              <MoreMenu
+                align='right'
+                actions={bubbleMore}
+                onSelect={(mode) => start(bubble.snapshot, mode)}
+                trigger={(open) => (
+                  <span
+                    className={`flex size-7 items-center justify-center rounded-lg transition-colors ${
+                      open
+                        ? 'bg-black/[0.06] text-neutral-900 dark:bg-white/10 dark:text-white'
+                        : 'text-neutral-400 hover:bg-black/[0.05] hover:text-neutral-800 dark:text-neutral-500 dark:hover:bg-white/10 dark:hover:text-neutral-100'
+                    }`}
+                  >
+                    <Ellipsis className='size-3.5' aria-hidden />
+                  </span>
+                )}
+              />
+            )}
             <IconButton
               label={pinned ? '取消固定' : '固定面板（不随页面滚动、点击外部不关闭）'}
               active={pinned}
@@ -459,12 +510,14 @@ export default function SelectionApp() {
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'done' && (
               <>
-                {!isWriteAction(bubble.mode) && (
+                {!writeMode && (
                   <FooterButton
                     icon={MessageSquareText}
                     onClick={() =>
                       askInSidePanel(bubble.snapshot, {
-                        question: `${SELECTION_AI_ACTIONS[bubble.mode as SelectionAiAction].label}这段内容`,
+                        question: isCustomActionKey(bubble.mode)
+                          ? `用「${currentAction?.label ?? '自定义动作'}」处理这段内容`
+                          : `${currentAction?.label ?? '解释'}这段内容`,
                         answer: aiResult.text,
                       })
                     }
@@ -475,7 +528,7 @@ export default function SelectionApp() {
                 <FooterButton icon={copied ? Check : Copy} onClick={() => copy(aiResult.text)}>
                   {copied ? '已复制' : '复制'}
                 </FooterButton>
-                {isWriteAction(bubble.mode) && bubble.snapshot.editable && (
+                {writeMode && bubble.snapshot.editable && (
                   <FooterButton
                     primary
                     icon={Replace}
@@ -502,26 +555,26 @@ const TOOL_BUTTON =
   'flex h-7 cursor-pointer items-center gap-1 rounded-full border-0 bg-transparent px-2.5 text-[13px] whitespace-nowrap text-neutral-700 transition-colors hover:bg-black/[0.06] hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-white/10 dark:hover:text-white'
 
 function Toolbar({
-  snapshot,
   rect,
-  aiAvailable,
+  actions,
+  showAsk,
   onAction,
   onAsk,
 }: {
-  snapshot: SelectionSnapshot
   rect: Rect
-  aiAvailable: boolean
+  actions: ToolbarAction[]
+  showAsk: boolean
   onAction: (mode: Mode) => void
   onAsk: () => void
 }) {
-  const modes: Mode[] = !aiAvailable
-    ? ['translate']
-    : snapshot.editable
-      ? WRITE_ACTIONS
-      : ['translate', ...READ_ACTIONS]
-  const showAsk = aiAvailable && !snapshot.editable
-  // 按钮数量估算宽度，用于贴边时不超出视口
-  const width = modes.length * 68 + (showAsk ? 78 : 0) + 8
+  const visible = actions.slice(0, MAX_TOOLBAR_ACTIONS)
+  const more = actions.slice(MAX_TOOLBAR_ACTIONS)
+  // 按标签长度估算宽度，用于贴边时不超出视口
+  const width =
+    visible.reduce((sum, action) => sum + 36 + Math.min(action.label.length, 6) * 13, 0) +
+    (more.length ? 70 : 0) +
+    (showAsk ? 78 : 0) +
+    8
 
   return (
     <div
@@ -530,24 +583,38 @@ function Toolbar({
       className='fixed flex items-center gap-0.5 rounded-full border border-black/[0.08] bg-white p-1 shadow-[0_6px_20px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]'
       style={{ ...toolbarStyle(rect, width), zIndex: Z_TOP, height: TOOLBAR_HEIGHT }}
     >
-      {modes.map((mode) => {
-        const { label, title, icon: Icon } = MODE_META[mode]
-        return (
-          <button
-            key={mode}
-            type='button'
-            title={title}
-            onClick={() => onAction(mode)}
-            className={TOOL_BUTTON}
-          >
-            <Icon className='size-3.5' aria-hidden />
-            {label}
-          </button>
-        )
-      })}
+      {visible.map(({ id, label, title, icon: Icon }) => (
+        <button
+          key={id}
+          type='button'
+          title={title}
+          onClick={() => onAction(id)}
+          className={TOOL_BUTTON}
+        >
+          <Icon className='size-3.5 shrink-0' aria-hidden />
+          <span className='max-w-[6.5em] truncate'>{label}</span>
+        </button>
+      ))}
+      {more.length > 0 && (
+        <MoreMenu
+          actions={more}
+          onSelect={onAction}
+          trigger={(open) => (
+            <span className={`${TOOL_BUTTON} ${open ? '!bg-black/[0.06] dark:!bg-white/10' : ''}`}>
+              更多
+              <ChevronDown
+                className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+                aria-hidden
+              />
+            </span>
+          )}
+        />
+      )}
       {showAsk && (
         <>
-          <span className='mx-0.5 h-4 w-px bg-black/10 dark:bg-white/15' aria-hidden />
+          {actions.length > 0 && (
+            <span className='mx-0.5 h-4 w-px bg-black/10 dark:bg-white/15' aria-hidden />
+          )}
           <button
             type='button'
             title='在侧边栏里就选中内容提问'
@@ -557,6 +624,63 @@ function Toolbar({
             <MessageSquareText className='size-3.5' aria-hidden />问 AI
           </button>
         </>
+      )}
+    </div>
+  )
+}
+
+/** 「更多」下拉：工具条和结果面板放不下的动作 */
+function MoreMenu({
+  actions,
+  onSelect,
+  trigger,
+  title = '更多动作',
+  align = 'left',
+}: {
+  align?: 'left' | 'right'
+  actions: ToolbarAction[]
+  onSelect: (mode: Mode) => void
+  trigger: (open: boolean) => ReactNode
+  title?: string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className='relative shrink-0'>
+      <button
+        type='button'
+        title={title}
+        aria-label={title}
+        aria-haspopup='menu'
+        aria-expanded={open}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setOpen((value) => !value)}
+        className='flex cursor-pointer border-0 bg-transparent p-0'
+      >
+        {trigger(open)}
+      </button>
+      {open && (
+        <div
+          role='menu'
+          className={`absolute top-full z-10 mt-2 flex max-h-60 ${align === 'left' ? 'left-0' : 'right-0'} min-w-40 flex-col overflow-y-auto rounded-xl border border-black/[0.08] bg-white p-1 shadow-[0_10px_30px_rgba(0,0,0,0.14)] dark:border-white/10 dark:bg-[#2a2a2a] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)]`}
+        >
+          {actions.map(({ id, label, title: hint, icon: Icon }) => (
+            <button
+              key={id}
+              type='button'
+              role='menuitem'
+              title={hint}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                setOpen(false)
+                onSelect(id)
+              }}
+              className='flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-left text-[13px] whitespace-nowrap text-neutral-700 transition-colors hover:bg-black/[0.05] hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-white/10 dark:hover:text-white'
+            >
+              <Icon className='size-3.5 shrink-0' aria-hidden />
+              <span className='max-w-[14em] truncate'>{label}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

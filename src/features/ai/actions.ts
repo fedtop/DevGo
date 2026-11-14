@@ -5,12 +5,25 @@
  * 模型能结合上下文给出它在这篇文章里的含义。
  */
 import type { ChatMessage } from '@/api/llm'
+import type { SelectionCustomAction } from '@/utils/settings'
 
 /** 阅读类动作：结果展示在气泡里 */
 export type ReadAction = 'explain' | 'summarize'
 /** 写作类动作（输入框内选中文字时）：结果可一键替换原文 */
 export type WriteAction = 'polish' | 'fix' | 'formal'
 export type SelectionAiAction = ReadAction | WriteAction
+/** 用户自定义动作的 id（`custom:` 前缀 + 动作 id），提示词由后台按 id 从存储读取 */
+export type CustomActionKey = `custom:${string}`
+/** 一次划词 AI 请求可执行的动作：内置动作或自定义动作 */
+export type SelectionActionId = SelectionAiAction | CustomActionKey
+
+export function customActionKey(id: string): CustomActionKey {
+  return `custom:${id}`
+}
+
+export function isCustomActionKey(action: string): action is CustomActionKey {
+  return action.startsWith('custom:')
+}
 
 export const SELECTION_AI_ACTIONS: Record<SelectionAiAction, { label: string; title: string }> = {
   explain: { label: '解释', title: '结合上下文解释选中内容' },
@@ -76,6 +89,36 @@ export function buildSelectionMessages(
       content:
         `你是浏览器划词助手。${task}\n` +
         '回答使用简体中文（选中内容本身是中文且用户另有要求时除外），可以使用 Markdown，篇幅尽量精炼。',
+    },
+    {
+      role: 'user',
+      content: `${contextText ? `${contextText}\n\n` : ''}选中的内容：\n"""\n${text}\n"""`,
+    },
+  ]
+}
+
+/**
+ * 自定义动作的提示词：用户的要求放进 system，和内置阅读类动作一样附带段落上下文与网页标题。
+ * 在输入框里执行时结果会替换原文，要求模型只输出结果本身。
+ */
+export function buildCustomActionMessages(
+  action: SelectionCustomAction,
+  text: string,
+  context: SelectionContext,
+  target: 'page' | 'input',
+): ChatMessage[] {
+  const output =
+    target === 'input'
+      ? '结果会直接替换输入框里的原文：只输出处理后的文字本身，不要解释、不要加引号或前后缀。'
+      : '回答可以使用 Markdown，篇幅尽量精炼。'
+  const contextText = describeContext(context)
+  return [
+    {
+      role: 'system',
+      content:
+        `你是浏览器划词助手，按用户设定的要求处理选中的内容。\n要求：${action.prompt.trim()}\n` +
+        '上下文只用来理解选中内容，不要处理上下文本身。\n' +
+        output,
     },
     {
       role: 'user',

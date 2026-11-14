@@ -10,7 +10,7 @@
 import type { TranslateErrorPayload } from '@/features/translate/errors'
 import type { TranslateLangCode } from '@/features/translate/languages'
 import type { LlmConfig } from '@/features/translate/llm-config'
-import type { SelectionAiAction, SelectionContext } from '@/features/ai/actions'
+import type { SelectionActionId, SelectionContext } from '@/features/ai/actions'
 import type { DictResult } from '@/types/dict'
 import type { WordResult } from '@/types/word'
 import type { NetworkMode, PopupShortcutTab, SyncStatus, TranslateProvider } from '@/utils/settings'
@@ -191,9 +191,11 @@ export const SELECTION_AI_PORT_NAME = 'devgo-selection-ai'
 /** 内容脚本 → Background：执行一个划词 AI 动作 */
 export interface SelectionAiRequest {
   type: 'run'
-  action: SelectionAiAction
+  action: SelectionActionId
   text: string
   context: SelectionContext
+  /** 选区在网页文字里还是输入框里；自定义动作据此决定结果是阅读还是替换原文 */
+  target: 'page' | 'input'
 }
 
 /** Background → 内容脚本：流式结果 */
