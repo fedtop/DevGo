@@ -4,7 +4,7 @@ DevGo 是一个面向开发者的浏览器效率扩展，聚焦翻译、GitHub �
 
 下载插件：👉🏻 [Chrome 应用商店](https://chrome.google.com/webstore/detail/devgo/kcofdbjhicjdbmldlcffcijglkifnnjn)
 
-使用文档：👉🏻 [DevGo 使用文档](https://fedtop.github.io/dev-go-docs)
+使用文档：👉🏻 [中文](https://fedtop.github.io/dev-go-docs/) ｜ [English](https://fedtop.github.io/dev-go-docs/en/guide/)
 
 离线安装包：👉🏻 [GitHub Releases](https://github.com/fedtop/dev-go/releases)（解压后在 `chrome://extensions` 开启开发者模式，「加载已解压的扩展程序」）
 
