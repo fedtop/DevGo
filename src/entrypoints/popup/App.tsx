@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { SHIP_NAME, SITE_URL } from '@/utils/constants'
+import { SHIP_NAME, SITE_URL, getDocsUrl } from '@/utils/constants'
 import { sendRuntimeMessage } from '@/utils/messaging'
 import FunctionPage from '@/features/popup/FunctionPage'
 import NetworkPage from '@/features/popup/NetworkPage'
 import ToolsPage from '@/features/popup/ToolsPage'
 import TranslatePage from '@/features/popup/TranslatePage'
 import { getPopupPages } from '@/features/popup/pages'
-import { t } from '@/utils/i18n'
+import { getLocale, t } from '@/utils/i18n'
 import Tabs from '@/ui/Tabs'
 import {
   defaultPopupTab,
@@ -20,7 +20,7 @@ import type { PopupShortcutMessage, PopupShortcutResponse } from '@/utils/messag
 import { formatShortcut, openShortcutSettings } from '@/utils/shortcut'
 import GithubMark from '@/ui/GithubMark'
 import IconButton from '@/ui/IconButton'
-import { ArrowUpRight, Settings } from 'lucide-react'
+import { ArrowUpRight, CircleHelp, Settings } from 'lucide-react'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 
 const DEFAULT_POPUP_COMMAND = 'open-default'
@@ -162,6 +162,17 @@ export default function App() {
           />
         </button>
         <div className='flex items-center gap-3'>
+          <a
+            href={getDocsUrl(getLocale())}
+            target='_blank'
+            rel='noreferrer'
+            title={t('popup.app.docs')}
+            aria-label={t('popup.app.docs')}
+            className='flex items-center gap-1.5 transition-colors hover:text-neutral-900'
+          >
+            <CircleHelp className='size-3.5' aria-hidden />
+            {t('popup.app.docs')}
+          </a>
           <a
             href={SITE_URL}
             target='_blank'

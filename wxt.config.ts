@@ -50,7 +50,11 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     // 扩展名称、描述与快捷键说明走 public/_locales，按浏览器语言显示
     default_locale: 'en',
-    homepage_url: 'https://github.com/wangrongding',
+    // 右键扩展图标点击扩展名打开的链接：Chrome 走商店页，Firefox（未上架）走仓库
+    homepage_url:
+      browser === 'firefox'
+        ? 'https://github.com/fedtop/DevGo'
+        : 'https://chrome.google.com/webstore/detail/devgo/kcofdbjhicjdbmldlcffcijglkifnnjn',
     permissions: [
       'contextMenus',
       // 定时更新自动模式的规则列表

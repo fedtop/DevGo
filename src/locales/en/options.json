@@ -52,6 +52,7 @@
   },
   "app": {
     "title": "{name} settings",
+    "docs": "Documentation",
     "nav": {
       "translate": "Translation",
       "models": "AI models",

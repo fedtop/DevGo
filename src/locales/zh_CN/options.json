@@ -52,6 +52,7 @@
   },
   "app": {
     "title": "{name} 设置",
+    "docs": "使用文档",
     "nav": {
       "translate": "翻译",
       "models": "AI 模型",

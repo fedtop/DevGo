@@ -9,7 +9,8 @@
     "openSettings": "打开设置",
     "editShortcut": "修改快捷键",
     "shortcut": "快捷键",
-    "setShortcut": "去设置"
+    "setShortcut": "去设置",
+    "docs": "文档"
   },
   "common": {
     "pageUnsupported": "当前页面不支持"

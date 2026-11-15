@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Brain,
   Globe,
   Languages,
@@ -18,8 +19,8 @@ import SelectionSettings from '@/features/options/SelectionSettings'
 import NetworkSettings from '@/features/network/NetworkSettings'
 import TranslateSettings from '@/features/options/TranslateSettings'
 import GithubMark from '@/ui/GithubMark'
-import { SHIP_NAME, SITE_URL } from '@/utils/constants'
-import { t, type MessageKey } from '@/utils/i18n'
+import { SHIP_NAME, SITE_URL, getDocsUrl } from '@/utils/constants'
+import { getLocale, t, type MessageKey } from '@/utils/i18n'
 
 interface Section {
   id: string
@@ -29,6 +30,12 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
+  {
+    id: 'general',
+    labelKey: 'options.app.nav.general',
+    icon: Settings,
+    component: GeneralSettings,
+  },
   {
     id: 'translate',
     labelKey: 'options.app.nav.translate',
@@ -50,12 +57,6 @@ const SECTIONS: Section[] = [
   },
   { id: 'network', labelKey: 'options.app.nav.network', icon: Globe, component: NetworkSettings },
   { id: 'enhance', labelKey: 'options.app.nav.enhance', icon: Puzzle, component: EnhanceSettings },
-  {
-    id: 'general',
-    labelKey: 'options.app.nav.general',
-    icon: Settings,
-    component: GeneralSettings,
-  },
 ]
 
 /** 已并入其他分区的旧 hash：旧书签、外部链接仍能直达对应位置 */
@@ -142,10 +143,19 @@ export default function App() {
           ))}
         </nav>
         <a
-          href={SITE_URL}
+          href={getDocsUrl(getLocale())}
           target='_blank'
           rel='noreferrer'
           className='mt-auto flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-neutral-500 transition-colors hover:bg-black/5 hover:text-neutral-900'
+        >
+          <BookOpen className='size-4' strokeWidth={1.8} aria-hidden />
+          {t('options.app.docs')}
+        </a>
+        <a
+          href={SITE_URL}
+          target='_blank'
+          rel='noreferrer'
+          className='flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-neutral-500 transition-colors hover:bg-black/5 hover:text-neutral-900'
         >
           <GithubMark className='size-4' />
           GitHub

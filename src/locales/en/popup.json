@@ -9,7 +9,8 @@
     "openSettings": "Open settings",
     "editShortcut": "Change shortcut",
     "shortcut": "Shortcut",
-    "setShortcut": "Set up"
+    "setShortcut": "Set up",
+    "docs": "Docs"
   },
   "common": {
     "pageUnsupported": "This page isn't supported"
