@@ -1,3 +1,5 @@
+[简体中文](README.md) | [English](README.en.md)
+
 # DevGo
 
 DevGo 是一个面向开发者的浏览器效率扩展，聚焦翻译、GitHub 增强、新标签页效率工具与页面调试辅助能力。
