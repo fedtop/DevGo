@@ -126,6 +126,168 @@ async function preloadLazyContent(tabId: number): Promise<void> {
   })
 }
 
+/** 网页里一段排在同一行的文字及其位置（文档坐标，CSS 像素） */
+interface TextRun {
+  text: string
+  x: number
+  y: number
+  width: number
+  height: number
+  /** 字号（CSS 像素） */
+  size: number
+  /** 每个字符（码点）的左边缘相对 x 的偏移，用来在 PDF 里逐字对齐 */
+  offsets: number[]
+}
+
+/**
+ * 收集区域内可见文字的位置，用来给图片式 PDF 叠一层透明文字：画面仍是截图，但文字能选中、复制、搜索。
+ * 在滚动到顶部时测量：吸顶 / 固定定位的元素这时的位置正好是截图第一屏里的位置。
+ * onlyInside 为 true 时（框选导出）跳过固定定位的元素（截图时它们被隐藏了），选中元素里的除外。
+ * 注入网页执行，不能引用外部变量。
+ */
+async function collectTextRuns(
+  region: { x: number; y: number; width: number; height: number },
+  onlyInside: boolean,
+): Promise<TextRun[]> {
+  const startX = window.scrollX
+  const startY = window.scrollY
+  window.scrollTo({ left: 0, top: 0, behavior: 'instant' })
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+  const target = document.querySelector('[data-devgo-capture-target]')
+  const fixedCache = new Map<Element, boolean>()
+  /** 是否在截图时被隐藏的固定定位元素里 */
+  const inHiddenFixed = (element: Element): boolean => {
+    if (!onlyInside) return false
+    const chain: Element[] = []
+    let node: Element | null = element
+    let result = false
+    while (node && node !== document.body) {
+      const cached = fixedCache.get(node)
+      if (cached !== undefined) {
+        result = cached
+        break
+      }
+      chain.push(node)
+      const position = getComputedStyle(node).position
+      if (
+        (position === 'fixed' || position === 'sticky') &&
+        !(target && (node.contains(target) || target.contains(node)))
+      ) {
+        result = true
+        break
+      }
+      node = node.parentElement
+    }
+    for (const item of chain) fixedCache.set(item, result)
+    return result
+  }
+
+  const runs: TextRun[] = []
+  const right = region.x + region.width
+  const bottom = region.y + region.height
+  const inRegion = (r: {
+    left: number
+    top: number
+    right: number
+    bottom: number
+    width: number
+    height: number
+  }) =>
+    r.width > 0 &&
+    r.height > 0 &&
+    r.right > region.x &&
+    r.left < right &&
+    r.bottom > region.y &&
+    r.top < bottom
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement
+      if (!node.nodeValue?.trim() || !parent) return NodeFilter.FILTER_REJECT
+      if (/^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|TEMPLATE)$/.test(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT
+      }
+      return NodeFilter.FILTER_ACCEPT
+    },
+  })
+  const range = document.createRange()
+
+  for (let node = walker.nextNode(); node && runs.length < 20000; node = walker.nextNode()) {
+    const parent = node.parentElement as HTMLElement
+    const style = getComputedStyle(parent)
+    if (style.visibility !== 'visible' || Number(style.opacity) === 0) continue
+    if (inHiddenFixed(parent)) continue
+    // 只给读屏软件看的文字（visually-hidden：1px 大小或整块裁掉），画面上看不到
+    const parentBox = parent.getBoundingClientRect()
+    if (parentBox.width <= 1 || parentBox.height <= 1) continue
+    if (
+      style.clipPath === 'inset(50%)' ||
+      /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(style.clip)
+    ) {
+      continue
+    }
+    const size = Number.parseFloat(style.fontSize) || 16
+    const data = node.nodeValue ?? ''
+
+    // 逐个字符量位置，按所在行切成多段：选中高亮能逐字对上画面，中英混排也不会错位
+    let current: TextRun | null = null
+    const flush = () => {
+      if (current && current.text.trim()) {
+        const box = {
+          left: current.x,
+          top: current.y,
+          right: current.x + current.width,
+          bottom: current.y + current.height,
+          width: current.width,
+          height: current.height,
+        }
+        if (inRegion(box)) runs.push(current)
+      }
+      current = null
+    }
+    for (let i = 0; i < data.length;) {
+      const char = String.fromCodePoint(data.codePointAt(i) ?? 32)
+      range.setStart(node, i)
+      range.setEnd(node, i + char.length)
+      i += char.length
+      const r = range.getBoundingClientRect()
+      if (!r.width || !r.height) {
+        // 折叠掉的空白：保留一个空格作为词间隔，不占宽度
+        if (current && !/\s$/.test(current.text)) {
+          current.text += ' '
+          current.offsets.push(current.width)
+        }
+        continue
+      }
+      if (
+        !current ||
+        Math.abs(r.top - current.y) > r.height / 2 ||
+        r.left < current.x + current.width - 1
+      ) {
+        flush()
+        current = {
+          text: char,
+          x: r.left,
+          y: r.top,
+          width: r.width,
+          height: r.height,
+          size,
+          offsets: [0],
+        }
+      } else {
+        current.text += /\s/.test(char) ? ' ' : char
+        current.offsets.push(r.left - current.x)
+        current.width = r.right - current.x
+        current.height = Math.max(current.height, r.bottom - current.y)
+      }
+    }
+    flush()
+  }
+
+  window.scrollTo({ left: startX, top: startY, behavior: 'instant' })
+  return runs
+}
+
 /**
  * 截取页面上一块区域（文档坐标），返回位图。
  * maxHeight：单块最高多少 CSS 像素（Chrome 逐屏截取，不能超过一屏）。
@@ -315,16 +477,108 @@ function encodeAscii(text: string): Uint8Array {
   return new TextEncoder().encode(text)
 }
 
-/** 把若干张 JPEG 按原尺寸各占一页，拼成一个最小可用的 PDF */
-function buildPdf(
-  pages: Array<{
-    jpeg: Uint8Array
-    pxWidth: number
-    pxHeight: number
-    ptWidth: number
-    ptHeight: number
-  }>,
-): Uint8Array {
+/** zlib 格式压缩，正好是 PDF 的 FlateDecode */
+async function deflate(data: Uint8Array): Promise<Uint8Array> {
+  const compressed = new Blob([data as BlobPart])
+    .stream()
+    .pipeThrough(new CompressionStream('deflate'))
+  return new Uint8Array(await new Response(compressed).arrayBuffer())
+}
+
+/** PDF 页上的一段透明文字（页面坐标，pt，原点在左下角，y 为基线） */
+interface PdfTextRun {
+  text: string
+  x: number
+  y: number
+  size: number
+  width: number
+  /** 每个字符相对 x 的偏移（pt） */
+  offsets: number[]
+}
+
+interface PdfPage {
+  jpeg: Uint8Array
+  pxWidth: number
+  pxHeight: number
+  ptWidth: number
+  ptHeight: number
+  texts: PdfTextRun[]
+}
+
+/**
+ * 透明文字层的内容流：渲染模式 3（不可见），不改变画面。
+ * 每个字符按网页里量到的位置用 TJ 逐字校正，选中高亮能对上画面里的字。
+ */
+function buildTextLayer(texts: PdfTextRun[]): string {
+  const parts: string[] = []
+  for (const run of texts) {
+    if (run.size <= 0) continue
+    const chars = [...run.text]
+    const ops: string[] = [
+      `/F1 ${run.size.toFixed(2)} Tf 1 0 0 1 ${run.x.toFixed(2)} ${run.y.toFixed(2)} Tm`,
+    ]
+    // 字体宽度统一是 1em：每个字用 Tz 横向缩放到它在网页里实际占的宽度，
+    // 字形宽度和画面一致，选中高亮能逐字对上，提取文字时也不会多出 / 丢掉空格。连续同宽的字合成一段
+    let scale = Number.NaN
+    let hex = ''
+    const emit = () => {
+      if (hex) ops.push(`${scale.toFixed(2)} Tz <${hex}> Tj`)
+      hex = ''
+    }
+    chars.forEach((char, index) => {
+      const offset = run.offsets[index] ?? 0
+      const next = index + 1 < chars.length ? (run.offsets[index + 1] ?? run.width) : run.width
+      // 用 UTF-16 码元当字形编号（Identity-H），ToUnicode 原样映射回来；超出 BMP 的字符（如 emoji）换成空格占位
+      const code = char.codePointAt(0) ?? 32
+      const glyph = (code > 0xffff ? 32 : code).toString(16).padStart(4, '0')
+      const charScale = Math.max(0, ((next - offset) / run.size) * 100)
+      if (Number.isNaN(scale) || Math.abs(charScale - scale) > 0.005) {
+        emit()
+        scale = charScale
+      }
+      hex += glyph
+    })
+    emit()
+    parts.push(ops.join(' '))
+  }
+  return parts.length ? `\nBT 3 Tr\n${parts.join('\n')}\nET` : ''
+}
+
+/** 逐个 16 位编码原样映射成 Unicode 的 ToUnicode CMap（bfrange 只能在低字节内变化，按高字节分 256 段） */
+function buildIdentityToUnicode(): string {
+  const ranges: string[] = []
+  for (let high = 0; high < 256; high++) {
+    const prefix = high.toString(16).padStart(2, '0')
+    ranges.push(`<${prefix}00> <${prefix}ff> <${prefix}00>`)
+  }
+  const blocks: string[] = []
+  for (let i = 0; i < ranges.length; i += 100) {
+    const chunk = ranges.slice(i, i + 100)
+    blocks.push(`${chunk.length} beginbfrange\n${chunk.join('\n')}\nendbfrange`)
+  }
+  return [
+    '/CIDInit /ProcSet findresource begin',
+    '12 dict begin',
+    'begincmap',
+    '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
+    '/CMapName /Adobe-Identity-UCS def',
+    '/CMapType 2 def',
+    '1 begincodespacerange',
+    '<0000> <ffff>',
+    'endcodespacerange',
+    ...blocks,
+    'endcmap',
+    'CMapName currentdict /CMap defineresource pop',
+    'end',
+    'end',
+  ].join('\n')
+}
+
+/**
+ * 把若干张 JPEG 按原尺寸各占一页，拼成一个最小可用的 PDF；
+ * 每页叠一层透明文字（不可见、不改变画面），文字可以选中、复制和搜索。
+ */
+async function buildPdf(pages: PdfPage[]): Promise<Uint8Array> {
   const chunks: Uint8Array[] = []
   const offsets: number[] = []
   let length = 0
@@ -337,10 +591,19 @@ function buildPdf(
     offsets[id] = length
     push(`${id} 0 obj\n`)
   }
+  /** 文本类的流用 Flate 压缩（逐字定位的文字层不压缩会很大） */
+  const stream = async (id: number, body: string) => {
+    const data = await deflate(encodeAscii(body))
+    startObject(id)
+    push(`<< /Filter /FlateDecode /Length ${data.length} >>\nstream\n`)
+    push(data)
+    push('\nendstream\nendobj\n')
+  }
 
   push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')
-  // 对象编号：1 目录、2 页面树，之后每页 3 个对象（页面、内容流、图片）
-  const pageIds = pages.map((_, index) => 3 + index * 3)
+  // 对象编号：1 目录、2 页面树、3–6 透明文字用的字体，之后每页 3 个对象（页面、内容流、图片）
+  const FONT = 3
+  const pageIds = pages.map((_, index) => 7 + index * 3)
 
   startObject(1)
   push('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n')
@@ -349,29 +612,42 @@ function buildPdf(
     `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>\nendobj\n`,
   )
 
-  pages.forEach((page, index) => {
+  // 字体只用于定位和提取文字，不嵌入字形（文字不可见，不需要画出来）
+  startObject(FONT)
+  push(
+    `<< /Type /Font /Subtype /Type0 /BaseFont /DevGoTextLayer /Encoding /Identity-H /DescendantFonts [${FONT + 1} 0 R] /ToUnicode ${FONT + 3} 0 R >>\nendobj\n`,
+  )
+  startObject(FONT + 1)
+  push(
+    `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /DevGoTextLayer /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${FONT + 2} 0 R /DW 1000 /CIDToGIDMap /Identity >>\nendobj\n`,
+  )
+  startObject(FONT + 2)
+  push(
+    '<< /Type /FontDescriptor /FontName /DevGoTextLayer /Flags 4 /FontBBox [0 -200 1000 800] /ItalicAngle 0 /Ascent 800 /Descent -200 /CapHeight 700 /StemV 80 >>\nendobj\n',
+  )
+  await stream(FONT + 3, buildIdentityToUnicode())
+
+  for (const [index, page] of pages.entries()) {
     const pageId = pageIds[index]
     const contentId = pageId + 1
     const imageId = pageId + 2
     const w = page.ptWidth.toFixed(2)
     const h = page.ptHeight.toFixed(2)
-    const content = `q ${w} 0 0 ${h} 0 0 cm /Im0 Do Q`
 
     startObject(pageId)
     push(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>\nendobj\n`,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Resources << /XObject << /Im0 ${imageId} 0 R >> /Font << /F1 ${FONT} 0 R >> >> /Contents ${contentId} 0 R >>\nendobj\n`,
     )
-    startObject(contentId)
-    push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream\nendobj\n`)
+    await stream(contentId, `q ${w} 0 0 ${h} 0 0 cm /Im0 Do Q${buildTextLayer(page.texts)}`)
     startObject(imageId)
     push(
       `<< /Type /XObject /Subtype /Image /Width ${page.pxWidth} /Height ${page.pxHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${page.jpeg.length} >>\nstream\n`,
     )
     push(page.jpeg)
     push('\nendstream\nendobj\n')
-  })
+  }
 
-  const objectCount = 3 + pages.length * 3
+  const objectCount = 7 + pages.length * 3
   const xrefOffset = length
   push(`xref\n0 ${objectCount}\n0000000000 65535 f \n`)
   for (let id = 1; id < objectCount; id++) {
@@ -430,6 +706,16 @@ async function exportRegion(
   fileName: string,
   hideFixed: 'after-first' | 'always',
 ): Promise<void> {
+  // PDF 要叠透明文字层：先在页面上量好文字位置（截图过程会滚动、隐藏元素，要在那之前量）
+  const runs =
+    format === 'pdf'
+      ? await runInPage(tabId, collectTextRuns, rect, hideFixed === 'always').catch(
+          (error: unknown) => {
+            console.warn('[DevGo] collect text layer failed:', error)
+            return [] as TextRun[]
+          },
+        )
+      : []
   await withTileCapturer(tabId, info.dpr, { hideFixed }, async (capture) => {
     if (format === 'png') {
       const canvas = await renderRegion(capture, rect, info.dpr)
@@ -439,20 +725,37 @@ async function exportRegion(
     }
 
     // PDF：按单页上限切成多页，每页单独截取编码，避免一张超长画布占满内存
-    const pages = []
+    const pages: PdfPage[] = []
     for (let offset = 0; offset < rect.height; offset += PDF_MAX_PAGE_CSS) {
       const height = Math.min(PDF_MAX_PAGE_CSS, rect.height - offset)
       const canvas = await renderRegion(capture, { ...rect, y: rect.y + offset, height }, info.dpr)
       const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.92 })
+      const top = rect.y + offset
+      const ptHeight = height * PX_TO_PT
       pages.push({
         jpeg: new Uint8Array(await blob.arrayBuffer()),
         pxWidth: canvas.width,
         pxHeight: canvas.height,
         ptWidth: rect.width * PX_TO_PT,
-        ptHeight: height * PX_TO_PT,
+        ptHeight,
+        texts: runs
+          // 按文字中线归到所在页，跨页的那一行只出现一次
+          .filter((run) => {
+            const middle = run.y + run.height / 2
+            return middle >= top && middle < top + height
+          })
+          .map((run) => ({
+            text: run.text,
+            x: (run.x - rect.x) * PX_TO_PT,
+            offsets: run.offsets.map((value) => value * PX_TO_PT),
+            // 基线大约在行框顶部往下 0.8 个字号处（PDF 的 y 轴从下往上）
+            y: ptHeight - (run.y - top + run.height / 2 + run.size * 0.32) * PX_TO_PT,
+            size: run.size * PX_TO_PT,
+            width: run.width * PX_TO_PT,
+          })),
       })
     }
-    await download(buildPdf(pages), 'application/pdf', fileName)
+    await download(await buildPdf(pages), 'application/pdf', fileName)
   })
 }
 
