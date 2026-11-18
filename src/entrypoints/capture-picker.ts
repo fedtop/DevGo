@@ -231,6 +231,9 @@ async function startPicker() {
     for (const [type, listener] of listeners) window.removeEventListener(type, listener, true)
     host.style.display = 'none'
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    // 标记选中的元素：后台逐屏截取时会隐藏吸顶 / 固定定位的元素，但不能把选中的这块也藏了
+    const target = current
+    target.setAttribute('data-devgo-capture-target', '')
     try {
       const result = await sendRuntimeMessage({ type: 'capture-element', format, rect: area })
       showToast(
@@ -244,6 +247,8 @@ async function startPicker() {
           error: error instanceof Error ? error.message : String(error),
         }),
       )
+    } finally {
+      target.removeAttribute('data-devgo-capture-target')
     }
   }
 

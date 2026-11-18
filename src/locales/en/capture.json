@@ -19,10 +19,9 @@
     "failed": "Export failed: {error}"
   },
   "errors": {
-    "permission": "Grant the debugger permission to capture the full page. Chrome briefly shows a bar saying the extension is debugging this page",
     "restricted": "This page can't be captured by extensions (browser pages, the Chrome Web Store, etc.)",
     "noTab": "Couldn't find the current tab",
     "empty": "The selected area has no size",
-    "unsupported": "This browser doesn't support capturing pages"
+    "notActive": "Switch to the tab you want to export, then try again"
   }
 }

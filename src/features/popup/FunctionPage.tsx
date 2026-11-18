@@ -3,7 +3,6 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
-import { requestCapturePermission } from '@/utils/capture-permission'
 import { t } from '@/utils/i18n'
 import {
   dockDisabledHosts,
@@ -196,42 +195,28 @@ function CaptureRow() {
   const fail = (error: unknown) =>
     setStatus({ text: error instanceof Error ? error.message : String(error), error: true })
 
-  // 权限申请必须在点击的同步调用栈里发起，requestCapturePermission 要在任何 await 之前调用
   const exportPage = (format: CaptureFormat) => {
-    const permission = requestCapturePermission()
-    void (async () => {
-      if (!(await permission)) {
-        setStatus({ text: t('capture.errors.permission'), error: true })
-        return
-      }
-      setBusy(true)
-      setStatus({ text: t('capture.popup.exporting') })
-      const result = await sendRuntimeMessage({
-        type: 'capture-page',
-        format,
-        tabId: tabId ?? undefined,
-      })
-      setStatus(
-        result.ok
-          ? { text: t('capture.popup.done', { name: result.fileName ?? '' }) }
-          : { text: result.error ?? '', error: true },
+    setBusy(true)
+    setStatus({ text: t('capture.popup.exporting') })
+    void sendRuntimeMessage({ type: 'capture-page', format, tabId: tabId ?? undefined })
+      .then((result) =>
+        setStatus(
+          result.ok
+            ? { text: t('capture.popup.done', { name: result.fileName ?? '' }) }
+            : { text: result.error ?? '', error: true },
+        ),
       )
-    })()
       .catch(fail)
       .finally(() => setBusy(false))
   }
 
   const pick = () => {
-    const permission = requestCapturePermission()
-    void (async () => {
-      if (!(await permission)) {
-        setStatus({ text: t('capture.errors.permission'), error: true })
-        return
-      }
-      const result = await sendRuntimeMessage({ type: 'capture-pick', tabId: tabId ?? undefined })
-      if (result.ok) window.close()
-      else setStatus({ text: result.error ?? '', error: true })
-    })().catch(fail)
+    void sendRuntimeMessage({ type: 'capture-pick', tabId: tabId ?? undefined })
+      .then((result) => {
+        if (result.ok) window.close()
+        else setStatus({ text: result.error ?? '', error: true })
+      })
+      .catch(fail)
   }
 
   const disabled = busy || !hostname || tabId == null

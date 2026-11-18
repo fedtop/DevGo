@@ -3,12 +3,12 @@
  *
  * 按浏览器实际渲染的画面分块截取再拼接，而不是走打印：打印会套用 print 样式、按纸张宽度重排，
  * 导出来和屏幕上看到的不一样。代价是 PDF 里是图片，文字不能选中。
- * - Chrome：debugger 协议的 captureBeyondViewport 截视口外的部分（可选权限 debugger，首次使用时申请）；
- * - Firefox：tabs.captureTab 直接按页面坐标截取。
+ * - Chrome：逐屏滚动 + tabs.captureVisibleTab 拼接（<all_urls> 已覆盖，不需要额外权限；
+ *   debugger 不能声明成可选权限，改成必需权限会让老用户更新后扩展被停用）；
+ * - Firefox：tabs.captureTab 直接按页面坐标截取视口外的区域。
  */
 
 import { t } from '@/utils/i18n'
-import { getCaptureTab } from '@/utils/capture-permission'
 import type { CaptureFormat, CaptureRect, CaptureResult } from '@/utils/messaging'
 
 const DOWNLOAD_DIR = 'DevGo-Export'
@@ -20,6 +20,18 @@ const MAX_CANVAS_SIDE = 32_000
 /** PDF 单页最大 14400pt（PDF 规范上限），按 96dpi 换算成 CSS 像素 */
 const PDF_MAX_PAGE_CSS = 19_200
 const PX_TO_PT = 0.75
+/** captureVisibleTab 每秒最多调用 2 次，两次之间留出余量 */
+const VISIBLE_CAPTURE_INTERVAL_MS = 550
+
+/** Firefox 有 tabs.captureTab（可按页面坐标截取视口外区域），Chrome 没有 */
+type CaptureTab = (
+  tabId: number,
+  options: { format: 'png'; rect: CaptureRect; scale: number },
+) => Promise<string>
+
+function getCaptureTab(): CaptureTab | undefined {
+  return (browser.tabs as unknown as { captureTab?: CaptureTab }).captureTab
+}
 
 interface PageInfo {
   title: string
@@ -114,50 +126,130 @@ async function preloadLazyContent(tabId: number): Promise<void> {
   })
 }
 
-/** 截取页面上一块区域（文档坐标），返回位图 */
-type TileCapturer = (rect: CaptureRect, scale: number) => Promise<ImageBitmap>
-
-async function dataUrlToBitmap(dataUrl: string): Promise<ImageBitmap> {
-  const blob = await (await fetch(dataUrl)).blob()
-  return createImageBitmap(blob)
+/**
+ * 截取页面上一块区域（文档坐标），返回位图。
+ * maxHeight：单块最高多少 CSS 像素（Chrome 逐屏截取，不能超过一屏）。
+ */
+interface TileCapturer {
+  maxHeight: number
+  capture(rect: CaptureRect, scale: number): Promise<ImageBitmap>
 }
+
+async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  return (await fetch(dataUrl)).blob()
+}
+
+/**
+ * 隐藏 / 恢复网页里固定定位与吸顶的元素（导航栏、悬浮按钮等）：逐屏截取时它们会在每一屏重复出现。
+ * 区域选择器选中的元素（带 data-devgo-capture-target）及其祖先、后代不动。
+ */
+function toggleFixedElements(hide: boolean) {
+  const MARK = 'devgoCaptureFixed'
+  if (!hide) {
+    for (const el of document.querySelectorAll<HTMLElement>('[data-devgo-capture-fixed]')) {
+      const previous = el.dataset[MARK] ?? ''
+      if (previous) el.style.setProperty('visibility', previous)
+      else el.style.removeProperty('visibility')
+      delete el.dataset[MARK]
+    }
+    return
+  }
+  const target = document.querySelector('[data-devgo-capture-target]')
+  for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+    if (el.tagName.startsWith('DEVGO-')) continue
+    const position = getComputedStyle(el).position
+    if (position !== 'fixed' && position !== 'sticky') continue
+    if (target && (el.contains(target) || target.contains(el))) continue
+    el.dataset[MARK] = el.style.getPropertyValue('visibility')
+    el.style.setProperty('visibility', 'hidden', 'important')
+  }
+}
+
+/** 滚到指定位置并等画面刷新，返回实际的滚动位置与视口尺寸 */
+async function scrollForCapture(x: number, y: number) {
+  window.scrollTo({ left: x, top: y, behavior: 'instant' })
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  await new Promise((resolve) => setTimeout(resolve, 120))
+  return {
+    scrollX: window.scrollX,
+    scrollY: window.scrollY,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+  }
+}
+
+let lastVisibleCaptureAt = 0
 
 async function withTileCapturer<T>(
   tabId: number,
   dpr: number,
-  run: (capture: TileCapturer) => Promise<T>,
+  options: { hideFixed: 'after-first' | 'always' },
+  run: (capturer: TileCapturer) => Promise<T>,
 ): Promise<T> {
   const captureTab = getCaptureTab()
   if (captureTab) {
-    return run((rect, scale) =>
-      captureTab(tabId, { format: 'png', rect, scale: dpr * scale }).then(dataUrlToBitmap),
-    )
+    return run({
+      maxHeight: Number.POSITIVE_INFINITY,
+      capture: (rect, scale) =>
+        captureTab(tabId, { format: 'png', rect, scale: dpr * scale })
+          .then(dataUrlToBlob)
+          .then((blob) => createImageBitmap(blob)),
+    })
   }
 
-  if (!chrome.debugger) throw new CaptureError(t('capture.errors.unsupported'))
-  const granted = await browser.permissions.contains({ permissions: ['debugger'] })
-  if (!granted) throw new CaptureError(t('capture.errors.permission'))
+  const tab = await browser.tabs.get(tabId)
+  if (!tab.active || tab.windowId == null) throw new CaptureError(t('capture.errors.notActive'))
+  const windowId = tab.windowId
+  const start = await runInPage(tabId, () => ({
+    x: window.scrollX,
+    y: window.scrollY,
+    h: window.innerHeight,
+  }))
 
-  const target = { tabId }
-  try {
-    await chrome.debugger.attach(target, '1.3')
-  } catch (error) {
-    if (isRestrictedError(error)) throw new CaptureError(t('capture.errors.restricted'))
-    throw error
+  let captured = 0
+  let fixedHidden = false
+  const hideFixed = async () => {
+    if (fixedHidden) return
+    fixedHidden = true
+    await runInPage(tabId, toggleFixedElements, true)
   }
+
   try {
-    return await run(async (rect, scale) => {
-      const result = (await chrome.debugger.sendCommand(target, 'Page.captureScreenshot', {
-        format: 'png',
-        fromSurface: true,
-        captureBeyondViewport: true,
-        clip: { ...rect, scale },
-      })) as { data?: string } | undefined
-      if (!result?.data) throw new Error('captureScreenshot returned no data')
-      return dataUrlToBitmap(`data:image/png;base64,${result.data}`)
+    if (options.hideFixed === 'always') await hideFixed()
+    return await run({
+      maxHeight: start.h,
+      capture: async (rect) => {
+        // 页面模式：第一屏保留吸顶导航，之后各屏隐藏，避免重复出现
+        if (captured === 1) await hideFixed()
+        const view = await runInPage(tabId, scrollForCapture, rect.x, rect.y)
+        const wait = lastVisibleCaptureAt + VISIBLE_CAPTURE_INTERVAL_MS - Date.now()
+        if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
+        lastVisibleCaptureAt = Date.now()
+        const dataUrl = await browser.tabs.captureVisibleTab(windowId, { format: 'png' })
+        captured++
+        const full = await createImageBitmap(await dataUrlToBlob(dataUrl))
+        const ratio = full.width / view.viewportWidth
+        const crop = await createImageBitmap(
+          full,
+          Math.round((rect.x - view.scrollX) * ratio),
+          Math.round((rect.y - view.scrollY) * ratio),
+          Math.max(1, Math.round(rect.width * ratio)),
+          Math.max(1, Math.round(rect.height * ratio)),
+        )
+        full.close()
+        return crop
+      },
     })
   } finally {
-    await chrome.debugger.detach(target).catch(() => undefined)
+    if (fixedHidden) await runInPage(tabId, toggleFixedElements, false).catch(() => undefined)
+    await runInPage(
+      tabId,
+      (x: number, y: number) => {
+        window.scrollTo({ left: x, top: y, behavior: 'instant' })
+      },
+      start.x,
+      start.y,
+    ).catch(() => undefined)
   }
 }
 
@@ -173,9 +265,17 @@ function fitScale(width: number, height: number, dpr: number): number {
   )
 }
 
+/** 最小的 CSS 像素步长，使其乘以设备像素比后是整数（1.5x 屏是 2，1.25x 屏是 4） */
+function pixelAlignedUnit(dpr: number): number {
+  for (let unit = 1; unit <= 8; unit++) {
+    if (Math.abs(dpr * unit - Math.round(dpr * unit)) < 0.01) return unit
+  }
+  return 1
+}
+
 /** 分块截取一块区域并拼到一张画布上 */
 async function renderRegion(
-  capture: TileCapturer,
+  capturer: TileCapturer,
   rect: CaptureRect,
   dpr: number,
 ): Promise<OffscreenCanvas> {
@@ -190,15 +290,21 @@ async function renderRegion(
   ctx.fillStyle = '#fff'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const tileCss = Math.max(1, Math.floor(MAX_TILE_PX / k))
+  // 每块的高度取「乘以像素比后是整数」的 CSS 像素，滚动位置落在整像素上，块与块之间不会错位
+  const unit = pixelAlignedUnit(dpr)
+  // 留出一个步长给接缝处的重叠
+  const limit = Math.min(capturer.maxHeight - unit, Math.floor(MAX_TILE_PX / k))
+  const tileCss = Math.max(unit, Math.floor(limit / unit) * unit)
   for (let offset = 0; offset < rect.height; offset += tileCss) {
     const height = Math.min(tileCss, rect.height - offset)
-    const bitmap = await capture(
-      { x: rect.x, y: rect.y + offset, width: rect.width, height },
+    // 非最后一块多截一点，下一块从上面盖住，避免取整误差在接缝处漏出一条白线
+    const overlap = offset + height < rect.height ? unit : 0
+    const bitmap = await capturer.capture(
+      { x: rect.x, y: rect.y + offset, width: rect.width, height: height + overlap },
       scale,
     )
     const top = Math.round(offset * k)
-    const bottom = Math.round((offset + height) * k)
+    const bottom = Math.round((offset + height + overlap) * k)
     ctx.drawImage(bitmap, 0, top, canvas.width, bottom - top)
     bitmap.close()
   }
@@ -322,8 +428,9 @@ async function exportRegion(
   rect: CaptureRect,
   format: CaptureFormat,
   fileName: string,
+  hideFixed: 'after-first' | 'always',
 ): Promise<void> {
-  await withTileCapturer(tabId, info.dpr, async (capture) => {
+  await withTileCapturer(tabId, info.dpr, { hideFixed }, async (capture) => {
     if (format === 'png') {
       const canvas = await renderRegion(capture, rect, info.dpr)
       const blob = await canvas.convertToBlob({ type: 'image/png' })
@@ -376,6 +483,7 @@ export async function capturePage(format: CaptureFormat, tabId?: number): Promis
         { x: 0, y: 0, width: info.viewportWidth, height: info.contentHeight },
         format,
         fileName,
+        'after-first',
       )
       return { ok: true, fileName }
     } finally {
@@ -404,9 +512,16 @@ export async function captureElement(
       await exportRegion(
         tabId,
         info,
-        { x: Math.max(0, Math.round(rect.x)), y: Math.max(0, Math.round(rect.y)), width, height },
+        {
+          x: Math.max(0, Math.round(rect.x)),
+          y: Math.max(0, Math.round(rect.y)),
+          // 逐屏截取只能拿到视口宽度以内的部分
+          width: Math.min(width, info.viewportWidth),
+          height,
+        },
         format,
         fileName,
+        'always',
       )
       return { ok: true, fileName }
     } finally {

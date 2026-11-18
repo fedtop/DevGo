@@ -3,7 +3,6 @@
  */
 
 import { capturePage, startCapturePicker } from '@/background/capture'
-import { requestCapturePermission } from '@/utils/capture-permission'
 import { initI18n, onLocaleChange, t, uiLanguage } from '@/utils/i18n'
 import {
   sendTabMessage,
@@ -139,11 +138,9 @@ export function registerCommands() {
       return
     }
     if (info.menuItemId === CAPTURE_PDF_ID || info.menuItemId === CAPTURE_PICK_ID) {
-      // 权限申请必须在右键菜单点击的同步调用栈里发起，不能先 await
-      const permission = requestCapturePermission()
       const tabId = tab?.id
-      void permission.then(async (granted) => {
-        if (!granted || tabId == null) return
+      if (tabId == null) return
+      void (async () => {
         const result =
           info.menuItemId === CAPTURE_PDF_ID
             ? await capturePage('pdf', tabId)
@@ -151,7 +148,7 @@ export function registerCommands() {
         if (!result.ok && result.error) {
           void sendTabMessage({ type: 'tip', msg: result.error }).catch(() => undefined)
         }
-      })
+      })()
     }
   })
 
