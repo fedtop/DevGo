@@ -18,7 +18,7 @@ import { formatShortcut } from '@/utils/shortcut'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { getActiveHostname } from '@/utils/tabs'
 import { useStorageItem } from '@/utils/useStorageItem'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, FileText, ImageDown, SquareDashedMousePointer } from 'lucide-react'
 
 function Row({ title, desc, children }: { title: string; desc: ReactNode; children: ReactNode }) {
   return (
@@ -231,25 +231,25 @@ function CaptureRow() {
           {status?.text ?? (hostname ? t('capture.popup.desc') : t('popup.common.pageUnsupported'))}
         </span>
       </div>
-      <div className='flex gap-2'>
-        <Button
-          variant='primary'
-          onClick={() => exportPage('pdf')}
-          disabled={disabled}
-          className='!px-3 !py-1 text-xs'
-        >
-          {t('capture.popup.pagePdf')}
-        </Button>
-        <Button
-          onClick={() => exportPage('png')}
-          disabled={disabled}
-          className='!px-3 !py-1 text-xs'
-        >
-          {t('capture.popup.pagePng')}
-        </Button>
-        <Button onClick={pick} disabled={disabled} className='!px-3 !py-1 text-xs'>
-          {t('capture.popup.pick')}
-        </Button>
+      <div className='grid grid-cols-3 gap-1.5'>
+        {(
+          [
+            [FileText, t('capture.popup.pagePdf'), () => exportPage('pdf')],
+            [ImageDown, t('capture.popup.pagePng'), () => exportPage('png')],
+            [SquareDashedMousePointer, t('capture.popup.pick'), pick],
+          ] as const
+        ).map(([Icon, label, onClick]) => (
+          <button
+            key={label}
+            type='button'
+            onClick={onClick}
+            disabled={disabled}
+            className='flex flex-col items-center gap-1 rounded-md border border-neutral-200 py-2 text-xs text-neutral-700 transition-colors enabled:hover:border-accent-300 enabled:hover:bg-accent-50/60 enabled:hover:text-accent-600 disabled:cursor-not-allowed disabled:opacity-50'
+          >
+            <Icon className='size-4' strokeWidth={1.75} aria-hidden />
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )
