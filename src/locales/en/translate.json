@@ -91,7 +91,7 @@
     "doubao": "Doubao (Volcano Ark)",
     "ollama": "Ollama (local)",
     "hint": {
-      "zhipu": "GLM-4.5 and above think before answering by default, which slows full-page translation. For speed, pick glm-4-flash / glm-4-air",
+      "zhipu": "Translation defaults to the fast glm-5.3-flash; for chat (selection AI, side panel assistant) glm-5.3 is recommended",
       "codingPlan": "Coding Plan keys only work with their dedicated base URLs; some plans restrict usage to coding tools — check your plan's terms",
       "arkCoding": "Enter a model ID supported by your plan as the model name (open the model dropdown to fetch them). Coding Plan keys only work with their dedicated base URLs; some plans restrict usage to coding tools — check your plan's terms",
       "doubao": "Enter the model ID or inference endpoint ID (ep-xxxx) from the Ark console as the model name",

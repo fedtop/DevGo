@@ -105,7 +105,7 @@
     "translateModel": {
       "title": "翻译模型",
       "badge": "追求速度",
-      "desc": "整页 / 悬停 / 划词翻译，翻译引擎选「AI 大模型」时生效。建议选不带深度思考的快模型，如 glm-4-flash、qwen-turbo、deepseek-chat。"
+      "desc": "整页 / 悬停 / 划词翻译，翻译引擎选「AI 大模型」时生效。建议选不带深度思考的快模型，如 glm-5.3-flash、qwen-turbo、deepseek-chat。"
     },
     "chatModel": {
       "title": "对话模型",

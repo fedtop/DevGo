@@ -91,7 +91,7 @@
     "doubao": "豆包（火山方舟）",
     "ollama": "Ollama（本地）",
     "hint": {
-      "zhipu": "GLM-4.5 及以上模型默认会先思考再回答，整页翻译较慢；追求速度可选 glm-4-flash / glm-4-air",
+      "zhipu": "翻译默认用快模型 glm-5.3-flash，对话（划词 AI、侧边栏助手）推荐 glm-5.3",
       "codingPlan": "Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意",
       "arkCoding": "模型名填写套餐支持的模型 ID（可点开模型下拉获取）。Coding Plan 套餐 Key 只能配合专属接口地址使用；部分套餐条款限定在编程工具中使用，请留意",
       "doubao": "模型名填写方舟控制台里的模型 ID 或推理接入点 ID（ep-xxxx）",

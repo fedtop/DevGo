@@ -1,8 +1,9 @@
 /**
  * 对话模型的读取：划词 AI 动作与侧边栏助手共用。
- * 用户没单独配置对话模型时沿用翻译模型（同一个服务商通常两边都能用）。
+ * 用户没单独配置对话模型时沿用翻译的服务与 Key（同一个服务商通常两边都能用），
+ * 但翻译默认的快模型会换成该服务推荐的对话模型（对话要能力，不求快）。
  */
-import { isLlmConfigReady, type LlmConfig } from '@/features/translate/llm-config'
+import { isLlmConfigReady, toChatConfig, type LlmConfig } from '@/features/translate/llm-config'
 import {
   assistantLlmApiKey,
   assistantLlmConfig,
@@ -26,7 +27,7 @@ export function resolveChatModel(
 ): ChatModel {
   return assistantConfig
     ? { config: assistantConfig, apiKey: assistantKey, inherited: false }
-    : { config: translateConfig, apiKey: translateKey, inherited: true }
+    : { config: toChatConfig(translateConfig), apiKey: translateKey, inherited: true }
 }
 
 export async function readChatModel(): Promise<ChatModel> {

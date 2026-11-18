@@ -22,7 +22,12 @@ export interface LlmPreset {
   id: string
   label: string
   baseUrl: string
+  /** 默认模型：翻译用，偏快 */
   model: string
+  /** 对话模型（划词 AI、侧边栏助手）推荐用的模型，偏强；不填时与 model 相同 */
+  chatModel?: string
+  /** 以前版本的默认模型：沿用翻译配置做对话时，遇到它们也换成 chatModel */
+  legacyModels?: string[]
   /** 常用模型（下拉兜底候选；服务支持 /models 时会合并实时列表） */
   models?: string[]
   /** 填写提示（在哪里拿 key、模型名含义等） */
@@ -47,16 +52,20 @@ const PRESET_DEFS: readonly LlmPresetDef[] = [
     id: 'zhipu',
     labelKey: 'translate.presets.zhipu',
     baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-    model: 'glm-4-flash',
-    models: ['glm-4-flash', 'glm-4-air', 'glm-4-plus', 'glm-4.5-air', 'glm-4.5', 'glm-4.6'],
+    model: 'glm-5.3-flash',
+    chatModel: 'glm-5.3',
+    legacyModels: ['glm-4-flash'],
+    models: ['glm-5.3-flash', 'glm-5.3', 'glm-5.2', 'glm-5.1', 'glm-4.7', 'glm-4.5-air'],
     hintKey: 'translate.presets.hint.zhipu',
   },
   {
     id: 'zhipu-coding',
     labelKey: 'translate.presets.zhipuCoding',
     baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4',
-    model: 'glm-4.6',
-    models: ['glm-4.6', 'glm-4.5', 'glm-4.5-air'],
+    model: 'glm-5.3-flash',
+    chatModel: 'glm-5.3',
+    legacyModels: ['glm-4.6'],
+    models: ['glm-5.3-flash', 'glm-5.3', 'glm-5.2', 'glm-5.1', 'glm-4.7', 'glm-4.5-air'],
     hintKey: 'translate.presets.hint.codingPlan',
   },
   {
@@ -180,6 +189,19 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
 
 export function getLlmPreset(id: string): LlmPreset | undefined {
   return LLM_PRESETS.find((preset) => preset.id === id)
+}
+
+/**
+ * 把翻译用的配置换成适合对话的模型：用的是预设的默认（快）模型时，换成预设推荐的对话模型；
+ * 用户自己选过的其他模型保持不变。
+ */
+export function toChatConfig(config: LlmConfig): LlmConfig {
+  const preset =
+    config.preset === 'custom' ? findPresetByBaseUrl(config.baseUrl) : getLlmPreset(config.preset)
+  if (!preset?.chatModel) return config
+  const model = config.model.trim()
+  const isDefault = model === preset.model || (preset.legacyModels ?? []).includes(model)
+  return isDefault ? { ...config, model: preset.chatModel } : config
 }
 
 /** 按接口地址匹配预设（手动改地址后仍能识别出是哪家服务） */

@@ -6,6 +6,7 @@ import {
   isLlmConfigReady,
   requiresApiKey,
   LLM_PRESETS,
+  toChatConfig,
   type LlmConfig,
 } from '@/features/translate/llm-config'
 import { describeServiceError } from '@/features/translate/errors'
@@ -93,7 +94,10 @@ export default function LlmConfigForm({
 
   /** 助手从未保存过配置时，用翻译的 AI 配置预填（同一个服务商通常两边都能用） */
   const assistantPrefilled = forAssistant && assistantConfigLoaded && assistantConfig === null
-  const savedConfig = forAssistant ? (assistantConfig ?? translateConfig) : translateConfig
+  const savedConfig = useMemo(
+    () => (forAssistant ? (assistantConfig ?? toChatConfig(translateConfig)) : translateConfig),
+    [forAssistant, assistantConfig, translateConfig],
+  )
   const savedKey = forAssistant ? (assistantPrefilled ? translateKey : assistantKey) : translateKey
   const configLoaded = forAssistant
     ? assistantConfigLoaded && translateConfigLoaded
@@ -127,7 +131,12 @@ export default function LlmConfigForm({
 
   /** 模型下拉：服务端实时列表为主（常用模型排前并标注），拉取失败时用预设候选兜底 */
   const modelOptions = useMemo<ComboboxOption[]>(() => {
-    const common = matchedPreset?.models ?? []
+    const presetModels = matchedPreset?.models ?? []
+    // 对话模型把推荐的强模型排在最前
+    const preferred = forAssistant ? matchedPreset?.chatModel : undefined
+    const common = preferred
+      ? [preferred, ...presetModels.filter((id) => id !== preferred)]
+      : presetModels
     const fetched = remote?.source === modelSource ? remote.models : []
     const ordered = [...common.filter((id) => !fetched.length || fetched.includes(id))]
     fetched.forEach((id) => {
@@ -137,7 +146,7 @@ export default function LlmConfigForm({
       value: id,
       note: common.includes(id) ? t('translate.llmForm.commonModel') : undefined,
     }))
-  }, [matchedPreset, remote, modelSource])
+  }, [matchedPreset, remote, modelSource, forAssistant])
 
   /** 远程服务没填 Key 时不发请求：必然鉴权失败，直接提示先填 Key */
   const missingKey = requiresApiKey(draft.baseUrl) && !apiKey.trim()
@@ -210,7 +219,14 @@ export default function LlmConfigForm({
     const next = getLlmPreset(id)
     if (!next) return
     update(
-      id === 'custom' ? { preset: id } : { preset: id, baseUrl: next.baseUrl, model: next.model },
+      id === 'custom'
+        ? { preset: id }
+        : {
+            preset: id,
+            baseUrl: next.baseUrl,
+            // 对话模型用预设推荐的强模型，翻译用默认的快模型
+            model: forAssistant ? (next.chatModel ?? next.model) : next.model,
+          },
     )
   }
 

@@ -105,7 +105,7 @@
     "translateModel": {
       "title": "Translation model",
       "badge": "Built for speed",
-      "desc": "Used for full-page / hover / selection translation when the engine is set to \"AI model\". Pick a fast model without deep thinking, e.g. glm-4-flash, qwen-turbo, deepseek-chat."
+      "desc": "Used for full-page / hover / selection translation when the engine is set to \"AI model\". Pick a fast model without deep thinking, e.g. glm-5.3-flash, qwen-turbo, deepseek-chat."
     },
     "chatModel": {
       "title": "Chat model",
