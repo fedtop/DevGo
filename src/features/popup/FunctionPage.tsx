@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
+import { requestCapturePermission } from '@/utils/capture-permission'
 import { t } from '@/utils/i18n'
 import {
   dockDisabledHosts,
@@ -13,6 +14,7 @@ import {
   unlockHosts,
   type SidepanelView,
 } from '@/utils/settings'
+import { sendRuntimeMessage, type CaptureFormat } from '@/utils/messaging'
 import { formatShortcut } from '@/utils/shortcut'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { getActiveHostname } from '@/utils/tabs'
@@ -180,6 +182,94 @@ function SiteSwitchRow({
   )
 }
 
+/** 导出网页：整页 PDF / 长图，或在网页里框选区域导出 */
+function CaptureRow() {
+  const tabId = useActiveTabId()
+  const [hostname, setHostname] = useState('')
+  const [status, setStatus] = useState<{ text: string; error?: boolean } | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    void getActiveHostname().then(setHostname)
+  }, [])
+
+  const fail = (error: unknown) =>
+    setStatus({ text: error instanceof Error ? error.message : String(error), error: true })
+
+  // 权限申请必须在点击的同步调用栈里发起，requestCapturePermission 要在任何 await 之前调用
+  const exportPage = (format: CaptureFormat) => {
+    const permission = requestCapturePermission()
+    void (async () => {
+      if (!(await permission)) {
+        setStatus({ text: t('capture.errors.permission'), error: true })
+        return
+      }
+      setBusy(true)
+      setStatus({ text: t('capture.popup.exporting') })
+      const result = await sendRuntimeMessage({
+        type: 'capture-page',
+        format,
+        tabId: tabId ?? undefined,
+      })
+      setStatus(
+        result.ok
+          ? { text: t('capture.popup.done', { name: result.fileName ?? '' }) }
+          : { text: result.error ?? '', error: true },
+      )
+    })()
+      .catch(fail)
+      .finally(() => setBusy(false))
+  }
+
+  const pick = () => {
+    const permission = requestCapturePermission()
+    void (async () => {
+      if (!(await permission)) {
+        setStatus({ text: t('capture.errors.permission'), error: true })
+        return
+      }
+      const result = await sendRuntimeMessage({ type: 'capture-pick', tabId: tabId ?? undefined })
+      if (result.ok) window.close()
+      else setStatus({ text: result.error ?? '', error: true })
+    })().catch(fail)
+  }
+
+  const disabled = busy || !hostname || tabId == null
+
+  return (
+    <div className='flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5'>
+      <div className='flex min-w-0 flex-col'>
+        <span className='text-sm font-medium text-neutral-800'>{t('capture.popup.title')}</span>
+        <span
+          className={`text-xs ${status?.error ? 'text-amber-600' : 'text-neutral-500'} ${status ? 'break-all' : 'truncate'}`}
+        >
+          {status?.text ?? (hostname ? t('capture.popup.desc') : t('popup.common.pageUnsupported'))}
+        </span>
+      </div>
+      <div className='flex gap-2'>
+        <Button
+          variant='primary'
+          onClick={() => exportPage('pdf')}
+          disabled={disabled}
+          className='!px-3 !py-1 text-xs'
+        >
+          {t('capture.popup.pagePdf')}
+        </Button>
+        <Button
+          onClick={() => exportPage('png')}
+          disabled={disabled}
+          className='!px-3 !py-1 text-xs'
+        >
+          {t('capture.popup.pagePng')}
+        </Button>
+        <Button onClick={pick} disabled={disabled} className='!px-3 !py-1 text-xs'>
+          {t('capture.popup.pick')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 /** 解除复制限制：只对当前站点开关（全局阻断 copy 等事件会让在线编辑器失灵） */
 function UnlockSiteRow() {
   const [hosts, setHosts] = useStorageItem(unlockHosts)
@@ -239,6 +329,7 @@ export default function FunctionPage() {
         hostsItem={selectionDisabledHosts}
         feature={t('popup.function.selectionFeature')}
       />
+      <CaptureRow />
       <UnlockSiteRow />
       <button
         type='button'

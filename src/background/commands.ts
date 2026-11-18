@@ -2,6 +2,8 @@
  * 快捷键命令与右键菜单：打开 popup 并定位到指定 Tab、切换整页翻译。
  */
 
+import { capturePage, startCapturePicker } from '@/background/capture'
+import { requestCapturePermission } from '@/utils/capture-permission'
 import { initI18n, onLocaleChange, t, uiLanguage } from '@/utils/i18n'
 import {
   sendTabMessage,
@@ -23,6 +25,8 @@ const COMMAND_TO_TAB: Record<string, PopupShortcutTab> = {
   'open-tools': 'tools',
 }
 const INLINE_TRANSLATE_ID = 'inline-translate'
+const CAPTURE_PDF_ID = 'capture-page-pdf'
+const CAPTURE_PICK_ID = 'capture-pick'
 
 function isPopupShortcutResponse(value: unknown): value is PopupShortcutResponse {
   return (
@@ -84,6 +88,16 @@ export function createContextMenus() {
       title: t('background.contextMenu.inlineTranslate'),
       contexts: ['page', 'selection'],
     })
+    browser.contextMenus.create({
+      id: CAPTURE_PDF_ID,
+      title: t('background.contextMenu.capturePdf'),
+      contexts: ['page'],
+    })
+    browser.contextMenus.create({
+      id: CAPTURE_PICK_ID,
+      title: t('background.contextMenu.capturePick'),
+      contexts: ['page'],
+    })
   })().catch((error: unknown) => console.warn('[DevGo] create context menus failed:', error))
 }
 
@@ -92,6 +106,12 @@ async function updateContextMenuTitles(): Promise<void> {
   try {
     await browser.contextMenus.update(INLINE_TRANSLATE_ID, {
       title: t('background.contextMenu.inlineTranslate'),
+    })
+    await browser.contextMenus.update(CAPTURE_PDF_ID, {
+      title: t('background.contextMenu.capturePdf'),
+    })
+    await browser.contextMenus.update(CAPTURE_PICK_ID, {
+      title: t('background.contextMenu.capturePick'),
     })
   } catch (error) {
     console.warn('[DevGo] update context menus failed:', error)
@@ -113,9 +133,25 @@ export function registerContextMenuLocaleWatcher() {
 /** 注册右键菜单点击与快捷键命令监听 */
 export function registerCommands() {
   // 右键菜单点击 -> 切换当前页面的整页双语翻译
-  browser.contextMenus.onClicked.addListener((info) => {
+  browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === INLINE_TRANSLATE_ID) {
       void sendTabMessage({ type: 'translate-page' })
+      return
+    }
+    if (info.menuItemId === CAPTURE_PDF_ID || info.menuItemId === CAPTURE_PICK_ID) {
+      // 权限申请必须在右键菜单点击的同步调用栈里发起，不能先 await
+      const permission = requestCapturePermission()
+      const tabId = tab?.id
+      void permission.then(async (granted) => {
+        if (!granted || tabId == null) return
+        const result =
+          info.menuItemId === CAPTURE_PDF_ID
+            ? await capturePage('pdf', tabId)
+            : await startCapturePicker(tabId)
+        if (!result.ok && result.error) {
+          void sendTabMessage({ type: 'tip', msg: result.error }).catch(() => undefined)
+        }
+      })
     }
   })
 

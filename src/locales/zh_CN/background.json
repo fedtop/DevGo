@@ -1,6 +1,8 @@
 {
   "contextMenu": {
-    "inlineTranslate": "翻译当前页面（再次点击恢复原文）"
+    "inlineTranslate": "翻译当前页面（再次点击恢复原文）",
+    "capturePdf": "将网页导出为 PDF",
+    "capturePick": "选择网页区域导出为图片 / PDF"
   },
   "media": {
     "noActiveTab": "无法获取当前标签页"

@@ -9,6 +9,7 @@ import {
   registerOpenAssistantListener,
   testAssistant,
 } from '@/background/ai'
+import { captureElement, capturePage, startCapturePicker } from '@/background/capture'
 import {
   createContextMenus,
   registerCommands,
@@ -117,6 +118,10 @@ export default defineBackground(() => {
     'clear-media-resources': (message) => clearMediaResources(message.tabId),
     'download-media-resource': (message) =>
       downloadMediaResource(message.url, message.fileName, message.mime, message.saveAs),
+    'capture-page': (message) => capturePage(message.format, message.tabId),
+    'capture-pick': (message) => startCapturePicker(message.tabId),
+    'capture-element': (message, sender) =>
+      captureElement(sender.tab?.id, message.rect, message.format),
   })
 
   // 长连接：整页翻译（每个内容脚本一条，按段流式回传）与划词 AI 动作（每次动作一条）

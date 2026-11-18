@@ -272,6 +272,23 @@ export interface PageTranslationState {
   active: boolean
 }
 
+/** 网页导出格式 */
+export type CaptureFormat = 'pdf' | 'png'
+
+/** 要导出的网页区域（文档坐标，CSS 像素） */
+export interface CaptureRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface CaptureResult {
+  ok: boolean
+  fileName?: string
+  error?: string
+}
+
 /** Background 负责响应的请求消息（runtime 通道） */
 export type RuntimeMessage =
   | { type: 'translate'; text: string }
@@ -299,6 +316,12 @@ export type RuntimeMessage =
   | { type: 'download-network-rule-list'; url: string }
   | { type: 'get-media-resources'; tabId?: number; includeDom?: boolean }
   | { type: 'clear-media-resources'; tabId?: number }
+  /** 导出整个网页（与屏幕显示一致的 PDF / 长图） */
+  | { type: 'capture-page'; format: CaptureFormat; tabId?: number }
+  /** 在网页里打开区域选择器 */
+  | { type: 'capture-pick'; tabId?: number }
+  /** 区域选择器选好后导出该区域（发送方标签页） */
+  | { type: 'capture-element'; format: CaptureFormat; rect: CaptureRect }
   | {
       type: 'download-media-resource'
       url: string
@@ -328,6 +351,9 @@ export interface RuntimeResponseMap {
   'download-network-rule-list': NetworkRuleListDownloadStatus
   'get-media-resources': MediaResourceListResult
   'clear-media-resources': { ok: boolean; removed: number }
+  'capture-page': CaptureResult
+  'capture-pick': CaptureResult
+  'capture-element': CaptureResult
   'download-media-resource': MediaDownloadResult
 }
 

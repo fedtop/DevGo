@@ -1,0 +1,28 @@
+{
+  "popup": {
+    "title": "导出网页",
+    "desc": "导出和屏幕上一模一样的 PDF 或长图，也可以只导出选中的区域",
+    "pagePdf": "整页 PDF",
+    "pagePng": "整页长图",
+    "pick": "选择区域",
+    "exporting": "正在导出…",
+    "done": "已导出：{name}"
+  },
+  "picker": {
+    "hint": "移动鼠标选中要导出的区域，点击确定 · ↑ 父节点 · ↓ 子节点 · Esc 退出",
+    "exportPng": "导出图片",
+    "exportPdf": "导出 PDF",
+    "repick": "重选",
+    "cancel": "取消",
+    "exporting": "正在导出…",
+    "done": "已导出：{name}",
+    "failed": "导出失败：{error}"
+  },
+  "errors": {
+    "permission": "需要授予「调试网页」权限才能截取完整网页，浏览器顶部会短暂提示扩展正在调试此网页",
+    "restricted": "这个页面不允许扩展截取（浏览器内置页、扩展商店等）",
+    "noTab": "无法获取当前标签页",
+    "empty": "选中的区域没有尺寸",
+    "unsupported": "当前浏览器不支持截取网页"
+  }
+}

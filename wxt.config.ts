@@ -70,8 +70,9 @@ export default defineConfig({
       // Chrome 本地 favicon 数据库（newtab 图标零网络加载）；Firefox 无此 API
       ...(browser === 'firefox' ? [] : ['favicon']),
     ],
-    // WebRTC IP 防泄露（chrome.privacy）：开启时才申请，避免更新扩展时因新增权限被浏览器停用
-    optional_permissions: ['privacy'],
+    // 用到时才申请，避免更新扩展时因新增权限被浏览器停用：
+    // privacy 给 WebRTC IP 防泄露；debugger 给网页导出截取视口外的部分（Firefox 用 tabs.captureTab，不需要）
+    optional_permissions: browser === 'firefox' ? ['privacy'] : ['privacy', 'debugger'],
     // 内容脚本、CORS 动态规则和后台代理都需要全站访问能力。
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [

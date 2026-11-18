@@ -15,6 +15,7 @@ import { useSyncExternalStore } from 'react'
 import enAi from '@/locales/en/ai.json'
 import enAssistant from '@/locales/en/assistant.json'
 import enBackground from '@/locales/en/background.json'
+import enCapture from '@/locales/en/capture.json'
 import enCommon from '@/locales/en/common.json'
 import enDock from '@/locales/en/dock.json'
 import enGithub from '@/locales/en/github.json'
@@ -27,6 +28,7 @@ import enTranslate from '@/locales/en/translate.json'
 import zhAi from '@/locales/zh_CN/ai.json'
 import zhAssistant from '@/locales/zh_CN/assistant.json'
 import zhBackground from '@/locales/zh_CN/background.json'
+import zhCapture from '@/locales/zh_CN/capture.json'
 import zhCommon from '@/locales/zh_CN/common.json'
 import zhDock from '@/locales/zh_CN/dock.json'
 import zhGithub from '@/locales/zh_CN/github.json'
@@ -50,6 +52,7 @@ const zhCN = {
   background: zhBackground,
   github: zhGithub,
   dock: zhDock,
+  capture: zhCapture,
 }
 
 const en = {
@@ -65,6 +68,7 @@ const en = {
   background: enBackground,
   github: enGithub,
   dock: enDock,
+  capture: enCapture,
 }
 
 type Leaves<T, Prefix extends string = ''> = {
