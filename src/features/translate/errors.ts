@@ -10,6 +10,8 @@ import { t } from '@/utils/i18n'
 export type TranslateErrorCode =
   /** 配置缺失或无效（如 AI 翻译未填写接口地址 / 模型） */
   | 'config'
+  /** 还没配置可用的 AI 模型（缺 API Key 等），需要引导用户去设置页 */
+  | 'unconfigured'
   /** 鉴权失败（API Key 错误、token 失效） */
   | 'auth'
   /** 触发限流 */
@@ -89,6 +91,8 @@ export function describeServiceError(code: TranslateErrorCode | 'timeout'): stri
       return t('translate.serviceError.auth')
     case 'config':
       return t('translate.serviceError.config')
+    case 'unconfigured':
+      return t('translate.serviceError.unconfigured')
     case 'network':
       return t('translate.serviceError.network')
     case 'timeout':

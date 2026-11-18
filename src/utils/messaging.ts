@@ -301,7 +301,8 @@ export type RuntimeMessage =
   | { type: 'test-assistant'; llm: LlmConfig; apiKey: string }
   /** 立即执行一次跨设备同步对账 */
   | { type: 'sync-now' }
-  | { type: 'open-options-page' }
+  /** 打开设置页；section 为分区（如 models），对应 options.html#models */
+  | { type: 'open-options-page'; section?: string }
   /** 悬浮快捷栏：转给本标签页顶层 frame 的整页翻译（切换或查询状态），未加载翻译脚本时返回 null */
   | { type: 'dock-page-translation'; action: 'toggle' | 'state' }
   | { type: 'sync-cors-bypass' }

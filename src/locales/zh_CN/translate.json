@@ -70,7 +70,8 @@
     "rateLimit": "请求过于频繁或额度不足，请稍后重试",
     "server": "服务端出错，请稍后重试",
     "parse": "服务返回了无法识别的内容",
-    "default": "请求失败"
+    "default": "请求失败",
+    "unconfigured": "还没配置 AI 模型。到设置页「AI 模型」选择服务、填好 API Key 就能用了"
   },
   "page": {
     "unavailable": "翻译服务不可用：{message}",

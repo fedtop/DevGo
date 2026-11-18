@@ -70,7 +70,8 @@
     "rateLimit": "Too many requests or quota exceeded. Try again shortly",
     "server": "Server error. Try again shortly",
     "parse": "The service returned an unrecognized response",
-    "default": "Request failed"
+    "default": "Request failed",
+    "unconfigured": "No AI model set up yet. Choose a provider and add your API key in Settings → AI models"
   },
   "page": {
     "unavailable": "Translation service unavailable: {message}",

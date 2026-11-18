@@ -14,7 +14,7 @@ import {
 } from '@/features/ai/actions'
 import { readChatModel } from '@/features/ai/model'
 import { isAbortError, toTranslateError, TranslateError } from '@/features/translate/errors'
-import type { LlmConfig } from '@/features/translate/llm-config'
+import { isLlmUsable, type LlmConfig } from '@/features/translate/llm-config'
 import { t } from '@/utils/i18n'
 import {
   isOpenAssistantMessage,
@@ -67,6 +67,8 @@ export function handleSelectionAiPort(port: Browser.runtime.Port) {
           request.target,
         )
         const { config, apiKey } = await readChatModel()
+        // 没配好模型（如没填 API Key）就不发请求了，直接提示去设置页，而不是让用户看一个 401
+        if (!isLlmUsable(config, apiKey)) throw new TranslateError('unconfigured', '')
         await chatWithTools({
           config,
           apiKey,

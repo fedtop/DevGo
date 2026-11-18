@@ -18,7 +18,8 @@
     "followUpCustom": "Process this text with \"{name}\"",
     "followUpBuiltin": "{action} this text",
     "replace": "Replace original",
-    "retry": "Retry"
+    "retry": "Retry",
+    "setupModel": "Set up"
   },
   "translate": {
     "loading": "Translating…",

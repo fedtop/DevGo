@@ -90,8 +90,11 @@ export default defineBackground(() => {
     'list-llm-models': (message) => listLlmModels(message.baseUrl, message.apiKey),
     'test-assistant': (message) => testAssistant(message.llm, message.apiKey),
     'sync-now': () => syncNow(),
-    'open-options-page': () =>
-      browser.runtime.openOptionsPage().then(
+    'open-options-page': (message) =>
+      (message.section
+        ? browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${message.section}`) })
+        : browser.runtime.openOptionsPage()
+      ).then(
         () => ({ ok: true }),
         () => ({ ok: false }),
       ),

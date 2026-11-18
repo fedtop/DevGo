@@ -14,6 +14,8 @@ export interface AiResult {
   text: string
   reasoning: string
   error?: string
+  /** 模型没配好或 API Key 无效：结果面板给出「去配置」入口 */
+  needsSetup?: boolean
 }
 
 const EMPTY: AiResult = { status: 'loading', text: '', reasoning: '' }
@@ -68,6 +70,7 @@ export function useSelectionAi() {
               return {
                 ...base,
                 status: 'error',
+                needsSetup: event.error.code === 'unconfigured' || event.error.code === 'auth',
                 error:
                   event.error.message && event.error.message !== friendly
                     ? t('selection.ai.errorWithDetail', {

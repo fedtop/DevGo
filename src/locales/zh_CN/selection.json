@@ -18,7 +18,8 @@
     "followUpCustom": "用「{name}」处理这段内容",
     "followUpBuiltin": "{action}这段内容",
     "replace": "替换原文",
-    "retry": "重试"
+    "retry": "重试",
+    "setupModel": "去配置"
   },
   "translate": {
     "loading": "翻译中…",

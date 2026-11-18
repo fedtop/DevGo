@@ -46,6 +46,7 @@ import {
   PinOff,
   RefreshCw,
   Replace,
+  Settings,
   Sparkles,
   Volume2,
   X,
@@ -547,9 +548,22 @@ export default function SelectionApp() {
               </>
             )}
             {bubble.mode !== 'translate' && aiResult?.status === 'error' && (
-              <FooterButton icon={RefreshCw} onClick={() => start(bubble.snapshot, bubble.mode)}>
-                {t('selection.bubble.retry')}
-              </FooterButton>
+              <>
+                {aiResult.needsSetup && (
+                  <FooterButton
+                    primary
+                    icon={Settings}
+                    onClick={() =>
+                      void sendRuntimeMessage({ type: 'open-options-page', section: 'models' })
+                    }
+                  >
+                    {t('selection.bubble.setupModel')}
+                  </FooterButton>
+                )}
+                <FooterButton icon={RefreshCw} onClick={() => start(bubble.snapshot, bubble.mode)}>
+                  {t('selection.bubble.retry')}
+                </FooterButton>
+              </>
             )}
           </BubbleFooter>
         </div>
@@ -770,7 +784,11 @@ function TranslateView({ state, source }: { state: TranslateState | null; source
 function AiView({ result }: { result: ReturnType<typeof useSelectionAi>['result'] }) {
   if (!result) return null
   if (result.status === 'error') {
-    return <p className='text-rose-600 dark:text-rose-400'>{result.error}</p>
+    // 只是还没配置模型时用中性色提示，不当成出错
+    const tone = result.needsSetup
+      ? 'text-neutral-700 dark:text-neutral-300'
+      : 'text-rose-600 dark:text-rose-400'
+    return <p className={tone}>{result.error}</p>
   }
   if (result.status === 'loading') {
     return (
