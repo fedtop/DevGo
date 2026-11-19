@@ -38,6 +38,14 @@ import {
 } from '@/background/proxy'
 import { registerMessageRouter } from '@/background/router'
 import {
+  finishRecording,
+  recorderStatus,
+  recordStep,
+  registerSiteRecorderListeners,
+  runSiteTool,
+  startRecording,
+} from '@/background/site-tools'
+import {
   getWebrtcStatus,
   registerWebrtcWatchers,
   syncWebrtcSafely,
@@ -80,6 +88,8 @@ export default defineBackground(() => {
 
   // 划词「问 AI」打开侧边栏：需要同步处理以保留用户手势，先于异步路由注册
   registerOpenAssistantListener()
+  // 站点工具录制：完成时打开侧边栏同样要保留用户手势
+  registerSiteRecorderListeners()
 
   // 来自内容脚本 / Popup / 选项页的请求
   registerMessageRouter({
@@ -125,6 +135,12 @@ export default defineBackground(() => {
     'capture-pick': (message) => startCapturePicker(message.tabId),
     'capture-element': (message, sender) =>
       captureElement(sender.tab?.id, message.rect, message.format),
+    'site-tool-run': (message) => runSiteTool(message.tabId, message.steps, message.args),
+    'site-recorder-start': (message) => startRecording(message.tabId),
+    'site-recorder-step': (message, sender) => recordStep(sender.tab?.id, message.step),
+    'site-recorder-status': (_message, sender) => recorderStatus(sender.tab?.id),
+    'site-recorder-finish': (message, sender) =>
+      finishRecording(message.tabId ?? sender.tab?.id, message.cancel),
   })
 
   // 长连接：整页翻译（每个内容脚本一条，按段流式回传）与划词 AI 动作（每次动作一条）

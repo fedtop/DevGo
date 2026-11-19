@@ -41,6 +41,7 @@ import {
   TEST_SITE_TOOL,
   useSiteTools,
 } from './site-tools-client'
+import { useRecordingDraft } from './RecordingEditor'
 import WebmcpView from './WebmcpView'
 import { executeFrameTool, useActiveTabId, useWebmcpTools, type FrameTool } from './webmcp-client'
 import {
@@ -175,6 +176,11 @@ export default function AssistantApp() {
     void sidepanelView.getValue().then(apply)
     return sidepanelView.watch(apply)
   }, [])
+  // 录制完成后切到「网页工具」页整理保存
+  const recordingDraft = useRecordingDraft()
+  useEffect(() => {
+    if (recordingDraft) setView('tools')
+  }, [recordingDraft])
   const [items, setItems] = useState<ChatItem[]>([])
   const [input, setInput] = useState('')
   const [quote, setQuote] = useState('')
@@ -198,8 +204,8 @@ export default function AssistantApp() {
   useEffect(() => {
     if (!loaded || viewDecidedRef.current) return
     viewDecidedRef.current = true
-    if (!configReady) setView('settings')
-  }, [loaded, configReady])
+    if (!configReady && !recordingDraft) setView('settings')
+  }, [loaded, configReady, recordingDraft])
 
   // 新内容到达时保持滚动到底部（用户主动上翻时不打扰）
   useEffect(() => {
@@ -533,6 +539,7 @@ export default function AssistantApp() {
           status={status}
           onRefresh={refresh}
           busy={running}
+          tabId={tabId}
           onCreate={(request) => {
             if (!configReady) {
               setView('settings')

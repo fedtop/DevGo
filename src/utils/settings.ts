@@ -6,7 +6,7 @@ import type { SiteTool } from '@/features/site-tools/types'
 import type { TranslateTargetSetting } from '@/features/translate/languages'
 import { DEFAULT_LLM_CONFIG, type LlmConfig } from '@/features/translate/llm-config'
 import { normalizeBypassList, type NetworkScenarioDefaultAction } from '@/utils/network'
-import type { AssistantHandoff } from '@/utils/messaging'
+import type { AssistantHandoff, RecordedStep, RecordingDraft } from '@/utils/messaging'
 
 /** 翻译引擎：微软 / Google 免费接口，或用户自配的 AI 大模型（OpenAI 兼容） */
 export type TranslateProvider = 'microsoft' | 'google' | 'llm'
@@ -697,3 +697,28 @@ export const selectionHiddenBuiltinActions = storage.defineItem<string[]>(
 
 /** 站点工具：按网站定义、侧边栏 AI 助手可调用的工具（见 features/site-tools） */
 export const siteTools = storage.defineItem<SiteTool[]>('local:siteTools', { fallback: [] })
+
+/** 录制操作时是否记录密码框的值（默认不记录，回放时由调用方传入） */
+export const siteRecorderCapturePasswords = storage.defineItem<boolean>(
+  'local:siteRecorderCapturePasswords',
+  { fallback: false },
+)
+
+/** 进行中的录制（按标签页）；存在 session 里，浏览器关闭即清除 */
+export interface ActiveRecording {
+  startUrl: string
+  title: string
+  steps: RecordedStep[]
+  lastStepAt: number
+}
+
+export const siteRecordings = storage.defineItem<Record<string, ActiveRecording>>(
+  'session:siteRecordings',
+  { fallback: {} },
+)
+
+/** 录制完成、等待在侧边栏确认保存的草稿 */
+export const siteRecordingDraft = storage.defineItem<RecordingDraft | null>(
+  'local:siteRecordingDraft',
+  { fallback: null },
+)

@@ -21,6 +21,12 @@ import IconButton from '@/ui/IconButton'
 import { t } from '@/utils/i18n'
 import type { WebmcpExecuteResult } from '@/utils/messaging'
 
+import {
+  RecorderControl,
+  RecordingEditor,
+  useRecording,
+  useRecordingDraft,
+} from './RecordingEditor'
 import { templateFromSchema } from './schema-template'
 import type { FrameTool, ToolsStatus } from './webmcp-client'
 
@@ -33,6 +39,7 @@ interface WebmcpViewProps {
   onCreate: (request: string) => void
   /** 正在对话中：创建请求要等这一轮结束 */
   busy: boolean
+  tabId: number | null
 }
 
 const toolKey = (tool: FrameTool) => `${tool.frameId}:${tool.name}`
@@ -48,8 +55,14 @@ export default function WebmcpView({
   execute,
   onCreate,
   busy,
+  tabId,
 }: WebmcpViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
+  const { recording, stepCount } = useRecording(tabId)
+  const draft = useRecordingDraft()
+
+  if (draft) return <RecordingEditor draft={draft} tabId={tabId} />
+  const recorder = <RecorderControl tabId={tabId} recording={recording} stepCount={stepCount} />
 
   if (status === 'unavailable' && tools.length === 0) {
     return (
@@ -83,7 +96,8 @@ export default function WebmcpView({
             {t('assistant.webmcp.empty.description')}
           </p>
         </div>
-        <CreateToolBox onCreate={onCreate} busy={busy} />
+        {recording ? recorder : <CreateToolBox onCreate={onCreate} busy={busy} />}
+        {!recording && recorder}
         <p className='flex flex-wrap items-center justify-center gap-x-2 px-3 text-center text-[11px] leading-relaxed text-neutral-400'>
           {status === 'unsupported' && (
             <span className='inline-flex items-center gap-1'>
@@ -124,8 +138,9 @@ export default function WebmcpView({
           />
         ))}
       </ul>
-      <div className='mt-3'>
-        <CreateToolBox onCreate={onCreate} busy={busy} collapsible />
+      <div className='mt-3 flex flex-col gap-2'>
+        {!recording && <CreateToolBox onCreate={onCreate} busy={busy} collapsible />}
+        {recorder}
       </div>
       <p className='mt-2 text-center text-[11px]'>
         <ManageLink />

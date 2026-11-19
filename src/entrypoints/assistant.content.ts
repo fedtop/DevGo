@@ -10,7 +10,7 @@
  */
 import { readPageContent } from '@/features/assistant/page-reader'
 import { inspectPage } from '@/features/site-tools/inspect'
-import { runSiteTool } from '@/features/site-tools/runner'
+import { runStep } from '@/features/site-tools/runner'
 import { hasExtensionRuntime } from '@/utils/content-settings'
 import { initI18n, t } from '@/utils/i18n'
 import type {
@@ -174,9 +174,9 @@ export default defineContentScript({
         case 'inspect-page':
           if (isTop) sendResponse(inspectPage())
           return undefined
-        case 'site-tool-run':
+        case 'site-tool-step':
           if (!isTop) return undefined
-          void runSiteTool(message.steps, message.args).then(sendResponse)
+          void runStep(message.step, message.args).then(sendResponse)
           return true
         default:
           return undefined

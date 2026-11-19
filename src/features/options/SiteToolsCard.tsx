@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Download, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 
+import { exportSiteTool, parseImport } from '@/features/site-tools/import'
 import {
   normalizeSiteTools,
   parseSiteToolDraft,
@@ -14,10 +15,10 @@ import ConfirmDialog from '@/ui/ConfirmDialog'
 import IconButton from '@/ui/IconButton'
 import Switch from '@/ui/Switch'
 import { t } from '@/utils/i18n'
-import { siteTools } from '@/utils/settings'
+import { siteRecorderCapturePasswords, siteTools } from '@/utils/settings'
 import { useStorageItem } from '@/utils/useStorageItem'
 
-import { Card, INPUT_CLASS } from './layout'
+import { Card, INPUT_CLASS, Row } from './layout'
 
 /** 设置页「站点工具」：列出、启停、按 JSON 编辑或删除站点工具 */
 export default function SiteToolsCard() {
@@ -41,20 +42,84 @@ export default function SiteToolsCard() {
   const toggle = (id: string, enabled: boolean) =>
     setStored(tools.map((item) => (item.id === id ? { ...item, enabled } : item)))
 
+  const [capturePasswords, setCapturePasswords] = useStorageItem(siteRecorderCapturePasswords)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [notice, setNotice] = useState<{ text: string; error?: boolean } | null>(null)
+
+  /** 导入：同名工具覆盖，其余追加 */
+  const importFile = async (file: File) => {
+    const result = parseImport(await file.text())
+    if (!result.ok) {
+      setNotice({
+        text: t('options.assistant.siteTools.importFailed', { error: result.error }),
+        error: true,
+      })
+      return
+    }
+    const now = Date.now()
+    let next = [...tools]
+    for (const draft of result.drafts) {
+      const existing = next.find((item) => item.name === draft.name)
+      next = existing
+        ? next.map((item) =>
+            item.id === existing.id ? { ...item, ...draft, updatedAt: now } : item,
+          )
+        : [...next, { ...draft, id: crypto.randomUUID(), enabled: true, updatedAt: now }]
+    }
+    setStored(next)
+    setNotice({ text: t('options.assistant.siteTools.imported', { count: result.drafts.length }) })
+  }
+
+  const exportTool = (tool: SiteTool) => {
+    const url = URL.createObjectURL(
+      new Blob([exportSiteTool(toDraft(tool))], { type: 'application/json' }),
+    )
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `devgo-tool-${tool.name}.json`
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
   return (
     <Card
       title={t('options.assistant.siteTools.title')}
       desc={t('options.assistant.siteTools.desc')}
       extra={
-        <Button
-          onClick={() => setEditing({ draft: SITE_TOOL_TEMPLATE })}
-          className='!px-2.5 !py-1 text-xs'
-        >
-          <Plus className='size-3.5' aria-hidden />
-          {t('options.assistant.siteTools.add')}
-        </Button>
+        <div className='flex items-center gap-1.5'>
+          <Button onClick={() => fileRef.current?.click()} className='!px-2.5 !py-1 text-xs'>
+            <Upload className='size-3.5' aria-hidden />
+            {t('options.assistant.siteTools.import')}
+          </Button>
+          <Button
+            onClick={() => setEditing({ draft: SITE_TOOL_TEMPLATE })}
+            className='!px-2.5 !py-1 text-xs'
+          >
+            <Plus className='size-3.5' aria-hidden />
+            {t('options.assistant.siteTools.add')}
+          </Button>
+          <input
+            ref={fileRef}
+            type='file'
+            accept='.json,application/json'
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void importFile(file)
+            }}
+          />
+        </div>
       }
     >
+      <p className='text-xs leading-relaxed text-neutral-500'>
+        {t('options.assistant.siteTools.importHint')}
+      </p>
+      {notice && (
+        <p className={`text-xs ${notice.error ? 'text-rose-600' : 'text-emerald-700'}`}>
+          {notice.text}
+        </p>
+      )}
       {tools.length > 0 ? (
         <ul className='flex flex-col divide-y divide-neutral-100'>
           {tools.map((tool) => (
@@ -84,6 +149,13 @@ export default function SiteToolsCard() {
                   <Pencil />
                 </IconButton>
                 <IconButton
+                  label={t('options.assistant.siteTools.export')}
+                  onClick={() => exportTool(tool)}
+                  className='!size-7 [&_svg]:!size-4'
+                >
+                  <Download />
+                </IconButton>
+                <IconButton
                   label={t('options.assistant.siteTools.delete')}
                   onClick={() => setDeleting(tool)}
                   className='!size-7 hover:!text-rose-600 [&_svg]:!size-4'
@@ -99,6 +171,15 @@ export default function SiteToolsCard() {
           {t('options.assistant.siteTools.empty')}
         </p>
       )}
+
+      <div className='border-t border-neutral-100 pt-3'>
+        <Row
+          label={t('options.assistant.siteTools.capturePasswords')}
+          hint={t('options.assistant.siteTools.capturePasswordsHint')}
+        >
+          <Switch checked={capturePasswords} onChange={setCapturePasswords} />
+        </Row>
+      </div>
 
       {editing && (
         <SiteToolDialog

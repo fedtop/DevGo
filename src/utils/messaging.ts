@@ -9,6 +9,7 @@
 
 import type { TranslateErrorPayload } from '@/features/translate/errors'
 import type { TranslateLangCode } from '@/features/translate/languages'
+import type { StepResult } from '@/features/site-tools/runner'
 import type { SiteToolStep } from '@/features/site-tools/types'
 import type { LlmConfig } from '@/features/translate/llm-config'
 import type { SelectionActionId, SelectionContext } from '@/features/ai/actions'
@@ -284,6 +285,23 @@ export interface CaptureRect {
   height: number
 }
 
+/** 录制到的一步；password 表示这是密码框（未录密码时值为参数占位） */
+export type RecordedStep = SiteToolStep & { password?: boolean }
+
+export interface RecorderStatus {
+  stepCount: number
+  /** 是否记录密码框的值（设置项） */
+  capturePasswords: boolean
+}
+
+/** 录制完成、等待在侧边栏确认保存的草稿 */
+export interface RecordingDraft {
+  startUrl: string
+  title: string
+  steps: RecordedStep[]
+  createdAt: number
+}
+
 export interface CaptureResult {
   ok: boolean
   fileName?: string
@@ -324,6 +342,16 @@ export type RuntimeMessage =
   | { type: 'capture-pick'; tabId?: number }
   /** 区域选择器选好后导出该区域（发送方标签页） */
   | { type: 'capture-element'; format: CaptureFormat; rect: CaptureRect }
+  /** 在标签页里按步骤执行站点工具（跨页面时由后台等新页面加载完再继续） */
+  | { type: 'site-tool-run'; tabId: number; steps: SiteToolStep[]; args: unknown }
+  /** 开始在标签页里录制操作 */
+  | { type: 'site-recorder-start'; tabId: number }
+  /** 录制器 → 后台：录到一步（录制状态存在后台，页面跳转后不丢） */
+  | { type: 'site-recorder-step'; step: RecordedStep }
+  /** 录制器注入后查询本标签页的录制状态（跳转后的新页面据此恢复录制条） */
+  | { type: 'site-recorder-status' }
+  /** 结束录制：cancel 时丢弃，否则生成草稿交给侧边栏保存 */
+  | { type: 'site-recorder-finish'; cancel: boolean; tabId?: number }
   | {
       type: 'download-media-resource'
       url: string
@@ -356,6 +384,11 @@ export interface RuntimeResponseMap {
   'capture-page': CaptureResult
   'capture-pick': CaptureResult
   'capture-element': CaptureResult
+  'site-tool-run': WebmcpExecuteResult
+  'site-recorder-start': { ok: boolean; error?: string }
+  'site-recorder-step': RecorderStatus | null
+  'site-recorder-status': RecorderStatus | null
+  'site-recorder-finish': { ok: boolean }
   'download-media-resource': MediaDownloadResult
 }
 
@@ -375,8 +408,8 @@ export type TabMessage =
   | { type: 'webmcp-read-result' }
   /** 读取网页正文（侧边栏助手总结 / 问答用，只由顶层 frame 响应） */
   | { type: 'read-page'; maxChars?: number }
-  /** 在顶层 frame 按步骤执行站点工具 */
-  | { type: 'site-tool-run'; steps: SiteToolStep[]; args: unknown }
+  /** 在顶层 frame 执行站点工具的一步（整个工具由后台编排） */
+  | { type: 'site-tool-step'; step: SiteToolStep; args: unknown }
   /** 读取网页结构概览（AI 生成站点工具用，只由顶层 frame 响应） */
   | { type: 'inspect-page' }
 
@@ -389,7 +422,7 @@ export interface TabResponseMap {
   'webmcp-execute': WebmcpExecuteResult
   'webmcp-read-result': string | null
   'read-page': PageContent
-  'site-tool-run': WebmcpExecuteResult
+  'site-tool-step': StepResult
   'inspect-page': string
 }
 

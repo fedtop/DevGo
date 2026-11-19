@@ -135,7 +135,7 @@
     },
     "siteTools": {
       "title": "Site tools",
-      "desc": "Add tools the AI assistant can call on any website: a few parameters plus fixed steps (call an API, fill, click, read), run by DevGo without executing any code. The easiest way is to ask the AI in the side panel to build one.",
+      "desc": "Add tools the AI assistant can call on any website: a few parameters plus fixed steps (call an API, fill, click, read, even across pages), run by DevGo without executing any code. The easiest way is to let the AI build one in the side panel's Page tools tab, or record your own actions.",
       "add": "New",
       "empty": "No site tools yet. Open the site you want to enhance and tell the side panel AI \"make a search tool for this site\". It inspects the page, test-runs the tool and saves it for you.",
       "edit": "Edit",
@@ -153,7 +153,15 @@
       "readOnly": "Read-only",
       "mayModify": "May modify data",
       "stepCount": "{count} steps",
-      "stepCount_one": "{count} step"
+      "stepCount_one": "{count} step",
+      "import": "Import",
+      "export": "Export",
+      "importHint": "Import tools exported from DevGo, or JSON recordings exported from the Chrome DevTools Recorder panel.",
+      "importFailed": "Import failed: {error}",
+      "imported": "Imported {count} tools; tools with the same name were replaced",
+      "imported_one": "Imported {count} tool; a tool with the same name was replaced",
+      "capturePasswords": "Save passwords when recording",
+      "capturePasswordsHint": "Off by default: recorded password fields become parameters passed in when running. When on, passwords are stored in plain text in the local tool definition (and in backup files)."
     }
   },
   "enhance": {

@@ -85,7 +85,7 @@ async function setDevgoUiHidden(tabId: number, hidden: boolean): Promise<void> {
   // 只能往各自的 shadow root 里追加一条更靠后的 :host 规则
   const toggle = (hide: boolean) => {
     for (const host of document.querySelectorAll(
-      'devgo-dock-ui, devgo-selection-ui, devgo-capture-picker, devgo-toast',
+      'devgo-dock-ui, devgo-selection-ui, devgo-capture-picker, devgo-site-recorder, devgo-toast',
     )) {
       const root = host.shadowRoot
       if (!root) continue

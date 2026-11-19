@@ -14,7 +14,7 @@ import {
   type SiteToolDraft,
 } from '@/features/site-tools/types'
 import { t } from '@/utils/i18n'
-import type { TabMessage, WebmcpExecuteResult } from '@/utils/messaging'
+import { sendRuntimeMessage, type TabMessage, type WebmcpExecuteResult } from '@/utils/messaging'
 import { siteTools } from '@/utils/settings'
 
 import { BUILTIN_FRAME_ID } from './page-tools'
@@ -60,24 +60,15 @@ function toResult(error: unknown): WebmcpExecuteResult {
   }
 }
 
-/** 在网页里按步骤执行一个站点工具（已保存的或 AI 正在试运行的草稿） */
+/** 在网页里按步骤执行一个站点工具（已保存的或 AI 正在试运行的草稿）；由后台编排，支持跨页面 */
 export async function runSiteToolInTab(
   tabId: number,
   tool: Pick<SiteToolDraft, 'steps'>,
   args: unknown,
 ): Promise<WebmcpExecuteResult> {
   try {
-    const result = await sendToTop<WebmcpExecuteResult>(tabId, {
-      type: 'site-tool-run',
-      steps: tool.steps,
-      args,
-    })
-    return result ?? { ok: false, error: t('assistant.errors.noResponse') }
+    return await sendRuntimeMessage({ type: 'site-tool-run', tabId, steps: tool.steps, args })
   } catch (error) {
-    // 工具里的点击 / 按键触发了页面跳转，消息通道随旧页面关闭
-    if (/message channel (is )?closed|message port closed/i.test(String(error))) {
-      return { ok: true, result: t('assistant.siteTools.navigated') }
-    }
     return toResult(error)
   }
 }
@@ -176,7 +167,8 @@ export function needsConfirmation(tool: FrameTool, args: unknown, confirmTools: 
   return confirmTools && !tool.readOnly
 }
 
-async function saveDraft(draft: SiteToolDraft): Promise<string> {
+/** 保存工具定义；同名工具覆盖（修复 / 重新录制） */
+export async function saveDraft(draft: SiteToolDraft): Promise<string> {
   const current = normalizeSiteTools(await siteTools.getValue())
   const existing = current.find((item) => item.name === draft.name)
   const tool: SiteTool = {

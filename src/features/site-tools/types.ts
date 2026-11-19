@@ -15,29 +15,43 @@ export interface SiteToolParam {
 }
 
 /**
- * 执行步骤。selector 是 CSS 选择器，可用「选择器@属性」读取属性（如 a.title@href）；
+ * 要操作的元素。selector 是首选，selectors 是录制时一并记下的备选（网页小改版时依次尝试）。
+ * 除 CSS 选择器外还支持：aria/名称（按无障碍名称：aria-label、按钮 / 链接文字、输入框的 label 或 placeholder）、
+ * text/文字（按可见文字）、xpath/表达式、pierce/CSS（穿透 Shadow DOM）。
+ * 动作类步骤会自动等目标元素出现并可见（最多 timeout 毫秒），不必另加 wait。
+ */
+interface TargetFields {
+  selector: string
+  selectors?: string[]
+  timeout?: number
+  /** 给人看的说明，如录制时元素的文字 */
+  note?: string
+}
+
+/**
+ * 执行步骤。read 的 selector 可用「选择器@属性」读取属性（如 a.title@href）；
  * 文本类字段里的 {{参数名}} 会替换成调用时的参数值。
  */
 export type SiteToolStep =
-  /** 等待元素出现（最多 timeout 毫秒），或不给 selector 时单纯等待 ms 毫秒 */
-  | { action: 'wait'; selector?: string; ms?: number; timeout?: number }
-  | { action: 'click'; selector: string }
-  /** 填写输入框 / 文本域 / 下拉框（兼容 React 等框架的受控输入） */
-  | { action: 'fill'; selector: string; value: string }
-  /** 在元素上按键；Enter 会同时提交所在的表单 */
-  | { action: 'press'; selector: string; key: string }
+  /** 等待元素出现，或不给 selector 时单纯等待 ms 毫秒 */
+  | ({ action: 'wait'; ms?: number } & Partial<TargetFields>)
+  /** 点击；double 为双击 */
+  | ({ action: 'click'; double?: boolean } & TargetFields)
+  /** 填写输入框 / 文本域 / 下拉框 / 可编辑区域，复选框与单选框填 true / false（兼容 React 等框架的受控输入） */
+  | ({ action: 'fill'; value: string } & TargetFields)
+  /** 按键（Enter 会同时提交所在的表单）；不给 selector 时作用在当前焦点元素上 */
+  | ({ action: 'press'; key: string } & Partial<TargetFields>)
   /**
    * 读取元素：默认取第一个匹配元素的文字；all 读全部；
    * fields 时对每个匹配元素按子选择器取字段，得到对象列表（适合搜索结果、列表）
    */
-  | {
+  | ({
       action: 'read'
-      selector: string
       all?: boolean
       fields?: Record<string, string>
       limit?: number
       as?: string
-    }
+    } & TargetFields)
   /** 以当前登录状态请求网站接口（同站请求会带上 Cookie），返回 JSON 或文本 */
   | {
       action: 'fetch'
@@ -46,9 +60,10 @@ export type SiteToolStep =
       body?: string
       headers?: Record<string, string>
       as?: string
+      note?: string
     }
-  /** 跳转到新地址（只能作为最后一步） */
-  | { action: 'navigate'; url: string }
+  /** 打开网址（相对地址按当前页面解析），等新页面加载完再继续后面的步骤 */
+  | { action: 'navigate'; url: string; note?: string }
 
 export type SiteToolAction = SiteToolStep['action']
 
@@ -73,7 +88,7 @@ export type SiteToolDraft = Omit<SiteTool, 'id' | 'enabled' | 'updatedAt'>
 
 const ACTIONS: SiteToolAction[] = ['wait', 'click', 'fill', 'press', 'read', 'fetch', 'navigate']
 const NAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{0,47}$/
-const MAX_STEPS = 30
+const MAX_STEPS = 200
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value != null && !Array.isArray(value)
@@ -81,7 +96,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isStringRecord = (value: unknown): value is Record<string, string> =>
   isRecord(value) && Object.values(value).every((item) => typeof item === 'string')
 
-function checkStep(step: unknown, index: number, isLast: boolean): string | null {
+function checkStep(step: unknown, index: number): string | null {
   const at = `steps[${index}]`
   if (!isRecord(step)) return `${at} 必须是对象`
   const action = step.action as SiteToolAction
@@ -90,6 +105,13 @@ function checkStep(step: unknown, index: number, isLast: boolean): string | null
     typeof step[key] === 'string' && (step[key] as string).trim()
       ? null
       : `${at}（${action}）缺少 ${key}`
+
+  if (
+    step.selectors != null &&
+    !(Array.isArray(step.selectors) && step.selectors.every((item) => typeof item === 'string'))
+  ) {
+    return `${at}.selectors 必须是字符串数组`
+  }
 
   switch (action) {
     case 'wait':
@@ -102,7 +124,7 @@ function checkStep(step: unknown, index: number, isLast: boolean): string | null
     case 'fill':
       return needString('selector') ?? (typeof step.value === 'string' ? null : `${at} 缺少 value`)
     case 'press':
-      return needString('selector') ?? needString('key')
+      return needString('key')
     case 'read':
       if (step.fields != null && !isStringRecord(step.fields)) {
         return `${at}.fields 必须是「字段名: 子选择器」的对象`
@@ -114,7 +136,7 @@ function checkStep(step: unknown, index: number, isLast: boolean): string | null
       }
       return needString('url')
     case 'navigate':
-      return needString('url') ?? (isLast ? null : `${at}：navigate 只能是最后一步`)
+      return needString('url')
   }
 }
 
@@ -162,7 +184,7 @@ export function parseSiteToolDraft(
   }
   if (value.steps.length > MAX_STEPS) return { ok: false, error: `steps 最多 ${MAX_STEPS} 步` }
   for (const [index, step] of value.steps.entries()) {
-    const error = checkStep(step, index, index === value.steps.length - 1)
+    const error = checkStep(step, index)
     if (error) return { ok: false, error }
   }
 
@@ -227,6 +249,7 @@ export function matchesUrl(pattern: string, url: string): boolean {
   const hostOf = (domainRule: string) =>
     (domainRule.includes(':') ? parsed.host : parsed.hostname).toLowerCase()
 
+  if (rule === '*') return true
   if (!rule.includes('/')) {
     const domain = rule.toLowerCase()
     const host = hostOf(domain)
@@ -282,11 +305,28 @@ export const SITE_TOOL_FORMAT = `站点工具定义（JSON 对象）：
 - params：参数数组，每项 { name, description, type: "string"|"number"|"boolean", required }；
 - steps：按顺序执行的步骤数组，文本字段中的 {{参数名}} 会替换成参数值（url 里会自动编码）：
   - { "action": "fetch", "url", "method"?, "body"?, "headers"?, "as"? }：以用户当前登录状态请求接口，返回 JSON 或文本。能找到网站自己的接口时优先用它，最稳定；
-  - { "action": "fill", "selector", "value" }：填写输入框；
-  - { "action": "press", "selector", "key": "Enter" }：按键（Enter 会提交所在表单）；
+  - { "action": "fill", "selector", "value" }：填写输入框、下拉框（复选框填 true / false）；
+  - { "action": "press", "selector"?, "key": "Enter" }：按键（Enter 会提交所在表单）；
   - { "action": "click", "selector" }：点击元素；
-  - { "action": "wait", "selector"?, "ms"?, "timeout"? }：等待元素出现或等待一段时间；
+  - { "action": "wait", "selector"?, "ms"? }：等待元素出现或等待一段时间。点击、填写等动作本身会自动等待目标元素出现，一般不需要单独 wait；
   - { "action": "read", "selector", "all"?, "fields"?, "limit"?, "as"? }：读取元素文字；「选择器@属性」读属性（如 a@href）；fields 为 { 字段名: 子选择器 } 时对每个匹配元素取字段，得到对象列表；
-  - { "action": "navigate", "url" }：跳转网址，只能是最后一步。
+  - { "action": "navigate", "url" }：打开网址，等新页面加载完再继续（可以出现在任意位置，适合跨页面的流程）。
+- 涉及元素的步骤还可以给 "selectors"：备选选择器数组，首选找不到时依次尝试。除 CSS 外支持 "aria/名称"（按 aria-label、按钮文字、输入框 label）、"text/文字"、"xpath/表达式"；
+- 点击或按键导致页面跳转时，后面的步骤会等新页面加载完后继续执行。
 - 每个 read / fetch 的结果按 as（默认 step序号）汇总为工具的返回值；只有一个结果时直接返回它。
 - 选择器要稳定：优先 id、name、aria-label、data-* 属性，避免依赖随机生成的 class。`
+
+/** 替换 {{参数名}}；url 时按 URL 编码，json 时按 JSON 字符串转义 */
+export function fillTemplate(
+  template: string,
+  args: Record<string, unknown>,
+  mode: 'raw' | 'url' | 'json' = 'raw',
+): string {
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key: string) => {
+    const value = args[key]
+    const text = value == null ? '' : typeof value === 'string' ? value : JSON.stringify(value)
+    if (mode === 'url') return encodeURIComponent(text)
+    if (mode === 'json') return JSON.stringify(text).slice(1, -1)
+    return text
+  })
+}

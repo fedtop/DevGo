@@ -3,73 +3,12 @@
  * 列出可交互元素（输入框、按钮、链接）和重复出现的列表，并给出尽量稳定的 CSS 选择器。
  */
 
+import { accessibleName, isVisible, ownSelector, stableClasses, uniqueSelector } from './locate'
+
 const MAX_CONTROLS = 120
 const MAX_LISTS = 10
 const MAX_OUTPUT_CHARS = 16_000
 const TEXT_PREVIEW = 60
-
-/** 看起来是框架自动生成的 class / id（带哈希、过长），不适合做选择器 */
-const UNSTABLE = /\d{3,}|[a-z]+-[a-zA-Z0-9]{5,}$|^css-|^sc-|^_|__[a-zA-Z0-9]{5,}/
-
-function isVisible(element: Element): boolean {
-  if (!(element instanceof HTMLElement)) return true
-  if (element.hidden) return false
-  const rect = element.getBoundingClientRect()
-  if (rect.width < 2 || rect.height < 2) return false
-  const style = getComputedStyle(element)
-  return style.visibility !== 'hidden' && style.display !== 'none'
-}
-
-function isUnique(selector: string): boolean {
-  try {
-    return document.querySelectorAll(selector).length === 1
-  } catch {
-    return false
-  }
-}
-
-function attrSelector(name: string, value: string): string {
-  return `[${name}="${value.replace(/["\\]/g, '\\$&')}"]`
-}
-
-function stableClasses(element: Element): string[] {
-  return [...element.classList].filter((name) => !UNSTABLE.test(name)).slice(0, 2)
-}
-
-/** 单个元素自身能区分的选择器片段（不含祖先） */
-function ownSelector(element: Element): string {
-  const tag = element.tagName.toLowerCase()
-  if (element.id && !UNSTABLE.test(element.id)) return `#${CSS.escape(element.id)}`
-  for (const name of ['data-testid', 'data-test', 'name', 'aria-label', 'placeholder', 'type']) {
-    const value = element.getAttribute(name)
-    if (value && value.length < 60) return `${tag}${attrSelector(name, value)}`
-  }
-  const classes = stableClasses(element)
-  return classes.length ? `${tag}.${classes.map((name) => CSS.escape(name)).join('.')}` : tag
-}
-
-/** 尽量短且唯一的选择器：自身特征不够时向上拼接祖先，最后用 :nth-of-type 兜底 */
-export function uniqueSelector(element: Element): string {
-  let selector = ownSelector(element)
-  if (isUnique(selector)) return selector
-  let current: Element | null = element
-  const parts: string[] = []
-  for (let depth = 0; current && current !== document.documentElement && depth < 6; depth += 1) {
-    let part = ownSelector(current)
-    const parent: Element | null = current.parentElement
-    if (parent) {
-      const sameTag = [...parent.children].filter((child) => child.tagName === current!.tagName)
-      if (sameTag.length > 1 && !part.startsWith('#')) {
-        part += `:nth-of-type(${sameTag.indexOf(current) + 1})`
-      }
-    }
-    parts.unshift(part)
-    selector = parts.join(' > ')
-    if (part.startsWith('#') || isUnique(selector)) return selector
-    current = parent
-  }
-  return selector
-}
 
 function preview(text: string | null | undefined): string {
   const value = (text ?? '').replace(/\s+/g, ' ').trim()
@@ -79,6 +18,8 @@ function preview(text: string | null | undefined): string {
 function describeControl(element: Element): string {
   const tag = element.tagName.toLowerCase()
   const bits = [`selector=${JSON.stringify(uniqueSelector(element))}`]
+  const ariaName = accessibleName(element)
+  if (ariaName && ariaName.length <= 60) bits.push(`aria=${JSON.stringify(`aria/${ariaName}`)}`)
   if (element instanceof HTMLInputElement) bits.push(`type=${element.type}`)
   for (const name of ['name', 'placeholder', 'aria-label']) {
     const value = element.getAttribute(name)
