@@ -132,6 +132,28 @@
       "desc": "Pages can expose runnable tools to the AI via WebMCP (queries, orders, form filling, etc.); the assistant discovers and calls them automatically. Needs Chrome 150 or later, with \"WebMCP for testing\" enabled in chrome://flags.",
       "confirm": "Confirm before running",
       "confirmHint": "Page tools not declared read-only (they may modify data) ask for your confirmation before running"
+    },
+    "siteTools": {
+      "title": "Site tools",
+      "desc": "Add tools the AI assistant can call on any website: a few parameters plus fixed steps (call an API, fill, click, read), run by DevGo without executing any code. The easiest way is to ask the AI in the side panel to build one.",
+      "add": "New",
+      "empty": "No site tools yet. Open the site you want to enhance and tell the side panel AI \"make a search tool for this site\". It inspects the page, test-runs the tool and saves it for you.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete site tool \"{name}\"?",
+      "deleteDesc": "The assistant will no longer be able to call this tool.",
+      "enabled": "Enabled",
+      "editTitle": "Edit site tool",
+      "addTitle": "New site tool",
+      "json": "Tool definition (JSON)",
+      "jsonHint": "name · description · matches (sites) · readOnly · params · steps (fetch / fill / press / click / wait / read / navigate). {{param}} in text is replaced with the argument value.",
+      "invalidJson": "Not valid JSON",
+      "save": "Save",
+      "cancel": "Cancel",
+      "readOnly": "Read-only",
+      "mayModify": "May modify data",
+      "stepCount": "{count} steps",
+      "stepCount_one": "{count} step"
     }
   },
   "enhance": {

@@ -9,6 +9,7 @@
 
 import type { TranslateErrorPayload } from '@/features/translate/errors'
 import type { TranslateLangCode } from '@/features/translate/languages'
+import type { SiteToolStep } from '@/features/site-tools/types'
 import type { LlmConfig } from '@/features/translate/llm-config'
 import type { SelectionActionId, SelectionContext } from '@/features/ai/actions'
 import type { DictResult } from '@/types/dict'
@@ -374,6 +375,10 @@ export type TabMessage =
   | { type: 'webmcp-read-result' }
   /** 读取网页正文（侧边栏助手总结 / 问答用，只由顶层 frame 响应） */
   | { type: 'read-page'; maxChars?: number }
+  /** 在顶层 frame 按步骤执行站点工具 */
+  | { type: 'site-tool-run'; steps: SiteToolStep[]; args: unknown }
+  /** 读取网页结构概览（AI 生成站点工具用，只由顶层 frame 响应） */
+  | { type: 'inspect-page' }
 
 /** 内容脚本对 TabMessage 的响应（无响应的消息不在此列） */
 export interface TabResponseMap {
@@ -384,6 +389,8 @@ export interface TabResponseMap {
   'webmcp-execute': WebmcpExecuteResult
   'webmcp-read-result': string | null
   'read-page': PageContent
+  'site-tool-run': WebmcpExecuteResult
+  'inspect-page': string
 }
 
 /** 网页正文快照 */

@@ -1,13 +1,16 @@
 /**
  * 侧边栏助手在网页里的桥：
  * - 读取网页正文（总结 / 问答用，只由顶层 frame 响应）；
- * - WebMCP：读取网页通过 WebMCP 注册的工具，并代侧边栏执行。
+ * - WebMCP：读取网页通过 WebMCP 注册的工具，并代侧边栏执行；
+ * - 站点工具：按步骤执行用户定义的工具、给 AI 生成工具提供网页结构（只在顶层 frame）。
  *
  * 依赖 Chrome 实验接口 document.modelContext（需在 chrome://flags 开启「WebMCP for testing」）。
  * 在每个 frame 中运行，只上报本 frame 自己注册的工具；侧边栏按 frameId 汇总、按 frameId 执行。
  * 未被侧边栏请求过的页面不做任何事，也不监听工具变化。
  */
 import { readPageContent } from '@/features/assistant/page-reader'
+import { inspectPage } from '@/features/site-tools/inspect'
+import { runSiteTool } from '@/features/site-tools/runner'
 import { hasExtensionRuntime } from '@/utils/content-settings'
 import { initI18n, t } from '@/utils/i18n'
 import type {
@@ -168,6 +171,13 @@ export default defineContentScript({
         case 'read-page':
           if (isTop) sendResponse(readPageContent(message.maxChars))
           return undefined
+        case 'inspect-page':
+          if (isTop) sendResponse(inspectPage())
+          return undefined
+        case 'site-tool-run':
+          if (!isTop) return undefined
+          void runSiteTool(message.steps, message.args).then(sendResponse)
+          return true
         default:
           return undefined
       }

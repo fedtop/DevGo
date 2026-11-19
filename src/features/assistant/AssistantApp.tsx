@@ -30,6 +30,17 @@ import {
   readPage,
   READ_PAGE_TOOL,
 } from './page-tools'
+import {
+  AUTHORING_TOOLS,
+  executeAuthoringTool,
+  executeSiteTool,
+  INSPECT_PAGE_TOOL,
+  isSiteTool,
+  needsConfirmation,
+  SAVE_SITE_TOOL,
+  TEST_SITE_TOOL,
+  useSiteTools,
+} from './site-tools-client'
 import WebmcpView from './WebmcpView'
 import { executeFrameTool, useActiveTabId, useWebmcpTools, type FrameTool } from './webmcp-client'
 import {
@@ -133,6 +144,9 @@ function quoteBlock(quote: string): string {
 export default function AssistantApp() {
   const tabId = useActiveTabId()
   const { tools: webTools, status, page, refresh } = useWebmcpTools(tabId)
+  const { tools: siteToolList } = useSiteTools(page.url)
+  /** 当前网页可用的工具：用户配置的站点工具 + 网页自己通过 WebMCP 注册的工具 */
+  const pageTools = [...siteToolList, ...webTools]
 
   const [assistantConfig, , assistantLoaded] = useStorageItem(assistantLlmConfig)
   const [assistantKey] = useStorageItem(assistantLlmApiKey)
@@ -177,7 +191,7 @@ export default function AssistantApp() {
   const stickToBottomRef = useRef(true)
 
   // 内置工具在前：网页工具同名时由 bindTools 追加序号区分
-  toolsRef.current = [READ_PAGE_TOOL, ...webTools]
+  toolsRef.current = [READ_PAGE_TOOL, ...AUTHORING_TOOLS, ...pageTools]
 
   // 只在首次加载完成时判断一次：未配置就先进设置页，之后不再自动切换视图
   const viewDecidedRef = useRef(false)
@@ -251,8 +265,8 @@ export default function AssistantApp() {
     }
   }
 
-  const confirm = (tool: FrameTool, callId: string): Promise<boolean> => {
-    if (tool.readOnly || !confirmTools) return Promise.resolve(true)
+  const confirm = (tool: FrameTool, callId: string, args: unknown): Promise<boolean> => {
+    if (!needsConfirmation(tool, args, confirmTools)) return Promise.resolve(true)
     const itemId = toolItemIdsRef.current.get(callId) ?? callId
     updateTool(itemId, { status: 'awaiting' })
     return new Promise((resolve) => {
@@ -265,7 +279,10 @@ export default function AssistantApp() {
   }
 
   const execute = async (targetTab: number, tool: FrameTool, args: unknown) => {
+    if (isSiteTool(tool)) return executeSiteTool(targetTab, tool, args)
     if (!isBuiltinTool(tool)) return executeFrameTool(targetTab, tool.frameId, tool.name, args)
+    const authoring = await executeAuthoringTool(targetTab, tool, args)
+    if (authoring) return authoring
     try {
       return { ok: true, result: formatPageContent(await readPage(targetTab)) }
     } catch (error) {
@@ -308,7 +325,7 @@ export default function AssistantApp() {
         config,
         apiKey,
         history: historyRef.current,
-        systemPrompt: buildSystemPrompt(page, webTools.length, config.prompt),
+        systemPrompt: buildSystemPrompt(page, webTools.length, config.prompt, siteToolList.length),
         getTools: () => toolsRef.current,
         execute: (tool, args) => execute(targetTab, tool, args),
         confirm,
@@ -424,10 +441,10 @@ export default function AssistantApp() {
   const placeholder = useMemo(() => {
     if (!configReady) return t('assistant.chat.placeholder.notConfigured')
     if (quote) return t('assistant.chat.placeholder.quote')
-    return webTools.length
+    return pageTools.length
       ? t('assistant.chat.placeholder.withTools')
       : t('assistant.chat.placeholder.default')
-  }, [configReady, quote, webTools.length])
+  }, [configReady, quote, pageTools.length])
 
   return (
     <div className='sidepanel-shell flex h-full flex-col text-neutral-800'>
@@ -439,11 +456,11 @@ export default function AssistantApp() {
             <p className='truncate text-[13px] font-medium text-neutral-900'>
               {page.title || host || t('assistant.header.currentPage')}
             </p>
-            {(host || webTools.length > 0) && (
+            {(host || pageTools.length > 0) && (
               <p className='truncate text-[11px] text-neutral-500'>
                 {host}
-                {webTools.length > 0 &&
-                  `${host ? ' · ' : ''}${t('assistant.header.webToolCount', { count: webTools.length })}`}
+                {pageTools.length > 0 &&
+                  `${host ? ' · ' : ''}${t('assistant.header.webToolCount', { count: pageTools.length })}`}
               </p>
             )}
           </div>
@@ -492,9 +509,9 @@ export default function AssistantApp() {
             >
               <Icon className='size-3.5' strokeWidth={1.8} aria-hidden />
               {label}
-              {value === 'tools' && status === 'ready' && webTools.length > 0 && (
+              {value === 'tools' && pageTools.length > 0 && (
                 <span className='rounded-full bg-black/[0.08] px-1.5 text-[10px] leading-4 text-neutral-600'>
-                  {webTools.length}
+                  {pageTools.length}
                 </span>
               )}
             </button>
@@ -512,13 +529,15 @@ export default function AssistantApp() {
         />
       ) : view === 'tools' ? (
         <WebmcpView
-          tools={webTools}
+          tools={pageTools}
           status={status}
           onRefresh={refresh}
           execute={(tool, args) =>
             tabId == null
               ? Promise.resolve({ ok: false, error: t('assistant.chat.noTab') })
-              : executeFrameTool(tabId, tool.frameId, tool.name, args)
+              : isSiteTool(tool)
+                ? executeSiteTool(tabId, tool, args)
+                : executeFrameTool(tabId, tool.frameId, tool.name, args)
           }
         />
       ) : (
@@ -534,7 +553,7 @@ export default function AssistantApp() {
             {items.length === 0 ? (
               <EmptyState
                 disabled={!configReady || running || tabId == null}
-                webToolCount={webTools.length}
+                webToolCount={pageTools.length}
                 onQuickAction={(prompt) => void send({ text: prompt, withPage: true })}
               />
             ) : (
@@ -803,7 +822,7 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
         : item.status === 'done'
           ? 'text-emerald-600'
           : 'text-neutral-500'
-  const displayName = item.name === READ_PAGE_TOOL.name ? t('assistant.tool.readPage') : item.name
+  const displayName = BUILTIN_TOOL_LABELS[item.name] ? t(BUILTIN_TOOL_LABELS[item.name]) : item.name
 
   return (
     <div className='mr-4 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs'>
@@ -833,7 +852,9 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
       {item.status === 'awaiting' && (
         <div className='mt-2 flex items-center justify-end gap-1.5'>
           <span className='mr-auto text-[11px] text-amber-600'>
-            {t('assistant.tool.mayModify')}
+            {item.name === SAVE_SITE_TOOL.name
+              ? t('assistant.tool.confirmSave')
+              : t('assistant.tool.mayModify')}
           </span>
           <Button onClick={() => onDecide(false)} className='!px-2 !py-0.5 text-xs'>
             {t('assistant.tool.reject')}
@@ -849,6 +870,14 @@ function ChatRow({ item, onDecide }: { item: ChatItem; onDecide: (allowed: boole
       )}
     </div>
   )
+}
+
+/** 内置工具在对话里显示的名称 */
+const BUILTIN_TOOL_LABELS: Record<string, MessageKey> = {
+  [READ_PAGE_TOOL.name]: 'assistant.tool.readPage',
+  [INSPECT_PAGE_TOOL.name]: 'assistant.tool.inspectPage',
+  [TEST_SITE_TOOL.name]: 'assistant.tool.testSiteTool',
+  [SAVE_SITE_TOOL.name]: 'assistant.tool.saveSiteTool',
 }
 
 function formatJson(text: string): string {

@@ -9,6 +9,7 @@ import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { useStorageItem } from '@/utils/useStorageItem'
 
 import { Card, Row, SectionHeader } from './layout'
+import SiteToolsCard from './SiteToolsCard'
 
 /** 设置页：侧边栏 AI 助手 */
 export default function AssistantSettings() {
@@ -59,6 +60,8 @@ export default function AssistantSettings() {
           <Switch checked={confirmTools} onChange={setConfirmTools} />
         </Row>
       </Card>
+
+      <SiteToolsCard />
     </div>
   )
 }

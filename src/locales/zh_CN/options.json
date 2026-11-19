@@ -132,6 +132,27 @@
       "desc": "网页可以通过 WebMCP 向 AI 提供可执行的工具（查询、下单、填写表单等），助手会自动发现并调用。需要 Chrome 150 及以上，并在 chrome://flags 启用「WebMCP for testing」。",
       "confirm": "执行前确认",
       "confirmHint": "未声明为只读的网页工具（可能修改数据），执行前先让你确认"
+    },
+    "siteTools": {
+      "title": "站点工具",
+      "desc": "给任意网站添加 AI 助手可以调用的工具：一组参数加一串固定步骤（请求接口、填写、点击、读取），由 DevGo 执行，不运行任何代码。最省事的做法是在侧边栏对话里让 AI 帮你生成。",
+      "add": "新建",
+      "empty": "还没有站点工具。打开想要增强的网站，在侧边栏对话里说「给这个网站做一个搜索工具」，AI 会查看网页、试运行后帮你保存。",
+      "edit": "编辑",
+      "delete": "删除",
+      "deleteTitle": "删除站点工具「{name}」？",
+      "deleteDesc": "删除后助手不能再调用这个工具。",
+      "enabled": "启用",
+      "editTitle": "编辑站点工具",
+      "addTitle": "新建站点工具",
+      "json": "工具定义（JSON）",
+      "jsonHint": "name 工具名 · description 用途 · matches 生效网址 · readOnly 是否只读 · params 参数 · steps 步骤（fetch / fill / press / click / wait / read / navigate），文本里的 {{参数名}} 会替换成参数值。",
+      "invalidJson": "不是合法的 JSON",
+      "save": "保存",
+      "cancel": "取消",
+      "readOnly": "只读",
+      "mayModify": "可能修改数据",
+      "stepCount": "{count} 步"
     }
   },
   "enhance": {

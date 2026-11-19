@@ -63,7 +63,11 @@
     "argsAndResult": "Arguments and result",
     "mayModify": "This tool may modify page data",
     "reject": "Reject",
-    "allow": "Allow"
+    "allow": "Allow",
+    "inspectPage": "Inspect page structure",
+    "testSiteTool": "Test site tool",
+    "saveSiteTool": "Save site tool",
+    "confirmSave": "Review the tool definition above before saving"
   },
   "settings": {
     "modelTitle": "Chat model",
@@ -125,6 +129,12 @@
     "invalidJson": "Arguments are not valid JSON",
     "noResult": "(Ran successfully with no return value)",
     "failed": "Run failed",
-    "result": "Result"
+    "result": "Result",
+    "siteTool": "Site tool",
+    "createHint": "You can also ask the AI in Chat to build a tool for this site, e.g. \"make a search tool for this site\".",
+    "manage": "Manage site tools"
+  },
+  "siteTools": {
+    "navigated": "Done. The page navigated away"
   }
 }

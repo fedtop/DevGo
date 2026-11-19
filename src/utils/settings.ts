@@ -2,6 +2,7 @@
  * 扩展设置（基于 WXT storage，跨页面共享、持久化）。
  */
 
+import type { SiteTool } from '@/features/site-tools/types'
 import type { TranslateTargetSetting } from '@/features/translate/languages'
 import { DEFAULT_LLM_CONFIG, type LlmConfig } from '@/features/translate/llm-config'
 import { normalizeBypassList, type NetworkScenarioDefaultAction } from '@/utils/network'
@@ -693,3 +694,6 @@ export const selectionHiddenBuiltinActions = storage.defineItem<string[]>(
   'local:selectionHiddenBuiltinActions',
   { fallback: [] },
 )
+
+/** 站点工具：按网站定义、侧边栏 AI 助手可调用的工具（见 features/site-tools） */
+export const siteTools = storage.defineItem<SiteTool[]>('local:siteTools', { fallback: [] })

@@ -14,6 +14,8 @@ import {
 /** 某个 frame 中的工具（frameId 用于把执行请求发回正确的 frame） */
 export interface FrameTool extends WebmcpTool {
   frameId: number
+  /** 站点工具对应的存储 id（其他工具没有） */
+  siteToolId?: string
 }
 
 export type ToolsStatus =

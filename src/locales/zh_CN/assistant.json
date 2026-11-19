@@ -61,7 +61,11 @@
     "argsAndResult": "参数与结果",
     "mayModify": "该工具可能修改网页数据",
     "reject": "拒绝",
-    "allow": "允许执行"
+    "allow": "允许执行",
+    "inspectPage": "查看网页结构",
+    "testSiteTool": "试运行站点工具",
+    "saveSiteTool": "保存站点工具",
+    "confirmSave": "保存前请检查上面的工具定义"
   },
   "settings": {
     "modelTitle": "对话模型",
@@ -120,6 +124,12 @@
     "invalidJson": "参数不是合法的 JSON",
     "noResult": "（执行成功，没有返回值）",
     "failed": "执行失败",
-    "result": "执行结果"
+    "result": "执行结果",
+    "siteTool": "站点工具",
+    "createHint": "也可以在「对话」里让 AI 帮你给这个网站做工具，比如「给这个网站做一个搜索工具」。",
+    "manage": "管理站点工具"
+  },
+  "siteTools": {
+    "navigated": "已执行，网页发生了跳转"
   }
 }

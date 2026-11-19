@@ -9,6 +9,7 @@ import {
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -37,14 +38,15 @@ const toolKey = (tool: FrameTool) => `${tool.frameId}:${tool.name}`
 export default function WebmcpView({ tools, status, onRefresh, execute }: WebmcpViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
 
-  if (status === 'unsupported') {
+  // 站点工具不依赖 WebMCP：有工具就直接列出
+  if (status === 'unsupported' && tools.length === 0) {
     return (
       <EmptyState icon={FlaskConical} title={t('assistant.webmcp.unsupported.title')}>
         {t('assistant.webmcp.unsupported.description')}
       </EmptyState>
     )
   }
-  if (status === 'unavailable') {
+  if (status === 'unavailable' && tools.length === 0) {
     return (
       <EmptyState
         icon={CircleAlert}
@@ -55,7 +57,7 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
       </EmptyState>
     )
   }
-  if (status === 'loading') {
+  if (status === 'loading' && tools.length === 0) {
     return (
       <EmptyState icon={Loader2} spin title={t('assistant.webmcp.loading.title')}>
         {t('assistant.webmcp.loading.description')}
@@ -65,7 +67,8 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
   if (tools.length === 0) {
     return (
       <EmptyState icon={PlugZap} title={t('assistant.webmcp.empty.title')} onRefresh={onRefresh}>
-        {t('assistant.webmcp.empty.description')}
+        {t('assistant.webmcp.empty.description')} {t('assistant.webmcp.createHint')}
+        <ManageLink />
       </EmptyState>
     )
   }
@@ -97,7 +100,26 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
           />
         ))}
       </ul>
+      <p className='mt-3 px-0.5 text-[11px] leading-relaxed text-neutral-500'>
+        {t('assistant.webmcp.createHint')} <ManageLink />
+      </p>
     </div>
+  )
+}
+
+/** 打开设置页的站点工具管理 */
+function ManageLink() {
+  return (
+    <button
+      type='button'
+      onClick={() =>
+        void browser.tabs.create({ url: browser.runtime.getURL('/options.html#assistant') })
+      }
+      className='inline-flex items-center gap-0.5 text-accent-600 hover:underline'
+    >
+      <Sparkles className='size-3' aria-hidden />
+      {t('assistant.webmcp.manage')}
+    </button>
   )
 }
 
@@ -214,7 +236,8 @@ function ToolCard({
                 {t('assistant.webmcp.mayModify')}
               </Badge>
             )}
-            {tool.frameId !== 0 && (
+            {tool.siteToolId && <Badge tone='plain'>{t('assistant.webmcp.siteTool')}</Badge>}
+            {tool.frameId > 0 && (
               <Badge tone='plain' icon={Frame}>
                 iframe
               </Badge>
