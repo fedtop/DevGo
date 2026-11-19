@@ -35,6 +35,7 @@ Offline install: 👉🏻 [GitHub Releases](https://github.com/fedtop/dev-go/rel
 - Summarize the page or extract key points in one click, and ask questions about the page (the AI reads the page content itself); "Ask AI" from the selection toolbar carries the selected text over
 - Works with any OpenAI-compatible service and Coding Plan presets; answers stream in with the reasoning shown
 - WebMCP: automatically lists tools the page registers via WebMCP (iframes included), and the AI can call them to get things done; tools not declared read-only ask for confirmation first; the side panel's "Page tools" page shows every tool's description and lets you run them with custom arguments (handy for debugging a page's WebMCP implementation). Requires Chrome 150+ with "WebMCP for testing" enabled in `chrome://flags`
+- Site tools: add AI-callable tools to any website (search, read a list, fill in and submit a form…). Describe what you need on the side panel's "Page tools" page and the AI inspects the page, test-runs and builds it; or "Record actions" to capture your own steps, across pages, then pick which values become parameters (passwords aren't recorded by default). Tools are pure data steps run by DevGo — no code is executed — and can be exported / imported, including recordings from the Chrome DevTools Recorder
 
 ![AI model configuration](https://fedtop.github.io/dev-go-docs/shots/0.2.3/en/light/options-models.png)
 
@@ -52,6 +53,7 @@ Offline install: 👉🏻 [GitHub Releases](https://github.com/fedtop/dev-go/rel
 - Sniff images, videos, and audio on the current tab; filter, search, and download individually or in bulk
 - Floating dock: a slim DevGo tab on the right edge of every page — hover to expand Translate this page, AI summary, AI assistant, Back to top, and more; drag it up or down, and hide it for now, per site, or everywhere
 - The selection toolbar can be turned off per site from the popup's Features page; the disabled-site list lives in Settings → Selection
+- Page export: from the popup's Features page, export the page as a full-page PDF or long image that matches the screen (PDF text is selectable and searchable), or pick one area of the page and export it as an image or PDF
 - Unlock copy / selection / right-click per site: toggle for the current site in the popup's Features page; manage all sites in Settings → Page enhancements
 - GitHub enhancements: floating buttons on code pages (edit online, DeepWiki, back to top); press `,` to open the repo in github1s
 - Marks page elements the browser should not auto-translate (GitHub code areas included)
@@ -145,7 +147,9 @@ src/
 │  ├─ selection.content.tsx# Selection toolbar (translation + AI actions)
 │  ├─ github.content.tsx   # GitHub enhancement UI
 │  ├─ unlock.content.ts    # Per-site copy/select unlock
-│  ├─ assistant.content.ts # Assistant bridge: read page content, read / run WebMCP tools
+│  ├─ assistant.content.ts # Assistant bridge: read page content, read / run WebMCP tools, run site tool steps
+│  ├─ site-recorder.ts     # Site tool recording bar (injected on demand)
+│  ├─ capture-picker.ts    # Area picker for page export (injected on demand)
 │  ├─ sidepanel/           # Side panel: AI assistant
 │  ├─ cors-bridge.content.ts
 │  ├─ cors-proxy.ts

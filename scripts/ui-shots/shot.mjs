@@ -218,7 +218,7 @@ process.on('exit', () => {
 })
 await sleep(3500)
 
-// 找到我们的扩展 id：浏览器自带组件扩展也有 background.js，需按 manifest 的 homepage_url 过滤
+// 找到我们的扩展 id：浏览器自带组件扩展也有 background.js，需按 manifest 的名称过滤
 let extId = ''
 for (let i = 0; i < 20 && !extId; i++) {
   const targets = await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`)).json()
@@ -236,12 +236,12 @@ for (let i = 0; i < 20 && !extId; i++) {
         JSON.stringify({
           id: 1,
           method: 'Runtime.evaluate',
-          params: { expression: 'chrome.runtime.getManifest().homepage_url', returnByValue: true },
+          params: { expression: 'chrome.runtime.getManifest().name', returnByValue: true },
         }),
       )
     })
     sw.close()
-    if (String(res.result?.result?.value).includes('wangrongding')) extId = t.url.split('/')[2]
+    if (res.result?.result?.value === 'DevGo') extId = t.url.split('/')[2]
   }
   if (!extId) await sleep(500)
 }
