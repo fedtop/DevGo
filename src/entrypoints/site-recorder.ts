@@ -79,6 +79,8 @@ function listOf(element: Element): { selector: string; count: number } | null {
   ) {
     const parent = item.parentElement
     if (!parent) break
+    // 表格里同一行的单元格不是「列表」，要按行（tr）找
+    if (item.tagName === 'TD' || item.tagName === 'TH') continue
     const signature = (node: Element) => `${node.tagName}.${[...node.classList].sort().join('.')}`
     const siblings = [...parent.children].filter((child) => signature(child) === signature(item))
     if (siblings.length >= 3) {
