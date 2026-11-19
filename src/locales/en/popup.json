@@ -133,6 +133,15 @@
     "unlockDescWithCount": "{host}: unlock copy, selection, and right-click ({count} sites enabled)",
     "unlockDescWithCount_one": "{host}: unlock copy, selection, and right-click ({count} site enabled)",
     "manageAll": "Manage all sites and more features",
-    "createTool": "Create"
+    "createTool": "Create",
+    "record": {
+      "title": "Record actions",
+      "desc": "Record page actions once, replay them or let the AI call them",
+      "recording": "Recording · {count} steps",
+      "recording_one": "Recording · {count} step",
+      "start": "Record",
+      "finish": "Finish",
+      "failed": "Couldn't start recording"
+    }
   }
 }

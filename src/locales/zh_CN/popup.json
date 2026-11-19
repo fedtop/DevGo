@@ -127,6 +127,14 @@
     "unlockDesc": "{host}：放开复制、选择与右键",
     "unlockDescWithCount": "{host}：放开复制、选择与右键（共 {count} 个站点已开启）",
     "manageAll": "管理全部网站与更多功能",
-    "createTool": "去创建"
+    "createTool": "去创建",
+    "record": {
+      "title": "录制操作",
+      "desc": "录一遍网页操作，存成可重放、AI 能调用的工具",
+      "recording": "录制中 · 已录 {count} 步",
+      "start": "开始录制",
+      "finish": "完成录制",
+      "failed": "无法开始录制"
+    }
   }
 }

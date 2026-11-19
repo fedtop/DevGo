@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
+import { useRecording } from '@/features/assistant/RecordingEditor'
 import { useSiteTools } from '@/features/assistant/site-tools-client'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
@@ -19,7 +20,7 @@ import { formatShortcut } from '@/utils/shortcut'
 import { useCommandShortcuts } from '@/utils/useCommandShortcuts'
 import { getActiveHostname } from '@/utils/tabs'
 import { useStorageItem } from '@/utils/useStorageItem'
-import { ArrowUpRight, FileText, ImageDown, SquareDashedMousePointer } from 'lucide-react'
+import { ArrowUpRight, Circle, FileText, ImageDown, SquareDashedMousePointer } from 'lucide-react'
 
 function Row({ title, desc, children }: { title: string; desc: ReactNode; children: ReactNode }) {
   return (
@@ -113,6 +114,70 @@ function WebmcpRow() {
         label={count ? t('popup.function.viewTools') : t('popup.function.createTool')}
         disabled={unavailable}
       />
+    </Row>
+  )
+}
+
+/**
+ * 录制操作：把用户在网页上的操作录成站点工具。录制条显示在网页顶部，
+ * 点「完成」后侧边栏打开整理页（设参数、命名、试运行、保存）。
+ */
+function RecordRow() {
+  const tabId = useActiveTabId()
+  const [hostname, setHostname] = useState('')
+  const [error, setError] = useState('')
+  const { recording, stepCount } = useRecording(tabId)
+  const [windowId, setWindowId] = useState<number | null>(null)
+
+  useEffect(() => {
+    void getActiveHostname().then(setHostname)
+    void browser.windows.getCurrent().then((win) => setWindowId(win.id ?? null))
+  }, [])
+
+  /** 结束录制并打开侧边栏的整理页（sidePanel.open 必须在点击的同步调用栈里执行） */
+  const finish = () => {
+    if (tabId == null) return
+    if (windowId != null) void chrome.sidePanel.open({ windowId }).catch(() => undefined)
+    void sendRuntimeMessage({ type: 'site-recorder-finish', cancel: false, tabId }).finally(() =>
+      window.close(),
+    )
+  }
+
+  const start = () => {
+    if (tabId == null) return
+    setError('')
+    void sendRuntimeMessage({ type: 'site-recorder-start', tabId })
+      .then((result) => {
+        if (result.ok) window.close()
+        else setError(result.error ?? t('popup.function.record.failed'))
+      })
+      .catch((reason: unknown) => setError(String(reason)))
+  }
+
+  const desc = error
+    ? error
+    : !hostname
+      ? t('popup.common.pageUnsupported')
+      : recording
+        ? t('popup.function.record.recording', { count: stepCount })
+        : t('popup.function.record.desc')
+
+  return (
+    <Row title={t('popup.function.record.title')} desc={desc}>
+      {recording ? (
+        <Button variant='primary' onClick={finish} className='!px-3 !py-1 text-xs'>
+          {t('popup.function.record.finish')}
+        </Button>
+      ) : (
+        <Button
+          onClick={start}
+          disabled={!hostname || tabId == null}
+          className='!px-3 !py-1 text-xs'
+        >
+          <Circle className='size-2.5 fill-rose-500 text-rose-500' aria-hidden />
+          {t('popup.function.record.start')}
+        </Button>
+      )}
     </Row>
   )
 }
@@ -302,6 +367,7 @@ export default function FunctionPage() {
         <>
           <AssistantRow />
           <WebmcpRow />
+          <RecordRow />
         </>
       )}
       <SiteSwitchRow
