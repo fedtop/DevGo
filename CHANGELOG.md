@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.5](https://github.com/fedtop/dev-go/compare/v0.2.4...v0.2.5) (2026-11-19)
+
+### Features
+
+- **popup:** 功能页加入「录制操作」入口，可直接开始 / 完成录制 ([2b93278](https://github.com/fedtop/dev-go/commit/2b932787d68083ff250fa59b523006b324ffaf9a))
+
+### Bug Fixes
+
+- **site-tools:** 扩展安装或更新前打开的页面没有内容脚本时自动补注入，试运行先回到录制起点 ([f054071](https://github.com/fedtop/dev-go/commit/f054071efaeec42f2ed8061236acc36849f0a982))
+
 ### [0.2.4](https://github.com/fedtop/dev-go/compare/v0.2.3...v0.2.4) (2026-11-19)
 
 ### Features
