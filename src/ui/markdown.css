@@ -61,3 +61,25 @@
   border: 0;
   border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
 }
+.md-table-wrap {
+  overflow-x: auto;
+}
+.md-table {
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.45;
+}
+.md-table th,
+.md-table td {
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  padding: 0.3em 0.6em;
+  text-align: left;
+  vertical-align: top;
+  /* 不在短词中间断行（价格、型号），过长的内容让表格横向滚动 */
+  overflow-wrap: break-word;
+}
+.md-table th {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  font-weight: 600;
+  white-space: nowrap;
+}
