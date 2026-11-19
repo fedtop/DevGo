@@ -3,6 +3,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { injectAssistantBridge, isMissingReceiver } from '@/utils/assistant-bridge'
 import { t } from '@/utils/i18n'
 import {
   isWebmcpFrameReport,
@@ -119,9 +120,14 @@ export function useWebmcpTools(tabId: number | null) {
       setStatus((current) => (current === 'loading' ? 'unavailable' : current))
     }, REPORT_TIMEOUT_MS)
 
-    sendTabMessage(tabId, { type: 'webmcp-list' }).catch(() => {
+    const fail = () => {
       window.clearTimeout(timeoutRef.current)
       setStatus('unavailable')
+    }
+    sendTabMessage(tabId, { type: 'webmcp-list' }).catch(async (error: unknown) => {
+      // 扩展安装 / 更新前就打开的页面里没有内容脚本：补注入后重新请求
+      if (!isMissingReceiver(error) || !(await injectAssistantBridge(tabId))) return fail()
+      sendTabMessage(tabId, { type: 'webmcp-list' }).catch(fail)
     })
   }, [tabId])
 

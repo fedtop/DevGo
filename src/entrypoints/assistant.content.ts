@@ -110,6 +110,11 @@ export default defineContentScript({
   runAt: 'document_idle',
   main() {
     if (!hasExtensionRuntime()) return
+    // 可能被按需补注入（见 utils/assistant-bridge.ts）：本页已有仍连着扩展的实例时不重复注册，
+    // 否则同一条消息会被执行两次；扩展更新后遗留的旧实例已断开，不算
+    const holder = window as Window & { __devgoAssistantBridgeAlive?: () => boolean }
+    if (holder.__devgoAssistantBridgeAlive?.()) return
+    holder.__devgoAssistantBridgeAlive = hasExtensionRuntime
 
     // 只有执行工具时会回报错误文案；不阻塞监听注册，回报前等语言就绪即可
     const i18nReady = initI18n().catch(() => undefined)

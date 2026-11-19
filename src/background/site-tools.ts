@@ -7,6 +7,7 @@
  */
 import { fillTemplate, type SiteToolStep } from '@/features/site-tools/types'
 import type { StepResult } from '@/features/site-tools/runner'
+import { injectAssistantBridge } from '@/utils/assistant-bridge'
 import { t } from '@/utils/i18n'
 import type {
   RecordedStep,
@@ -60,6 +61,7 @@ async function sendStep(
 ): Promise<StepResult & { navigated?: boolean }> {
   const message: TabMessage = { type: 'site-tool-step', step, args }
   const deadline = Date.now() + SCRIPT_READY_TIMEOUT
+  let injected = false
   for (;;) {
     try {
       const result = (await browser.tabs.sendMessage(tabId, message, { frameId: 0 })) as
@@ -70,6 +72,12 @@ async function sendStep(
       const text = error instanceof Error ? error.message : String(error)
       // 这一步本身触发了跳转（如点击链接），旧页面带着消息通道一起关闭
       if (isChannelClosed(text)) return { ok: true, navigated: true }
+      // 页面已加载完却没有接收方：标签页是扩展安装 / 更新前打开的，补注入助手桥
+      if (isNotReady(text) && !injected && (await browser.tabs.get(tabId)).status === 'complete') {
+        injected = true
+        await injectAssistantBridge(tabId)
+        continue
+      }
       if (!isNotReady(text) || Date.now() > deadline) {
         return {
           ok: false,

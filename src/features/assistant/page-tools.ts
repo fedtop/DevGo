@@ -1,6 +1,7 @@
 /**
  * 侧边栏助手的内置工具：不依赖网页是否实现 WebMCP，任何网页都能读取正文。
  */
+import { sendToAssistant } from '@/utils/assistant-bridge'
 import { t } from '@/utils/i18n'
 import type { PageContent, TabMessage } from '@/utils/messaging'
 
@@ -36,8 +37,7 @@ export class PageReadError extends Error {
 export async function readPage(tabId: number): Promise<PageContent> {
   const message: TabMessage = { type: 'read-page' }
   try {
-    const content = (await browser.tabs.sendMessage(tabId, message, { frameId: 0 })) as
-      PageContent | undefined
+    const content = await sendToAssistant<PageContent | undefined>(tabId, message)
     if (content) return content
   } catch {
     // 落到下面统一提示

@@ -13,6 +13,7 @@ import {
   type SiteTool,
   type SiteToolDraft,
 } from '@/features/site-tools/types'
+import { sendToAssistant } from '@/utils/assistant-bridge'
 import { t } from '@/utils/i18n'
 import { sendRuntimeMessage, type TabMessage, type WebmcpExecuteResult } from '@/utils/messaging'
 import { siteTools } from '@/utils/settings'
@@ -47,7 +48,7 @@ export function useSiteTools(url: string): { tools: FrameTool[]; all: SiteTool[]
 }
 
 async function sendToTop<T>(tabId: number, message: TabMessage): Promise<T | undefined> {
-  return (await browser.tabs.sendMessage(tabId, message, { frameId: 0 })) as T | undefined
+  return sendToAssistant<T | undefined>(tabId, message)
 }
 
 function toResult(error: unknown): WebmcpExecuteResult {

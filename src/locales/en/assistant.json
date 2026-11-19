@@ -195,6 +195,7 @@
       "read": "Read",
       "fetch": "Request",
       "navigate": "Open URL"
-    }
+    },
+    "testHint": "A test run first returns to the URL where recording started, then runs the steps"
   }
 }

@@ -245,7 +245,12 @@ export function RecordingEditor({ draft, tabId }: { draft: RecordingDraft; tabId
     if (tabId == null) return
     setError('')
     setTesting(true)
-    setTestResult(await runSiteToolInTab(tabId, parsed.draft, testArgs))
+    // 录完时网页通常停在流程的最后一页，从这里重放第一步会找不到元素：试运行总是先回到录制起点
+    const testSteps =
+      parsed.draft.steps[0]?.action === 'navigate'
+        ? parsed.draft.steps
+        : [{ action: 'navigate' as const, url: draft.startUrl }, ...parsed.draft.steps]
+    setTestResult(await runSiteToolInTab(tabId, { steps: testSteps }, testArgs))
     setTesting(false)
   }
 
@@ -386,6 +391,9 @@ export function RecordingEditor({ draft, tabId }: { draft: RecordingDraft; tabId
         })}
       </ol>
 
+      <p className='mt-3 text-[11px] leading-relaxed text-neutral-500'>
+        {t('assistant.recorder.testHint')}
+      </p>
       {testResult && (
         <pre
           className={`mt-3 max-h-48 overflow-auto rounded-lg p-2 font-mono text-[11px] whitespace-pre-wrap break-all ${
