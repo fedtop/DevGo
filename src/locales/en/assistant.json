@@ -2,8 +2,8 @@
   "pageTitle": "DevGo Assistant",
   "header": {
     "currentPage": "Current page",
-    "webToolCount": "{count} page tools",
-    "webToolCount_one": "{count} page tool",
+    "webToolCount": "{count} tools",
+    "webToolCount_one": "{count} tool",
     "newChat": "New chat",
     "backToChat": "Back to chat",
     "settings": "Settings"
@@ -102,8 +102,7 @@
   },
   "webmcp": {
     "unsupported": {
-      "title": "WebMCP isn't enabled yet",
-      "description": "WebMCP is currently an experimental Chrome feature. It needs Chrome 150 or later: search for \"WebMCP for testing\" in chrome://flags, enable it, restart the browser, then come back and refresh."
+      "note": "The page's own WebMCP tools need \"WebMCP for testing\" enabled in chrome://flags"
     },
     "unavailable": {
       "title": "This page can't be read",
@@ -114,8 +113,8 @@
       "description": "Reading tools registered by the page and its iframes."
     },
     "empty": {
-      "title": "This page doesn't provide any tools",
-      "description": "A page must register tools via WebMCP (document.modelContext) before the AI can act on it directly."
+      "title": "No tools on this page yet",
+      "description": "Let the AI look at this page and build a tool for you, such as search, reading a list or checking orders. Once saved, just ask on this site and the AI will use it."
     },
     "summary": "This page provides {count} tools. Describe what you need in Chat and the AI will call them",
     "summary_one": "This page provides {count} tool. Describe what you need in Chat and the AI will call it",
@@ -131,8 +130,19 @@
     "failed": "Run failed",
     "result": "Result",
     "siteTool": "Site tool",
-    "createHint": "You can also ask the AI in Chat to build a tool for this site, e.g. \"make a search tool for this site\".",
-    "manage": "Manage site tools"
+    "manage": "Manage all site tools",
+    "create": {
+      "button": "New tool with AI",
+      "title": "What tool do you need?",
+      "placeholder": "Describe what it should do, e.g. \"search products on this site and return name, price and link\"",
+      "exampleSearch": "Search this site and return titles and links",
+      "exampleList": "Read the list data on this page",
+      "exampleDetail": "Read the key details on this page",
+      "hint": "The AI inspects the page and test-runs it; you confirm before saving",
+      "busy": "The AI is replying; create after it finishes",
+      "submit": "Create",
+      "prompt": "Build a site tool for this website: {request}"
+    }
   },
   "siteTools": {
     "navigated": "Done. The page navigated away"

@@ -532,6 +532,15 @@ export default function AssistantApp() {
           tools={pageTools}
           status={status}
           onRefresh={refresh}
+          busy={running}
+          onCreate={(request) => {
+            if (!configReady) {
+              setView('settings')
+              return
+            }
+            setView('chat')
+            void send({ text: t('assistant.webmcp.create.prompt', { request }) })
+          }}
           execute={(tool, args) =>
             tabId == null
               ? Promise.resolve({ ok: false, error: t('assistant.chat.noTab') })

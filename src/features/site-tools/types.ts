@@ -278,7 +278,7 @@ export const SITE_TOOL_FORMAT = `站点工具定义（JSON 对象）：
 - name：工具名，字母开头，只含字母数字下划线；
 - description：说明做什么、什么时候用，模型据此决定是否调用；
 - matches：生效网址数组，域名（github.com，含子域名；有端口时写上端口，如 localhost:3000）或带路径通配（github.com/*/issues*）；
-- readOnly：只读取、不修改任何数据时为 true（执行前不需要用户确认）；
+- readOnly：工具不改变网站上的任何数据时为 true（执行前不需要用户确认）。搜索、筛选、读取都算只读，哪怕要在页面上填写搜索框并提交；只有发帖、下单、删除、修改设置这类会改动数据的才是 false；
 - params：参数数组，每项 { name, description, type: "string"|"number"|"boolean", required }；
 - steps：按顺序执行的步骤数组，文本字段中的 {{参数名}} 会替换成参数值（url 里会自动编码）：
   - { "action": "fetch", "url", "method"?, "body"?, "headers"?, "as"? }：以用户当前登录状态请求接口，返回 JSON 或文本。能找到网站自己的接口时优先用它，最稳定；

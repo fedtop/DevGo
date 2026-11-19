@@ -8,8 +8,10 @@ import {
   PlugZap,
   RefreshCw,
   ShieldAlert,
+  Settings2,
   ShieldCheck,
   Sparkles,
+  Wand2,
   type LucideIcon,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -27,25 +29,28 @@ interface WebmcpViewProps {
   status: ToolsStatus
   onRefresh: () => void
   execute: (tool: FrameTool, args: unknown) => Promise<WebmcpExecuteResult>
+  /** 让 AI 按描述为当前网站创建站点工具（切到对话并发送） */
+  onCreate: (request: string) => void
+  /** 正在对话中：创建请求要等这一轮结束 */
+  busy: boolean
 }
 
 const toolKey = (tool: FrameTool) => `${tool.frameId}:${tool.name}`
 
 /**
- * 侧边栏「网页工具」页：列出当前网页通过 WebMCP 注册的工具，查看说明、手动填参数执行
- * （调试网页的 WebMCP 实现时很有用）。AI 对话里会自动调用这些工具，不需要先在这里执行。
+ * 侧边栏「网页工具」页：列出当前网页的工具（用户配置的站点工具 + 网页通过 WebMCP 注册的工具），
+ * 查看说明、手动填参数执行；没有合适的工具时可以直接让 AI 为这个网站创建。
  */
-export default function WebmcpView({ tools, status, onRefresh, execute }: WebmcpViewProps) {
+export default function WebmcpView({
+  tools,
+  status,
+  onRefresh,
+  execute,
+  onCreate,
+  busy,
+}: WebmcpViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
 
-  // 站点工具不依赖 WebMCP：有工具就直接列出
-  if (status === 'unsupported' && tools.length === 0) {
-    return (
-      <EmptyState icon={FlaskConical} title={t('assistant.webmcp.unsupported.title')}>
-        {t('assistant.webmcp.unsupported.description')}
-      </EmptyState>
-    )
-  }
   if (status === 'unavailable' && tools.length === 0) {
     return (
       <EmptyState
@@ -66,10 +71,29 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
   }
   if (tools.length === 0) {
     return (
-      <EmptyState icon={PlugZap} title={t('assistant.webmcp.empty.title')} onRefresh={onRefresh}>
-        {t('assistant.webmcp.empty.description')} {t('assistant.webmcp.createHint')}
-        <ManageLink />
-      </EmptyState>
+      <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pt-8 pb-3'>
+        <div className='flex flex-col items-center gap-2 px-3 text-center'>
+          <span className='flex size-10 items-center justify-center rounded-full bg-black/5 text-neutral-600'>
+            <PlugZap className='size-5' strokeWidth={1.8} aria-hidden />
+          </span>
+          <p className='text-sm font-semibold text-neutral-900'>
+            {t('assistant.webmcp.empty.title')}
+          </p>
+          <p className='text-xs leading-relaxed text-neutral-500'>
+            {t('assistant.webmcp.empty.description')}
+          </p>
+        </div>
+        <CreateToolBox onCreate={onCreate} busy={busy} />
+        <p className='flex flex-wrap items-center justify-center gap-x-2 px-3 text-center text-[11px] leading-relaxed text-neutral-400'>
+          {status === 'unsupported' && (
+            <span className='inline-flex items-center gap-1'>
+              <FlaskConical className='size-3' aria-hidden />
+              {t('assistant.webmcp.unsupported.note')}
+            </span>
+          )}
+          <ManageLink />
+        </p>
+      </div>
     )
   }
 
@@ -100,9 +124,93 @@ export default function WebmcpView({ tools, status, onRefresh, execute }: Webmcp
           />
         ))}
       </ul>
-      <p className='mt-3 px-0.5 text-[11px] leading-relaxed text-neutral-500'>
-        {t('assistant.webmcp.createHint')} <ManageLink />
+      <div className='mt-3'>
+        <CreateToolBox onCreate={onCreate} busy={busy} collapsible />
+      </div>
+      <p className='mt-2 text-center text-[11px]'>
+        <ManageLink />
       </p>
+    </div>
+  )
+}
+
+/** 描述想要的工具，交给 AI 查看网页、试运行后创建 */
+function CreateToolBox({
+  onCreate,
+  busy,
+  collapsible = false,
+}: {
+  onCreate: WebmcpViewProps['onCreate']
+  busy: boolean
+  collapsible?: boolean
+}) {
+  const [open, setOpen] = useState(!collapsible)
+  const [request, setRequest] = useState('')
+  const examples = [
+    t('assistant.webmcp.create.exampleSearch'),
+    t('assistant.webmcp.create.exampleList'),
+    t('assistant.webmcp.create.exampleDetail'),
+  ]
+
+  if (!open) {
+    return (
+      <Button onClick={() => setOpen(true)} block className='!py-1.5 text-xs'>
+        <Wand2 className='size-3.5' aria-hidden />
+        {t('assistant.webmcp.create.button')}
+      </Button>
+    )
+  }
+
+  const submit = () => {
+    if (request.trim() && !busy) onCreate(request.trim())
+  }
+
+  return (
+    <div className='flex flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 text-xs'>
+      <p className='flex items-center gap-1.5 font-medium text-neutral-900'>
+        <Wand2 className='size-3.5 text-neutral-500' aria-hidden />
+        {t('assistant.webmcp.create.title')}
+      </p>
+      <textarea
+        value={request}
+        rows={2}
+        autoFocus={collapsible}
+        placeholder={t('assistant.webmcp.create.placeholder')}
+        onChange={(event) => setRequest(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            submit()
+          }
+        }}
+        className='popup-field w-full resize-none rounded-lg border px-2.5 py-2 text-xs leading-relaxed text-neutral-800 outline-none'
+      />
+      <div className='flex flex-wrap gap-1.5'>
+        {examples.map((example) => (
+          <button
+            key={example}
+            type='button'
+            onClick={() => setRequest(example)}
+            className='rounded-full border border-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900'
+          >
+            {example}
+          </button>
+        ))}
+      </div>
+      <div className='flex items-center justify-between gap-2'>
+        <span className='text-[11px] leading-relaxed text-neutral-500'>
+          {busy ? t('assistant.webmcp.create.busy') : t('assistant.webmcp.create.hint')}
+        </span>
+        <Button
+          variant='primary'
+          onClick={submit}
+          disabled={!request.trim() || busy}
+          className='shrink-0 !px-3 !py-1 text-xs'
+        >
+          <Sparkles className='size-3' aria-hidden />
+          {t('assistant.webmcp.create.submit')}
+        </Button>
+      </div>
     </div>
   )
 }
@@ -115,9 +223,9 @@ function ManageLink() {
       onClick={() =>
         void browser.tabs.create({ url: browser.runtime.getURL('/options.html#assistant') })
       }
-      className='inline-flex items-center gap-0.5 text-accent-600 hover:underline'
+      className='inline-flex items-center gap-1 text-neutral-500 transition-colors hover:text-neutral-900'
     >
-      <Sparkles className='size-3' aria-hidden />
+      <Settings2 className='size-3' aria-hidden />
       {t('assistant.webmcp.manage')}
     </button>
   )

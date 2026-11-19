@@ -111,12 +111,11 @@
     "assistantTitle": "AI assistant",
     "assistantDesc": "Summarize pages and ask about them in the side panel",
     "assistantDescShortcut": "Summarize pages and ask about them in the side panel · {shortcut}",
-    "webmcpTitle": "Page tools (WebMCP)",
+    "webmcpTitle": "Page tools",
     "webmcpLoading": "Checking this page…",
-    "webmcpUnsupported": "WebMCP is off in this browser (enable \"WebMCP for testing\" in chrome://flags)",
-    "webmcpTools": "This page provides {count} tools for the AI to call or for you to run",
-    "webmcpTools_one": "This page provides {count} tool for the AI to call or for you to run",
-    "webmcpNoTools": "This page doesn't provide any tools",
+    "webmcpTools": "This page has {count} tools for the AI to call or for you to run",
+    "webmcpTools_one": "This page has {count} tool for the AI to call or for you to run",
+    "webmcpNoTools": "No tools on this page yet. Let the AI build one",
     "viewTools": "View tools",
     "dockTitle": "Floating dock",
     "dockFeature": "Quick actions on the right edge of pages (translate, AI summary, and more)",
@@ -133,6 +132,7 @@
     "unlockDesc": "{host}: unlock copy, selection, and right-click",
     "unlockDescWithCount": "{host}: unlock copy, selection, and right-click ({count} sites enabled)",
     "unlockDescWithCount_one": "{host}: unlock copy, selection, and right-click ({count} site enabled)",
-    "manageAll": "Manage all sites and more features"
+    "manageAll": "Manage all sites and more features",
+    "createTool": "Create"
   }
 }

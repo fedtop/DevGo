@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
+import { useSiteTools } from '@/features/assistant/site-tools-client'
 import { useActiveTabId, useWebmcpTools } from '@/features/assistant/webmcp-client'
 import Button from '@/ui/Button'
 import Switch from '@/ui/Switch'
@@ -88,28 +89,29 @@ function AssistantRow() {
   )
 }
 
-/** 当前网页的 WebMCP 工具：有工具时打开侧边栏的「网页工具」页查看、手动执行 */
+/** 当前网页的工具（站点工具 + WebMCP）：打开侧边栏「网页工具」页查看、手动执行，或让 AI 新建 */
 function WebmcpRow() {
   const tabId = useActiveTabId()
-  const { tools, status } = useWebmcpTools(tabId)
+  const { tools: webTools, status, page } = useWebmcpTools(tabId)
+  const { tools: siteToolList } = useSiteTools(page.url)
+  const count = siteToolList.length + webTools.length
+  // 站点工具不依赖 WebMCP；没有工具时也能打开面板，让 AI 为这个网站创建
+  const unavailable = status === 'unavailable' && count === 0
 
-  const desc =
-    status === 'loading'
-      ? t('popup.function.webmcpLoading')
-      : status === 'unsupported'
-        ? t('popup.function.webmcpUnsupported')
-        : status === 'unavailable'
-          ? t('popup.common.pageUnsupported')
-          : tools.length
-            ? t('popup.function.webmcpTools', { count: tools.length })
-            : t('popup.function.webmcpNoTools')
+  const desc = unavailable
+    ? t('popup.common.pageUnsupported')
+    : count
+      ? t('popup.function.webmcpTools', { count })
+      : status === 'loading'
+        ? t('popup.function.webmcpLoading')
+        : t('popup.function.webmcpNoTools')
 
   return (
     <Row title={t('popup.function.webmcpTitle')} desc={desc}>
       <OpenSidePanelButton
         view='tools'
-        label={t('popup.function.viewTools')}
-        disabled={status !== 'ready' || tools.length === 0}
+        label={count ? t('popup.function.viewTools') : t('popup.function.createTool')}
+        disabled={unavailable}
       />
     </Row>
   )

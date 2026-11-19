@@ -108,11 +108,10 @@
     "assistantTitle": "AI 助手",
     "assistantDesc": "侧边栏里总结网页、就网页内容提问",
     "assistantDescShortcut": "侧边栏里总结网页、就网页内容提问 · {shortcut}",
-    "webmcpTitle": "网页工具（WebMCP）",
+    "webmcpTitle": "网页工具",
     "webmcpLoading": "正在检测当前网页…",
-    "webmcpUnsupported": "浏览器未开启 WebMCP（chrome://flags 启用 WebMCP for testing）",
-    "webmcpTools": "当前网页提供 {count} 个工具，可让 AI 调用或手动执行",
-    "webmcpNoTools": "当前网页没有提供工具",
+    "webmcpTools": "当前网页有 {count} 个工具，可让 AI 调用或手动执行",
+    "webmcpNoTools": "当前网页还没有工具，可以让 AI 帮你做一个",
     "viewTools": "查看工具",
     "selectionTitle": "划词工具条",
     "selectionFeature": "选中文字后显示翻译与 AI 工具条",
@@ -127,6 +126,7 @@
     "unlockTitle": "解除本站复制限制",
     "unlockDesc": "{host}：放开复制、选择与右键",
     "unlockDescWithCount": "{host}：放开复制、选择与右键（共 {count} 个站点已开启）",
-    "manageAll": "管理全部网站与更多功能"
+    "manageAll": "管理全部网站与更多功能",
+    "createTool": "去创建"
   }
 }

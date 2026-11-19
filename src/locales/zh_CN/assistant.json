@@ -2,7 +2,7 @@
   "pageTitle": "DevGo 助手",
   "header": {
     "currentPage": "当前页面",
-    "webToolCount": "{count} 个网页工具",
+    "webToolCount": "{count} 个工具",
     "newChat": "新对话",
     "backToChat": "返回对话",
     "settings": "设置"
@@ -98,8 +98,7 @@
   },
   "webmcp": {
     "unsupported": {
-      "title": "浏览器还没开启 WebMCP",
-      "description": "WebMCP 目前是 Chrome 的实验功能：需要 Chrome 150 及以上，在 chrome://flags 搜索「WebMCP for testing」并启用，重启浏览器后回到这里刷新。"
+      "note": "网页自带的 WebMCP 工具需在 chrome://flags 开启「WebMCP for testing」"
     },
     "unavailable": {
       "title": "当前页面读取不到",
@@ -110,8 +109,8 @@
       "description": "读取网页及其中 iframe 注册的工具。"
     },
     "empty": {
-      "title": "这个网页没有提供工具",
-      "description": "网页需要通过 WebMCP（document.modelContext）注册工具，AI 才能直接替你操作网页。"
+      "title": "这个网页还没有工具",
+      "description": "可以让 AI 查看这个网页，帮你做一个工具，比如搜索、读取列表、查订单。保存后，在这个网站上直接说需求，AI 就会调用它。"
     },
     "summary": "当前网页提供 {count} 个工具，在「对话」里描述需求，AI 会自动调用",
     "refresh": "重新检测",
@@ -126,8 +125,19 @@
     "failed": "执行失败",
     "result": "执行结果",
     "siteTool": "站点工具",
-    "createHint": "也可以在「对话」里让 AI 帮你给这个网站做工具，比如「给这个网站做一个搜索工具」。",
-    "manage": "管理站点工具"
+    "manage": "管理全部站点工具",
+    "create": {
+      "button": "用 AI 新建工具",
+      "title": "想要一个什么工具？",
+      "placeholder": "描述工具要做的事，比如「搜索本站商品，返回名称、价格和链接」",
+      "exampleSearch": "搜索本站内容，返回标题和链接",
+      "exampleList": "读取当前页面的列表数据",
+      "exampleDetail": "读取当前详情页的关键信息",
+      "hint": "AI 会查看网页、试运行，保存前请你确认",
+      "busy": "AI 正在回答，结束后再创建",
+      "submit": "开始创建",
+      "prompt": "给这个网站做一个站点工具：{request}"
+    }
   },
   "siteTools": {
     "navigated": "已执行，网页发生了跳转"
