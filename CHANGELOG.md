@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.4](https://github.com/fedtop/dev-go/compare/v0.2.3...v0.2.4) (2026-11-19)
+
+### Features
+
+- **ai:** 对话模型推荐强模型（glm-5.3），翻译保留快模型（glm-5.3-flash），更新智谱兜底模型列表 ([c1748ec](https://github.com/fedtop/dev-go/commit/c1748ec59356bdd8571289281c6bb95f1a9300a0))
+- **assistant:** 没有网页工具时也能打开工具页，在面板里描述需求让 AI 直接创建站点工具 ([95f79bd](https://github.com/fedtop/dev-go/commit/95f79bddb73bf0b2342eaf69040029cb50d0d65e))
+- **assistant:** 站点工具——按网站定义 AI 可调用的工具，侧边栏可让 AI 查看网页、试运行后生成并保存 ([626dc22](https://github.com/fedtop/dev-go/commit/626dc22514769393d21e3f71fdab5c597be93785))
+- **capture:** 导出的 PDF 叠加透明文字层，文字可选中、复制和搜索 ([48a12d6](https://github.com/fedtop/dev-go/commit/48a12d6350716ef79e0cd40fcfc828ef5a853b27))
+- **capture:** 网页导出为与屏幕一致的 PDF / 长图，支持框选节点导出图片或 PDF ([0d82457](https://github.com/fedtop/dev-go/commit/0d82457c6a92d8d4dc3cdb9f59fc65cf36820e50))
+- **scripts:** 弹窗截图按 .popup-shell 实际高度裁切，去掉底部空白（文档反馈） ([6da7030](https://github.com/fedtop/dev-go/commit/6da703052b00ed8b1ae3847de3ccfc25e660ffe7))
+- **scripts:** 新增卡片裁切/悬停翻译/输入框润色/整页翻译/拼接图场景，fixture 服务可探活重启 ([9040989](https://github.com/fedtop/dev-go/commit/90409894e04b65e0f677dccd5f1a10dc95277c43))
+- **scripts:** 新增文档截图流水线 scripts/ui-shots（CDP 无头截图 + i18n 自查 + 按版本目录同步） ([4a51e6d](https://github.com/fedtop/dev-go/commit/4a51e6d66d362b521d1f4a45a029da418d5ba0af))
+- **selection:** 未配置 AI 模型时划词 AI 提示去配置并直达设置页「AI 模型」，不再显示 401 ([df9ea0a](https://github.com/fedtop/dev-go/commit/df9ea0ac3fda3538948e376cf09b01aedf08681a))
+- **site-tools:** 录制网页操作生成站点工具，支持跨页面回放、多候选选择器与自动等待，可导入导出及导入 Chrome Recorder 录制 ([8738d66](https://github.com/fedtop/dev-go/commit/8738d66cfa97efa3f1b5be81bacdd057fe26dca4))
+- **ui:** Markdown 渲染支持表格、删除线和裸链接 ([27760be](https://github.com/fedtop/dev-go/commit/27760be18f7f85cbae2384a40d0c44c58acd1b88))
+- **ui:** 设置页「通用」置顶并加使用文档入口，弹窗页脚加文档链接，右键图标主页改指商店页 ([b537237](https://github.com/fedtop/dev-go/commit/b5372371252d8bb3cdf9f9ff7bf2958dc900a4bf))
+
+### Bug Fixes
+
+- **capture:** 改用逐屏滚动 + captureVisibleTab 截取，去掉无法设为可选权限的 debugger ([463bc82](https://github.com/fedtop/dev-go/commit/463bc82d1484102339664aaad01a5115d7ebd1ff))
+- **scripts:** options 分区长图 full 标志误传布尔导致视口截断 ([0f007ee](https://github.com/fedtop/dev-go/commit/0f007ee03834aef8d85d90b143d4a273b69689b0))
+
 ### [0.2.3](https://github.com/fedtop/dev-go/compare/v0.2.2...v0.2.3) (2026-11-14)
 
 ### Bug Fixes
