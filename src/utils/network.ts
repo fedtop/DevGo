@@ -57,11 +57,8 @@ function extractHostPatternFromUrlLike(value: string): string | null {
     // URL 会把通配符 `*` 编码成 `%2A`，还原后才能作为通配规则使用
     return normalizeHostPattern(url.hostname.replace(/%2a/gi, '*'))
   } catch {
-    const withoutScheme = value.replace(WILDCARD_SCHEME_RE, '').replace(URL_SCHEME_RE, '')
-    const host = withoutScheme.startsWith('[')
-      ? withoutScheme.slice(0, withoutScheme.indexOf(']') + 1 || undefined)
-      : withoutScheme.split(/[/?#]/)[0]
-    return host ? normalizeHostPattern(host) : null
+    // 解析不出主机名的输入（含空格等）不是有效规则，直接丢弃
+    return null
   }
 }
 

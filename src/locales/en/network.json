@@ -15,7 +15,7 @@
     "deleteMode": "Delete this mode",
     "proxyServer": "Proxy server",
     "bypassTitle": "Bypass list (domains that skip this proxy)",
-    "bypassHint": "One domain or Chrome proxy bypass rule per line. Proxy, Auto, and every custom proxy mode each save their own list.",
+    "bypassHint": "One domain or Chrome proxy bypass rule per line; *.example.com matches subdomains. Proxy, Auto, and every custom proxy mode each save their own list.",
     "unsaved": "Unsaved changes to the proxy server or bypass list. Save to apply them",
     "saveHint": "Proxy server and bypass list changes need saving; the rule list, proxy domains, and the WebRTC settings below take effect immediately",
     "noConfigDesc": "Direct and System proxy need no configuration. Switch to Auto, Global proxy, or a custom mode to configure the proxy server, rule list, and bypass list here.",
